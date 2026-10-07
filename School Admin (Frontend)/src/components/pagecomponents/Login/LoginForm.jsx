@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const LoginForm = ({ onLogin }) => {
   const [identifier, setIdentifier] = useState('');
@@ -14,12 +15,13 @@ const LoginForm = ({ onLogin }) => {
     try {
       // Calling the Supabase Edge Function (Cloud or Local)
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321';
-      const response = await fetch(`${supabaseUrl}/functions/v1/admin-login`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/school-account`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          action: 'login',
           email: identifier,
           password: password
         })
@@ -65,7 +67,7 @@ const LoginForm = ({ onLogin }) => {
             id="identifier"
             name="identifier"
             type="text"
-            placeholder="admin@school.com"
+            placeholder="school@example.com"
             required
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
@@ -123,6 +125,14 @@ const LoginForm = ({ onLogin }) => {
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
+      </div>
+
+      {/* Register Link */}
+      <div className="text-center mt-4 pt-4 border-t border-slate-100">
+        <span className="text-[13px] text-slate-500">Don't have an account? </span>
+        <Link to="/register" className="text-[13px] font-semibold text-[#0652bb] hover:text-blue-800 transition-colors">
+          Register your school
+        </Link>
       </div>
     </form>
   );
