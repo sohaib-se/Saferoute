@@ -7,10 +7,10 @@ import RecentActivity from '../components/pagecomponents/Dashboard/RecentActivit
 import VehicleStatus from '../components/pagecomponents/Dashboard/VehicleStatus';
 import DashboardFooter from '../components/pagecomponents/Dashboard/DashboardFooter';
 
-const DashboardPage = ({ onLogout }) => {
+const DashboardPage = ({ onLogout, onNavigate, currentPage = 'Dashboard' }) => {
   return (
     <div className="h-screen flex bg-[#EEF2F6] antialiased text-[#1E293B] overflow-hidden font-sans">
-      <Sidebar onLogout={onLogout} />
+      <Sidebar onLogout={onLogout} onNavigate={onNavigate} currentPage={currentPage} />
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <Header />
         
