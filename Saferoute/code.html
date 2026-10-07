@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>School Transport - Admin Fleet Portal</title>
+<!-- Tailwind CSS CDN with forms and container queries plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Font Awesome Icons CDN -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<!-- Google Font: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            sidebar: '#0C1322',
+            sidebarActive: '#2563EB',
+            sidebarHover: '#1E293B',
+            canvas: '#F1F5F9',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-layout">
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #F3F6F9;
+      color: #0F172A;
+    }
+    /* Subtle custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex bg-[#EEF2F6] antialiased text-[#1E293B]">
+<!-- BEGIN: Sidebar -->
+<aside class="w-[230px] flex-shrink-0 bg-[#0C1425] text-slate-300 flex flex-col justify-between select-none" data-purpose="sidebar">
+<div>
+<!-- Brand Logo / Header -->
+<div class="px-5 pt-6 pb-6 flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-[#2563EB] flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+<i class="fa-solid fa-bus text-lg"></i>
+</div>
+<div>
+<h1 class="text-sm font-bold text-white tracking-tight leading-snug">School Transport</h1>
+<p class="text-[11px] text-slate-400 font-medium">Vehicles Fleet</p>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav class="px-3 space-y-1 text-[13px] font-medium">
+<!-- Dashboard (Active) -->
+<a class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl bg-[#2563EB] text-white font-semibold shadow-sm transition-colors" href="#">
+<i class="fa-solid fa-table-columns text-sm w-4 text-center"></i>
+<span>Dashboard</span>
+</a>
+<!-- Students -->
+<a class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-[#152038] transition-colors" href="#">
+<i class="fa-regular fa-user text-sm w-4 text-center"></i>
+<span>Students</span>
+</a>
+<!-- Parents -->
+<a class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-[#152038] transition-colors" href="#">
+<i class="fa-solid fa-user-group text-xs w-4 text-center"></i>
+<span>Parents</span>
+</a>
+<!-- Drivers -->
+<a class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-[#152038] transition-colors" href="#">
+<i class="fa-regular fa-circle-user text-sm w-4 text-center"></i>
+<span>Drivers</span>
+</a>
+<!-- Vehicles -->
+<a class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-[#152038] transition-colors" href="#">
+<i class="fa-regular fa-calendar-check text-sm w-4 text-center"></i>
+<span>Vehicles</span>
+</a>
+<!-- Routes -->
+<a class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-[#152038] transition-colors" href="#">
+<i class="fa-solid fa-map-location-dot text-xs w-4 text-center"></i>
+<span>Routes</span>
+</a>
+<!-- Trips -->
+<a class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-[#152038] transition-colors" href="#">
+<i class="fa-regular fa-clock text-sm w-4 text-center"></i>
+<span>Trips</span>
+</a>
+<!-- Live Tracking -->
+<a class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-[#152038] transition-colors" href="#">
+<i class="fa-solid fa-location-dot text-sm w-4 text-center"></i>
+<span>Live Tracking</span>
+</a>
+<!-- Fees -->
+<a class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-[#152038] transition-colors" href="#">
+<i class="fa-solid fa-wallet text-sm w-4 text-center"></i>
+<span>Fees</span>
+</a>
+<!-- Notifications -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-[#152038] transition-colors" href="#">
+<div class="flex items-center gap-3.5">
+<i class="fa-regular fa-bell text-sm w-4 text-center"></i>
+<span>Notifications</span>
+</div>
+<span class="w-5 h-5 rounded-full bg-[#1D4ED8] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+</a>
+<!-- SOS Alerts -->
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-[#152038] transition-colors" href="#">
+<div class="flex items-center gap-3.5">
+<i class="fa-solid fa-triangle-exclamation text-sm w-4 text-center text-rose-500"></i>
+<span class="text-rose-400 font-medium">SOS Alerts</span>
+</div>
+<span class="w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center">1</span>
+</a>
+</nav>
+</div>
+<!-- Sidebar Bottom Status -->
+<div class="px-5 py-6">
+<div class="flex items-start gap-2.5">
+<div class="w-2.5 h-2.5 rounded-full bg-[#10B981] mt-1 flex-shrink-0 animate-pulse"></div>
+<div>
+<div class="text-[12px] font-semibold text-slate-200 leading-tight">Dispatch Center</div>
+<div class="text-[11px] text-[#10B981] font-medium leading-tight">Live Monitored</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: Sidebar -->
+<!-- BEGIN: Main Area -->
+<div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- BEGIN: Top Navigation Header -->
+<header class="bg-white border-b border-slate-200/80 px-8 py-3.5 flex items-center justify-between sticky top-0 z-20">
+<!-- Search Input -->
+<div class="w-80 relative">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+<i class="fa-solid fa-magnifying-glass text-xs"></i>
+</div>
+<input class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs placeholder-slate-400 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" placeholder="Search here..." type="text"/>
+</div>
+<!-- Right Header Actions -->
+<div class="flex items-center gap-4">
+<!-- Bell Notification -->
+<button class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center relative text-slate-600 transition-colors">
+<i class="fa-regular fa-bell text-sm"></i>
+<span class="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full ring-2 ring-white"></span>
+</button>
+<!-- Refresh Button -->
+<button class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 transition-colors">
+<i class="fa-solid fa-arrow-rotate-right text-xs"></i>
+</button>
+<!-- Divider -->
+<div class="h-7 w-[1px] bg-slate-200 mx-1"></div>
+<!-- User Profile Pill -->
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="w-9 h-9 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-sm shadow-sm">
+            A
+          </div>
+<div class="text-left">
+<p class="text-xs font-bold text-slate-800 leading-tight group-hover:text-blue-600 transition-colors">Admin</p>
+<p class="text-[11px] text-slate-400 leading-tight">Super Admin</p>
+</div>
+<i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+</div>
+</div>
+</header>
+<!-- END: Top Navigation Header -->
+<!-- BEGIN: Dashboard Content Body -->
+<main class="p-8 space-y-6 flex-1 max-w-[1400px]">
+<!-- Page Title & Operational Status -->
+<div class="flex items-center justify-between flex-wrap gap-4">
+<div>
+<h2 class="text-[22px] font-bold text-slate-900 tracking-tight">Dashboard</h2>
+<p class="text-xs text-slate-500 mt-0.5">Real-time school transport operational overview &amp; telematics.</p>
+</div>
+<div class="inline-flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-xs">
+<span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+<span class="text-xs font-medium text-slate-700">Live Telematics System Active</span>
+</div>
+</div>
+<!-- BEGIN: Stat Cards Row -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" data-purpose="kpi-cards">
+<!-- Card 1: TOTAL VEHICLES -->
+<div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-start justify-between">
+<div>
+<span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">TOTAL VEHICLES</span>
+<div class="text-3xl font-bold text-slate-900 mt-1 mb-2">25</div>
+<div class="flex items-center gap-1.5 text-xs font-semibold text-[#10B981]">
+<i class="fa-solid fa-arrow-trend-up text-[11px]"></i>
+<span>100% operational</span>
+</div>
+</div>
+<div class="w-12 h-12 rounded-xl bg-[#EFF6FF] flex items-center justify-center text-[#2563EB]">
+<i class="fa-solid fa-bus text-lg"></i>
+</div>
+</div>
+<!-- Card 2: ACTIVE TRIPS -->
+<div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-start justify-between">
+<div>
+<span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">ACTIVE TRIPS</span>
+<div class="text-3xl font-bold text-slate-900 mt-1 mb-2">12</div>
+<div class="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+<span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+<span>In progress now</span>
+</div>
+</div>
+<div class="w-12 h-12 rounded-xl bg-[#ECFDF5] flex items-center justify-center text-[#10B981]">
+<i class="fa-solid fa-location-arrow text-lg"></i>
+</div>
+</div>
+<!-- Card 3: DRIVERS ONLINE -->
+<div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-start justify-between">
+<div>
+<span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">DRIVERS ONLINE</span>
+<div class="text-3xl font-bold text-slate-900 mt-1 mb-2">18</div>
+<div class="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+<i class="fa-solid fa-user-check text-[11px] text-blue-600"></i>
+<span>Shift 1 Active</span>
+</div>
+</div>
+<div class="w-12 h-12 rounded-xl bg-[#EEF2FF] flex items-center justify-center text-[#4F46E5]">
+<i class="fa-solid fa-user-tie text-lg"></i>
+</div>
+</div>
+<!-- Card 4: STUDENTS ONBOARD -->
+<div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-start justify-between">
+<div>
+<span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">STUDENTS ONBOARD</span>
+<div class="text-3xl font-bold text-slate-900 mt-1 mb-2">312</div>
+<div class="flex items-center gap-1.5 text-xs font-semibold text-[#10B981]">
+<i class="fa-solid fa-shield-halved text-[11px]"></i>
+<span>RFID Checked-in</span>
+</div>
+</div>
+<div class="w-12 h-12 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0D9488]">
+<i class="fa-solid fa-users text-lg"></i>
+</div>
+</div>
+</section>
+<!-- END: Stat Cards Row -->
+<!-- BEGIN: Middle Section (Live Tracking & Today's Trips) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Live Tracking Map (7 cols) -->
+<div class="lg:col-span-7 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col" data-purpose="live-tracking-card">
+<div class="p-5 pb-4 flex items-center justify-between">
+<div>
+<h3 class="text-sm font-bold text-slate-800">Live Tracking</h3>
+<p class="text-xs text-slate-400 mt-0.5">Real-time GPS telematics fleet monitoring</p>
+</div>
+<a class="text-xs font-semibold text-[#2563EB] hover:text-blue-700 flex items-center gap-1" href="#">
+              Full Map <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+</a>
+</div>
+<!-- Stylized Map Canvas Container -->
+<div class="relative bg-[#EAF0F6] h-[310px] w-full overflow-hidden flex-1 select-none">
+<!-- Road Vector Network Simulation -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="60" id="grid" patternunits="userSpaceOnUse" width="60">
+<path d="M 60 0 L 0 0 0 60" fill="none" opacity="0.5" stroke="#E2E8F0" stroke-width="0.8"></path>
+</pattern>
+</defs>
+<rect fill="url(#grid)" height="100%" width="100%"></rect>
+<!-- Major Highways / Roadways -->
+<path d="M-50,150 Q180,140 280,210 T560,120 T800,160" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-width="16"></path>
+<path d="M-50,150 Q180,140 280,210 T560,120 T800,160" fill="none" stroke="#DDE7F0" stroke-linecap="round" stroke-width="12"></path>
+<path d="M220,-20 L280,210 L320,360" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-width="14"></path>
+<path d="M220,-20 L280,210 L320,360" fill="none" stroke="#DDE7F0" stroke-linecap="round" stroke-width="10"></path>
+<path d="M40,280 Q240,270 380,180 T680,80" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-width="12"></path>
+<path d="M40,280 Q240,270 380,180 T680,80" fill="none" stroke="#DDE7F0" stroke-linecap="round" stroke-width="8"></path>
+<!-- Active Route Path Line (Blue dotted trail) -->
+<path d="M50,230 Q160,235 240,225 T380,215 T480,220" fill="none" stroke="#2563EB" stroke-dasharray="2 6" stroke-linecap="round" stroke-width="3.5"></path>
+<path d="M240,225 L380,215" fill="none" stroke="#2563EB" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<!-- Map Markers -->
+<!-- Marker Green (School / Origin) -->
+<div class="absolute left-[110px] top-[140px] -translate-x-1/2 -translate-y-1/2">
+<div class="w-7 h-7 rounded-full bg-[#10B981] ring-4 ring-emerald-100 flex items-center justify-center text-white text-xs shadow-md">
+<i class="fa-solid fa-flag text-[10px]"></i>
+</div>
+</div>
+<!-- Marker Blue Active (Bus No. 12) -->
+<div class="absolute left-[285px] top-[170px] -translate-x-1/2 -translate-y-1/2 z-10">
+<div class="relative flex items-center justify-center">
+<span class="animate-ping absolute inline-flex h-9 w-9 rounded-full bg-blue-400 opacity-40"></span>
+<div class="w-9 h-9 rounded-full bg-[#2563EB] ring-4 ring-blue-200/80 flex items-center justify-center text-white text-sm shadow-lg">
+<i class="fa-solid fa-bus text-xs"></i>
+</div>
+</div>
+</div>
+<!-- Marker Orange (Upcoming Station / Bus 07) -->
+<div class="absolute left-[380px] top-[200px] -translate-x-1/2 -translate-y-1/2">
+<div class="w-7 h-7 rounded-full bg-[#F59E0B] ring-4 ring-amber-100 flex items-center justify-center text-white text-xs shadow-md">
+<i class="fa-solid fa-bus text-[10px]"></i>
+</div>
+</div>
+<!-- Floating Card Tooltip for Bus No. 12 -->
+<div class="absolute left-[150px] top-[18px] bg-white rounded-xl shadow-lg border border-slate-100 p-3.5 w-60 z-20">
+<div class="flex items-center justify-between pb-2 border-b border-slate-100">
+<div class="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+<span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+<span>Bus No. 12</span>
+</div>
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECFDF5] text-[#10B981]">
+                  On Route
+                </span>
+</div>
+<div class="mt-2.5 space-y-1 text-[11px]">
+<div class="flex justify-between items-center text-slate-500">
+<span>Driver:</span>
+<span class="font-semibold text-slate-700">Muhammad Ali</span>
+</div>
+<div class="flex justify-between items-center text-slate-500">
+<span>Speed:</span>
+<span class="font-bold text-slate-800">38 km/h</span>
+</div>
+<div class="flex justify-between items-center text-slate-500">
+<span>Last Update:</span>
+<span class="text-slate-400">2 min ago</span>
+</div>
+</div>
+</div>
+<!-- Zoom Controls -->
+<div class="absolute right-3.5 bottom-3.5 flex flex-col bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
+<button class="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors border-b border-slate-100">
+<i class="fa-solid fa-plus text-xs"></i>
+</button>
+<button class="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors">
+<i class="fa-solid fa-minus text-xs"></i>
+</button>
+</div>
+</div>
+</div>
+<!-- Today's Trips Card (5 cols) -->
+<div class="lg:col-span-5 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between" data-purpose="todays-trips-card">
+<div class="p-5 pb-3">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="text-sm font-bold text-slate-800">Today's Trips</h3>
+<p class="text-xs text-slate-400 mt-0.5">Active and upcoming school schedules</p>
+</div>
+<a class="text-xs font-semibold text-[#2563EB] hover:text-blue-700" href="#">View All</a>
+</div>
+<!-- Trips Table -->
+<div class="mt-4">
+<div class="grid grid-cols-12 text-[10px] font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-100 px-2">
+<div class="col-span-4">BUS NO.</div>
+<div class="col-span-4">ROUTE</div>
+<div class="col-span-4 text-right">STATUS</div>
+</div>
+<div class="divide-y divide-slate-50 text-xs">
+<!-- Row 1 -->
+<div class="grid grid-cols-12 items-center py-3.5 px-2 hover:bg-slate-50/70 rounded-lg transition-colors cursor-pointer group">
+<div class="col-span-4 flex items-center gap-2 font-semibold text-slate-700">
+<span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+<span>Bus-12</span>
+</div>
+<div class="col-span-4 text-slate-600 font-medium truncate">Green Valley</div>
+<div class="col-span-4 flex items-center justify-end gap-2">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#ECFDF5] text-[#10B981]">
+<span class="text-[8px]">•</span> On Route
+                    </span>
+<i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-slate-500 transition-colors"></i>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="grid grid-cols-12 items-center py-3.5 px-2 hover:bg-slate-50/70 rounded-lg transition-colors cursor-pointer group">
+<div class="col-span-4 flex items-center gap-2 font-semibold text-slate-700">
+<span class="w-2 h-2 rounded-full bg-[#2563EB]"></span>
+<span>Bus-07</span>
+</div>
+<div class="col-span-4 text-slate-600 font-medium truncate">Model Town</div>
+<div class="col-span-4 flex items-center justify-end gap-2">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EFF6FF] text-[#2563EB]">
+<span class="text-[8px]">•</span> Picked Up
+                    </span>
+<i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-slate-500 transition-colors"></i>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="grid grid-cols-12 items-center py-3.5 px-2 hover:bg-slate-50/70 rounded-lg transition-colors cursor-pointer group">
+<div class="col-span-4 flex items-center gap-2 font-semibold text-slate-700">
+<span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+<span>Bus-09</span>
+</div>
+<div class="col-span-4 text-slate-600 font-medium truncate">University</div>
+<div class="col-span-4 flex items-center justify-end gap-2">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#ECFDF5] text-[#10B981]">
+<span class="text-[8px]">•</span> On Route
+                    </span>
+<i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-slate-500 transition-colors"></i>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Card Banner -->
+<div class="mx-5 mb-5 p-4 rounded-xl bg-[#091124] text-white flex items-center gap-3.5 shadow-sm">
+<div class="w-9 h-9 rounded-lg bg-[#2563EB] flex items-center justify-center text-white text-base">
+<i class="fa-solid fa-bus"></i>
+</div>
+<div>
+<p class="text-xs font-bold leading-tight tracking-tight">School Transport</p>
+<p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">ADMIN FLEET PORTAL</p>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Middle Section -->
+<!-- BEGIN: Bottom Section (Recent Activity & Vehicle Status) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Recent Activity (6 cols) -->
+<div class="lg:col-span-6 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between" data-purpose="recent-activity-card">
+<div>
+<h3 class="text-sm font-bold text-slate-800">Recent Activity</h3>
+<div class="mt-4 space-y-3.5">
+<!-- Activity Item 1 -->
+<div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50/70 transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center text-[#2563EB] flex-shrink-0">
+<i class="fa-solid fa-bus text-sm"></i>
+</div>
+<div>
+<h4 class="text-xs font-bold text-slate-800 leading-tight">Bus 12 picked up students</h4>
+<p class="text-[11px] text-slate-400 mt-0.5 leading-tight">Stop: Gulberg Green Station 4</p>
+</div>
+</div>
+<span class="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">
+                  08:12 AM
+                </span>
+</div>
+<!-- Activity Item 2 -->
+<div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50/70 transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-[#F5F3FF] flex items-center justify-center text-[#7C3AED] flex-shrink-0">
+<i class="fa-solid fa-user-plus text-xs"></i>
+</div>
+<div>
+<h4 class="text-xs font-bold text-slate-800 leading-tight">New parent registered</h4>
+<p class="text-[11px] text-slate-400 mt-0.5 leading-tight">Parent ID: #PR-8921 (Sana Ahmed)</p>
+</div>
+</div>
+<span class="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">
+                  08:00 AM
+                </span>
+</div>
+<!-- Activity Item 3 -->
+<div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50/70 transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-[#ECFDF5] flex items-center justify-center text-[#10B981] flex-shrink-0">
+<i class="fa-solid fa-school text-xs"></i>
+</div>
+<div>
+<h4 class="text-xs font-bold text-slate-800 leading-tight">Driver arrived at school</h4>
+<p class="text-[11px] text-slate-400 mt-0.5 leading-tight">Bus 04 • Rashid Mehmood</p>
+</div>
+</div>
+<span class="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">
+                  07:58 AM
+                </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Vehicle Status (6 cols) -->
+<div class="lg:col-span-6 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between" data-purpose="vehicle-status-card">
+<div>
+<h3 class="text-sm font-bold text-slate-800">Vehicle Status</h3>
+<p class="text-xs text-slate-400 mt-0.5">Current availability &amp; maintenance split</p>
+<div class="mt-4 flex items-center justify-around flex-wrap gap-6 py-2">
+<!-- Donut Chart -->
+<div class="relative w-36 h-36 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90" viewbox="0 0 100 100">
+<!-- Background Ring -->
+<circle cx="50" cy="50" fill="none" r="38" stroke="#F1F5F9" stroke-width="13"></circle>
+<!-- Arc: Running (18/25 = 72% -> ~171.7) -->
+<circle cx="50" cy="50" fill="none" r="38" stroke="#2563EB" stroke-dasharray="171.7 238.7" stroke-dashoffset="0" stroke-width="13"></circle>
+<!-- Arc: Idle (5/25 = 20% -> ~47.7) -->
+<circle cx="50" cy="50" fill="none" r="38" stroke="#38BDF8" stroke-dasharray="47.7 238.7" stroke-dashoffset="-173" stroke-width="13"></circle>
+<!-- Arc: Maintenance (2/25 = 8% -> ~19.1) -->
+<circle cx="50" cy="50" fill="none" r="38" stroke="#F59E0B" stroke-dasharray="19.1 238.7" stroke-dashoffset="-222" stroke-width="13"></circle>
+</svg>
+<!-- Center Text inside Donut -->
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+<span class="text-2xl font-extrabold text-slate-800 leading-none">25</span>
+<span class="text-[9px] font-bold text-slate-400 tracking-wider mt-0.5 uppercase">TOTAL</span>
+</div>
+</div>
+<!-- Legend List -->
+<div class="space-y-3.5 min-w-[170px]">
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-2 text-slate-600 font-medium">
+<span class="w-2.5 h-2.5 rounded-full bg-[#2563EB]"></span>
+<span>Running</span>
+</div>
+<span class="font-bold text-slate-800">18</span>
+</div>
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-2 text-slate-600 font-medium">
+<span class="w-2.5 h-2.5 rounded-full bg-[#38BDF8]"></span>
+<span>Idle</span>
+</div>
+<span class="font-bold text-slate-800">5</span>
+</div>
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-2 text-slate-600 font-medium">
+<span class="w-2.5 h-2.5 rounded-full bg-[#F59E0B]"></span>
+<span>Maintenance</span>
+</div>
+<span class="font-bold text-slate-800">2</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Bottom Section -->
+</main>
+<!-- END: Dashboard Content Body -->
+<!-- BEGIN: Footer -->
+<footer class="mt-auto bg-white border-t border-slate-200/80 px-8 py-4 flex items-center justify-between flex-wrap gap-4 text-xs text-slate-500">
+<div>
+        © 2026 School Transport System. All rights reserved.
+      </div>
+<div class="flex items-center gap-6">
+<a class="hover:text-slate-800 transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-slate-800 transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-slate-800 transition-colors" href="#">System Status</a>
+</div>
+</footer>
+<!-- END: Footer -->
+</div>
+<!-- END: Main Area -->
+</body></html>
