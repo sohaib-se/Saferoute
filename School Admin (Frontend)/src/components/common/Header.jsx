@@ -36,18 +36,28 @@ const Header = () => {
         <div className="h-7 w-px bg-slate-200 mx-1" />
 
         {/* User Profile */}
-        <div className="flex items-center gap-3 cursor-pointer group">
-          <div className="w-9 h-9 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-sm shadow-sm">
-            A
-          </div>
-          <div className="text-left">
-            <p className="text-xs font-bold text-slate-800 leading-tight group-hover:text-blue-600 transition-colors">
-              Admin
-            </p>
-            <p className="text-[11px] text-slate-400 leading-tight">Super Admin</p>
-          </div>
-          <MdKeyboardArrowDown size={14} className="text-slate-400 ml-1" />
-        </div>
+        {(() => {
+          let user = null;
+          try {
+            user = JSON.parse(localStorage.getItem('user') || 'null');
+          } catch (e) {}
+          const displayName = user?.name || 'Admin';
+          const initial = displayName.charAt(0).toUpperCase() || 'A';
+          return (
+            <div className="flex items-center gap-3 cursor-pointer group">
+              <div className="w-9 h-9 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                {initial}
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-bold text-slate-800 leading-tight group-hover:text-blue-600 transition-colors">
+                  {displayName}
+                </p>
+                <p className="text-[11px] text-slate-400 leading-tight">School Admin</p>
+              </div>
+              <MdKeyboardArrowDown size={14} className="text-slate-400 ml-1" />
+            </div>
+          );
+        })()}
       </div>
     </header>
   );
