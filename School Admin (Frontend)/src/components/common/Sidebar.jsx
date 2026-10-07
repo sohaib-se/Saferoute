@@ -14,7 +14,7 @@ import {
 } from 'react-icons/md';
 
 const navItems = [
-  { label: 'Dashboard', icon: MdDashboard, active: true },
+  { label: 'Dashboard', icon: MdDashboard },
   { label: 'Students', icon: MdPersonOutline },
   { label: 'Parents', icon: MdPeople },
   { label: 'Drivers', icon: MdPerson },
@@ -22,11 +22,12 @@ const navItems = [
   { label: 'Routes', icon: MdMap },
   { label: 'Trips', icon: MdAccessTime },
   { label: 'Live Tracking', icon: MdLocationOn },
+  { label: 'Fees', icon: MdAccountBalanceWallet },
   { label: 'Notifications', icon: MdNotifications, badge: 3 },
   { label: 'SOS Alerts', icon: MdWarning, badge: 1, danger: true },
 ];
 
-const Sidebar = ({ onLogout }) => {
+const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
   return (
     <aside
       className="w-[230px] flex-shrink-0 flex flex-col justify-between select-none"
@@ -54,43 +55,52 @@ const Sidebar = ({ onLogout }) => {
 
         {/* Navigation */}
         <nav className="px-3 space-y-0.5 text-[13px]">
-          {navItems.map(({ label, icon: Icon, active, badge, danger }) => (
-            <a
-              key={label}
-              href="#"
-              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-150"
-              style={{
-                background: active ? '#2563EB' : 'transparent',
-                color: active ? '#fff' : danger ? '#FB7185' : '#94A3B8',
-                fontWeight: active ? 600 : 500,
-              }}
-              onMouseEnter={(e) => {
-                if (!active) {
-                  e.currentTarget.style.background = '#152038';
-                  if (!danger) e.currentTarget.style.color = '#E2E8F0';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!active) {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = danger ? '#FB7185' : '#94A3B8';
-                }
-              }}
-            >
-              <div className="flex items-center gap-3.5">
-                <Icon size={16} className="flex-shrink-0" />
-                <span>{label}</span>
-              </div>
-              {badge && (
-                <span
-                  className="w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-                  style={{ background: danger ? '#E11D48' : '#1D4ED8' }}
-                >
-                  {badge}
-                </span>
-              )}
-            </a>
-          ))}
+          {navItems.map(({ label, icon: Icon, badge, danger }) => {
+            const active = currentPage === label;
+            return (
+              <a
+                key={label}
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (onNavigate) {
+                    onNavigate(label);
+                  }
+                }}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-150"
+                style={{
+                  background: active ? '#2563EB' : 'transparent',
+                  color: active ? '#fff' : danger ? '#FB7185' : '#94A3B8',
+                  fontWeight: active ? 600 : 500,
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = '#152038';
+                    if (!danger) e.currentTarget.style.color = '#E2E8F0';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = danger ? '#FB7185' : '#94A3B8';
+                  }
+                }}
+              >
+                <div className="flex items-center gap-3.5">
+                  <Icon size={16} className="flex-shrink-0" />
+                  <span>{label}</span>
+                </div>
+                {badge && (
+                  <span
+                    className="w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
+                    style={{ background: danger ? '#E11D48' : '#1D4ED8' }}
+                  >
+                    {badge}
+                  </span>
+                )}
+              </a>
+            );
+          })}
         </nav>
       </div>
 
