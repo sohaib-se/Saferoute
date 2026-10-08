@@ -103,7 +103,6 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem('isLoggedIn') === 'true'
   })
-  const [currentPage, setCurrentPage] = useState('Parents')
   const [currentPage, setCurrentPage] = useState('Dashboard')
   const [students, setStudents] = useState(initialStudents)
   
@@ -141,52 +140,57 @@ const App = () => {
     );
   };
 
-  if (!isLoggedIn) {
-    return <LoginPage onLogin={handleLogin} />
-  }
+  const renderDashboardContent = () => {
+    if (currentPage === 'Parents') {
+      return (
+        <ParentManagment
+          onLogout={handleLogout}
+          onNavigate={setCurrentPage}
+          currentPage={currentPage}
+        />
+      )
+    }
 
-  if (currentPage === 'Parents') {
+    if (currentPage === 'AddStudent') {
+      return (
+        <Addstudent
+          onLogout={handleLogout}
+          onNavigate={setCurrentPage}
+          currentPage="Students"
+          onAddStudent={handleAddStudent}
+        />
+      )
+    }
+
+    if (currentPage === 'Students') {
+      return (
+        <StudentManagment
+          onLogout={handleLogout}
+          onNavigate={setCurrentPage}
+          currentPage={currentPage}
+          students={students}
+          onAddStudent={handleAddStudent}
+          onUpdateStudent={handleUpdateStudent}
+        />
+      )
+    }
+
     return (
-      <ParentManagment
+      <DashboardPage
         onLogout={handleLogout}
         onNavigate={setCurrentPage}
         currentPage={currentPage}
-  if (currentPage === 'AddStudent') {
-    return (
-      <Addstudent
-        onLogout={handleLogout}
-        onNavigate={setCurrentPage}
-        currentPage="Students"
-        onAddStudent={handleAddStudent}
       />
     )
   }
 
-  if (currentPage === 'Students') {
-    return (
-      <StudentManagment
-        onLogout={handleLogout}
-        onNavigate={setCurrentPage}
-        currentPage={currentPage}
-        students={students}
-        onAddStudent={handleAddStudent}
-        onUpdateStudent={handleUpdateStudent}
-      />
-    )
-  }
-
-  return (
-    <DashboardPage
-      onLogout={handleLogout}
-      onNavigate={setCurrentPage}
-      currentPage={currentPage}
-    />
   return (
     <Routes>
       <Route path="/" element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
       <Route path="/login" element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <LoginPage onLogin={handleLogin} />} />
       <Route path="/register" element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <RegisterPage onRegister={handleLogin} />} />
-      <Route path="/dashboard" element={isLoggedIn ? <DashboardPage onLogout={handleLogout} /> : <Navigate to="/login" replace />} />
+      <Route path="/dashboard" element={isLoggedIn ? renderDashboardContent() : <Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to={isLoggedIn ? "/dashboard" : "/"} replace />} />
     </Routes>
   )
 }
