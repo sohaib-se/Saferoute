@@ -6,37 +6,31 @@ import CardStudentPhoto from '../components/pagecomponents/addstudents/CardStude
 import CardBasicProfile from '../components/pagecomponents/addstudents/CardBasicProfile';
 import CardParentGuardian from '../components/pagecomponents/addstudents/CardParentGuardian';
 import CardRouteFleet from '../components/pagecomponents/addstudents/CardRouteFleet';
-import CardResidenceGeofence from '../components/pagecomponents/addstudents/CardResidenceGeofence';
 import AddStudentFooter from '../components/pagecomponents/addstudents/AddStudentFooter';
+import AddParentModal from '../components/pagecomponents/ParentManagement/AddParentModal';
 
 const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStudent }) => {
+  const [isAddParentModalOpen, setIsAddParentModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: 'Ayesha Khan',
-    id: 'ST-9041',
+    name: '',
+    id: '',
     class: 'Grade 5',
-    section: 'A',
-    rollNo: '14',
-    dob: '2014-05-12',
-    bloodGroup: 'O+',
+    section: '',
+    rollNo: '',
     gender: 'Female',
     
     // Parent info
     parentSearch: '',
-    parentName: 'Tariq Khan',
-    relationship: 'Father',
-    parentPhone: '+92 312 9876543',
-    parentEmail: 'tariq.khan@example.com',
+    parentName: '',
+    relationship: '',
 
     // Route & Fleet info
-    route: 'Route 1 - Green Valley Express (Zone North)',
-    vehicle: 'Bus 12 • Muhammad Ali • 32 Seats (6 Available)',
-    serviceMode: 'Two-Way',
-    allocatedSeat: 'Seat #18',
+    driver: 'Muhammad Ali',
+    vehicle: 'Bus 12',
     status: 'Waiting',
 
     // Residence & Geofence
-    address: 'House #42, Street 4, Sector B-1, Green Valley Housing Society, Lahore',
-    instructions: 'Student wears asthma inhaler; mother will accompany',
+    address: '',
     
     // Image
     photoUrl: null,
@@ -48,10 +42,6 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
 
   const handleGenderSelect = (gender) => {
     setFormData((prev) => ({ ...prev, gender }));
-  };
-
-  const handleServiceModeSelect = (serviceMode) => {
-    setFormData((prev) => ({ ...prev, serviceMode }));
   };
 
   const handlePhotoChange = (e) => {
@@ -66,6 +56,15 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
     setFormData((prev) => ({ ...prev, photoUrl: null }));
   };
 
+  const handleAddParentFromModal = (newParent) => {
+    setFormData((prev) => ({
+      ...prev,
+      parentName: newParent.name,
+      parentSearch: newParent.name,
+    }));
+    setIsAddParentModalOpen(false);
+  };
+
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
     if (!formData.name) return;
@@ -77,21 +76,13 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
     
     const formattedId = formData.id.startsWith('#') ? formData.id : `#${formData.id}`;
 
-    const shortRoute = formData.route.includes('-') 
-      ? formData.route.split('-')[0].trim() 
-      : formData.route;
-    
-    const shortVehicle = formData.vehicle.includes('•') 
-      ? formData.vehicle.split('•')[0].trim() 
-      : formData.vehicle;
-
     const newStudent = {
       ...formData,
       name: formData.name,
       id: formattedId,
       class: formData.class,
-      route: shortRoute,
-      vehicle: shortVehicle,
+      route: formData.driver ? `Driver: ${formData.driver}` : 'Route 1',
+      vehicle: formData.vehicle || 'Bus 12',
       status: formData.status || 'Waiting',
       initials: calculatedInitials,
       avatarBg: 'bg-rose-100 text-rose-500',
@@ -116,20 +107,12 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
 
     const formattedId = (formData.id || 'ST-9000').startsWith('#') ? formData.id : `#${formData.id}`;
 
-    const shortRoute = formData.route.includes('-') 
-      ? formData.route.split('-')[0].trim() 
-      : formData.route;
-    
-    const shortVehicle = formData.vehicle.includes('•') 
-      ? formData.vehicle.split('•')[0].trim() 
-      : formData.vehicle;
-
     if (onAddStudent) {
       onAddStudent({
         ...formData,
         id: formattedId,
-        route: shortRoute,
-        vehicle: shortVehicle,
+        route: formData.driver ? `Driver: ${formData.driver}` : 'Route 1',
+        vehicle: formData.vehicle || 'Bus 12',
         initials: calculatedInitials,
         avatarBg: 'bg-blue-100 text-blue-600',
       });
@@ -186,11 +169,6 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
                   onChange={handleChange}
                   onGenderSelect={handleGenderSelect}
                 />
-
-                <CardParentGuardian
-                  formData={formData}
-                  onChange={handleChange}
-                />
               </div>
 
               {/* Right Column (5 of 12 cols) */}
@@ -198,12 +176,12 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
                 <CardRouteFleet
                   formData={formData}
                   onChange={handleChange}
-                  onServiceModeSelect={handleServiceModeSelect}
                 />
 
-                <CardResidenceGeofence
+                <CardParentGuardian
                   formData={formData}
                   onChange={handleChange}
+                  onNewParentClick={() => setIsAddParentModalOpen(true)}
                 />
               </div>
             </div>
@@ -217,6 +195,13 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
           onSubmit={handleSubmit}
         />
       </div>
+
+      {/* Add Parent Modal loaded from Parent Management */}
+      <AddParentModal
+        isOpen={isAddParentModalOpen}
+        onClose={() => setIsAddParentModalOpen(false)}
+        onAddParent={handleAddParentFromModal}
+      />
     </div>
   );
 };

@@ -18,6 +18,13 @@ const AddStudentFooter = ({ onBack, onSaveAndAddAnother, onSubmit }) => {
       <div className="flex items-center gap-3">
         <button
           type="button"
+          onClick={onBack}
+          className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
           onClick={onSaveAndAddAnother}
           className="px-5 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
         >

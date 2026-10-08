@@ -27,7 +27,7 @@ const CardBasicProfile = ({ formData, onChange, onGenderSelect }) => {
               type="text"
               required
               className="w-full px-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white"
-              placeholder="Full Name"
+              placeholder="e.g. Ayesha Khan"
               value={formData.name || ''}
               onChange={(e) => onChange('name', e.target.value)}
             />
@@ -40,7 +40,7 @@ const CardBasicProfile = ({ formData, onChange, onGenderSelect }) => {
                 type="text"
                 required
                 className="w-full pl-8 pr-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white"
-                placeholder="Student ID"
+                placeholder="e.g. ST-9041"
                 value={formData.id || ''}
                 onChange={(e) => onChange('id', e.target.value)}
               />
@@ -70,7 +70,7 @@ const CardBasicProfile = ({ formData, onChange, onGenderSelect }) => {
             <input
               type="text"
               className="w-full px-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white"
-              placeholder="Section"
+              placeholder="e.g. A"
               value={formData.section || ''}
               onChange={(e) => onChange('section', e.target.value)}
             />
@@ -80,52 +80,31 @@ const CardBasicProfile = ({ formData, onChange, onGenderSelect }) => {
             <input
               type="text"
               className="w-full px-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white"
-              placeholder="Rollno"
+              placeholder="e.g. 14"
               value={formData.rollNo || ''}
               onChange={(e) => onChange('rollNo', e.target.value)}
             />
           </div>
         </div>
 
-        {/* Row 3: Date of Birth & Blood Group */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Date of Birth</label>
-            <div className="relative">
-              <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <rect height="18" rx="2" ry="2" width="18" x="3" y="4"></rect>
-                <line x1="16" x2="16" y1="2" y2="6"></line>
-                <line x1="8" x2="8" y1="2" y2="6"></line>
-                <line x1="3" x2="21" y1="10" y2="10"></line>
-              </svg>
-              <input
-                type="date"
-                className="w-full pl-10 pr-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white"
-                value={formData.dob || ''}
-                onChange={(e) => onChange('dob', e.target.value)}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Blood Group</label>
-            <select
-              value={formData.bloodGroup || 'O+'}
-              onChange={(e) => onChange('bloodGroup', e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:bg-white cursor-pointer"
-            >
-              <option value="A+">A+</option>
-              <option value="A-">A-</option>
-              <option value="B+">B+</option>
-              <option value="B-">B-</option>
-              <option value="O+">O+</option>
-              <option value="O-">O-</option>
-              <option value="AB+">AB+</option>
-              <option value="AB-">AB-</option>
-            </select>
+        {/* Row 3: Residential Address */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Residential Address *</label>
+          <div className="relative">
+            <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M12 2a8 8 0 00-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 00-8-8z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <input
+              type="text"
+              required
+              className="w-full pl-10 pr-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white"
+              placeholder="e.g. House #42, Street 4, Sector B-1, Green Valley Housing Society, Lahore"
+              value={formData.address || ''}
+              onChange={(e) => onChange('address', e.target.value)}
+            />
           </div>
         </div>
-
-        {/* Gender Selection Pill Buttons */}
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1.5">Gender</label>
           <div className="grid grid-cols-3 gap-3">

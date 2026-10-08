@@ -35,14 +35,14 @@ const CardResidenceGeofence = ({ formData, onChange }) => {
             type="text"
             required
             className="w-full px-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white"
-            placeholder="Street address..."
+            placeholder="e.g. House #42, Street 4, Sector B-1, Green Valley Housing Society, Lahore"
             value={formData.address || ''}
             onChange={(e) => onChange('address', e.target.value)}
           />
         </div>
 
         {/* Embedded Map Preview */}
-        <div className="relative h-44 w-full rounded-xl overflow-hidden border border-slate-200 bg-[#dce7e1] flex items-center justify-center">
+        <div className="relative h-52 w-full rounded-xl overflow-hidden border border-slate-200 bg-[#dce7e1] flex items-center justify-center p-3">
           {/* Simulated Map Feature Lines */}
           <div className="absolute inset-0 opacity-40 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.7)_0%,transparent_60%)]">
             <div className="absolute w-full h-1 bg-amber-200 top-12 rotate-[-6deg]"></div>
@@ -54,12 +54,19 @@ const CardResidenceGeofence = ({ formData, onChange }) => {
             <span className="absolute bottom-12 left-10 text-[8px] font-bold text-slate-500">Samanabad Town</span>
           </div>
 
-          {/* Geofence Radius Circle and Pin */}
-          <div className="relative flex items-center justify-center z-10">
-            <div className="w-28 h-28 rounded-full bg-blue-500/15 border border-blue-500/40 flex items-center justify-center">
-              <div className="w-14 h-14 rounded-full bg-blue-500/20 border border-blue-500/60 flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg border-2 border-white transform -translate-y-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          {/* Geofence Radius Circle and Pin with Real-time Address */}
+          <div className="relative flex flex-col items-center justify-center z-10 -mt-2">
+            {/* Realtime Address Tooltip */}
+            <div className="mb-2 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-lg shadow-md border border-blue-200 text-center max-w-[280px] transition-all">
+              <p className="text-[10px] font-bold text-blue-700 truncate leading-tight">
+                📍 {formData.address ? formData.address : 'Type address above to set location...'}
+              </p>
+            </div>
+
+            <div className="w-24 h-24 rounded-full bg-blue-500/15 border border-blue-500/40 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-blue-500/20 border border-blue-500/60 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg border-2 border-white">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"></path>
                   </svg>
                 </div>
@@ -69,28 +76,18 @@ const CardResidenceGeofence = ({ formData, onChange }) => {
 
           {/* Overlay Pill at Bottom of Map */}
           <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-white/95 backdrop-blur-xs py-1.5 px-3 rounded-lg border border-slate-200/90 shadow-sm flex items-center justify-between text-[10px] z-20">
-            <div className="flex items-center gap-1.5 text-slate-700 font-semibold">
+            <div className="flex items-center gap-1.5 text-slate-700 font-semibold truncate mr-2">
               <svg className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10"></circle>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
               </svg>
-              <span>Smart Alert Geofence: <strong>500m Radius</strong></span>
+              <span className="truncate">Smart Alert Geofence: <strong>500m Radius</strong></span>
             </div>
-            <span className="text-slate-400 font-mono text-[9px]">31.4826° N, 74.2982° E</span>
+            <span className="text-slate-400 font-mono text-[9px] flex-shrink-0">31.4826° N, 74.2982° E</span>
           </div>
         </div>
 
-        {/* Special Driver & Attendant Instructions */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Special Driver & Attendant Instructions</label>
-          <input
-            type="text"
-            className="w-full px-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white"
-            placeholder="Special instructions..."
-            value={formData.instructions || ''}
-            onChange={(e) => onChange('instructions', e.target.value)}
-          />
-        </div>
+
       </div>
     </div>
   );
