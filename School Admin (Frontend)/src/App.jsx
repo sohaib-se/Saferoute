@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import DashboardPage from './pages/DashboardPage'
+import ParentManagment from './pages/ParentManagment'
 import StudentManagment from './pages/StudentManagment'
 import Addstudent from './pages/Addstudent'
 import LoginPage from './pages/LoginPage'
@@ -102,6 +103,7 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem('isLoggedIn') === 'true'
   })
+  const [currentPage, setCurrentPage] = useState('Parents')
   const [currentPage, setCurrentPage] = useState('Dashboard')
   const [students, setStudents] = useState(initialStudents)
   
@@ -143,6 +145,12 @@ const App = () => {
     return <LoginPage onLogin={handleLogin} />
   }
 
+  if (currentPage === 'Parents') {
+    return (
+      <ParentManagment
+        onLogout={handleLogout}
+        onNavigate={setCurrentPage}
+        currentPage={currentPage}
   if (currentPage === 'AddStudent') {
     return (
       <Addstudent
