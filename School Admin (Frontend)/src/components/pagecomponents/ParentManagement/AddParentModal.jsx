@@ -6,9 +6,7 @@ const AddParentModal = ({ isOpen, onClose, onAddParent }) => {
     email: '',
     phone: '',
     children: '',
-    route: 'Route 1 (Green Valley)',
-    bus: 'Bus 12',
-    status: 'Active',
+    address: '',
   });
 
   if (!isOpen) return null;
@@ -112,37 +110,15 @@ const AddParentModal = ({ isOpen, onClose, onAddParent }) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Assigned Route</label>
-              <select
-                value={formData.route}
-                onChange={(e) => setFormData({ ...formData, route: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-slate-800 cursor-pointer"
-              >
-                <option value="Route 1 (Green Valley)">Route 1 (Green Valley)</option>
-                <option value="Route 2 (Model Town)">Route 2 (Model Town)</option>
-                <option value="Route 3 (University)">Route 3 (University)</option>
-                <option value="Route 4 (Johar Town)">Route 4 (Johar Town)</option>
-                <option value="Route 5 (Canal Road)">Route 5 (Canal Road)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Assigned Bus</label>
-              <select
-                value={formData.bus}
-                onChange={(e) => setFormData({ ...formData, bus: e.target.value })}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-slate-800 cursor-pointer"
-              >
-                <option value="Bus 12">Bus 12</option>
-                <option value="Bus 07">Bus 07</option>
-                <option value="Bus 09">Bus 09</option>
-                <option value="Bus 15">Bus 15</option>
-                <option value="Bus 18">Bus 18</option>
-                <option value="Bus 05">Bus 05</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Address</label>
+            <input
+              type="text"
+              placeholder="e.g. House #12, Street 4, Model Town, Lahore"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800"
+            />
           </div>
 
           <div className="pt-3 flex items-center justify-end space-x-2">

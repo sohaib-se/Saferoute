@@ -110,24 +110,15 @@ const initialParents = [
 
 const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All Status');
-  const [routeFilter, setRouteFilter] = useState('All Routes');
   const [activePage, setActivePage] = useState(1);
 
   const filteredParents = parentsList.filter((parent) => {
-    const matchesSearch =
+    return (
       parent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       parent.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       parent.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      parent.children.some((c) => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    const matchesStatus =
-      statusFilter === 'All Status' || parent.status === statusFilter;
-
-    const matchesRoute =
-      routeFilter === 'All Routes' || parent.route.toLowerCase().includes(routeFilter.toLowerCase());
-
-    return matchesSearch && matchesStatus && matchesRoute;
+      parent.children.some((c) => c.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
   });
 
   const handleExport = () => {
@@ -185,7 +176,7 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
         {/* Filters Row */}
         <div className="flex flex-col sm:flex-row items-center gap-3">
           {/* Search Bar */}
-          <div className="relative flex-1 w-full">
+          <div className="relative w-full sm:w-80 md:w-96">
             <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
@@ -198,56 +189,6 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
-          {/* Status Dropdown */}
-          <div className="relative w-full sm:w-40 shrink-0">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full appearance-none pl-3.5 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="All Status">All Status</option>
-              <option value="Active">Active</option>
-              <option value="Pending">Pending</option>
-            </select>
-            <svg className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </div>
-
-          {/* Routes Dropdown */}
-          <div className="relative w-full sm:w-44 shrink-0">
-            <select
-              value={routeFilter}
-              onChange={(e) => setRouteFilter(e.target.value)}
-              className="w-full appearance-none pl-3.5 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="All Routes">All Routes</option>
-              <option value="Route 1">Route 1</option>
-              <option value="Route 2">Route 2</option>
-              <option value="Route 3">Route 3</option>
-              <option value="Route 4">Route 4</option>
-              <option value="Route 5">Route 5</option>
-            </select>
-            <svg className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </div>
-
-          {/* Filter Icon Button */}
-          <button className="p-2 border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 shrink-0 cursor-pointer">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <line x1="4" x2="4" y1="21" y2="14"></line>
-              <line x1="4" x2="4" y1="10" y2="3"></line>
-              <line x1="12" x2="12" y1="21" y2="12"></line>
-              <line x1="12" x2="12" y1="8" y2="3"></line>
-              <line x1="20" x2="20" y1="21" y2="16"></line>
-              <line x1="20" x2="20" y1="12" y2="3"></line>
-              <line x1="1" x2="7" y1="14" y2="14"></line>
-              <line x1="9" x2="15" y1="8" y2="8"></line>
-              <line x1="17" x2="23" y1="16" y2="16"></line>
-            </svg>
-          </button>
         </div>
       </div>
 
@@ -262,7 +203,6 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
               <th className="py-3 px-4" scope="col">Phone Number</th>
               <th className="py-3 px-4" scope="col">Linked Children</th>
               <th className="py-3 px-4" scope="col">Assigned Route & Bus</th>
-              <th className="py-3 px-4" scope="col">Status</th>
               <th className="py-3 px-4 text-center" scope="col">Action</th>
             </tr>
           </thead>
@@ -312,19 +252,6 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
                       {parent.bus}
                     </div>
                   </td>
-                  <td className="py-3.5 px-4">
-                    {parent.status === 'Active' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        Active
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-100">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                        Pending
-                      </span>
-                    )}
-                  </td>
                   <td className="py-3.5 px-4 text-center">
                     <div className="flex items-center justify-center gap-2 text-slate-400">
                       <button className="hover:text-blue-600 transition p-1 cursor-pointer" title="Edit Parent">
@@ -345,7 +272,7 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-slate-400 text-xs">
+                <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
                   No parents found matching the specified filters.
                 </td>
               </tr>
