@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import DashboardPage from './pages/DashboardPage'
 import ParentManagment from './pages/ParentManagment'
 import StudentManagment from './pages/StudentManagment'
+import DriversManagment from './pages/DriversManagment'
 import Addstudent from './pages/Addstudent'
 import LoginPage from './pages/LoginPage'
 import LandingPage from './pages/LandingPage'
@@ -171,6 +172,16 @@ const App = () => {
           students={students}
           onAddStudent={handleAddStudent}
           onUpdateStudent={handleUpdateStudent}
+        />
+      )
+    }
+
+    if (currentPage === 'Drivers') {
+      return (
+        <DriversManagment
+          onLogout={handleLogout}
+          onNavigate={setCurrentPage}
+          currentPage={currentPage}
         />
       )
     }
