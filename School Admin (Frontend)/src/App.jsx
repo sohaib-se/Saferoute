@@ -4,6 +4,8 @@ import DashboardPage from './pages/DashboardPage'
 import ParentManagment from './pages/ParentManagment'
 import StudentManagment from './pages/StudentManagment'
 import DriversManagment from './pages/DriversManagment'
+import VehicleManagment from './pages/VehicleManagment'
+import Notifications from './pages/Notifications'
 import Addstudent from './pages/Addstudent'
 import LoginPage from './pages/LoginPage'
 import LandingPage from './pages/LandingPage'
@@ -179,6 +181,26 @@ const App = () => {
     if (currentPage === 'Drivers') {
       return (
         <DriversManagment
+          onLogout={handleLogout}
+          onNavigate={setCurrentPage}
+          currentPage={currentPage}
+        />
+      )
+    }
+
+    if (currentPage === 'Vehicles') {
+      return (
+        <VehicleManagment
+          onLogout={handleLogout}
+          onNavigate={setCurrentPage}
+          currentPage={currentPage}
+        />
+      )
+    }
+
+    if (currentPage === 'Notifications') {
+      return (
+        <Notifications
           onLogout={handleLogout}
           onNavigate={setCurrentPage}
           currentPage={currentPage}
