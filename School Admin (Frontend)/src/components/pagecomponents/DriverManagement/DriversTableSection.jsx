@@ -1,10 +1,21 @@
 import React, { useState } from 'react';
+import {
+  MdSearch,
+  MdFileDownload,
+  MdAdd,
+  MdCall,
+  MdDirectionsBus,
+  MdEdit,
+  MdVisibility,
+  MdChevronLeft,
+  MdChevronRight,
+} from 'react-icons/md';
 
 export const initialDriversData = [
   {
     num: 1,
     initials: 'MA',
-    initialsStyle: 'bg-primary-container/15 text-primary',
+    initialsStyle: 'bg-blue-100 text-blue-700',
     name: 'Muhammad Ali',
     license: 'LIC-PK-98214',
     licenseType: 'Heavy Transport',
@@ -13,13 +24,13 @@ export const initialDriversData = [
     route: 'Route 1',
     routeSub: 'Green Valley',
     status: 'Online',
-    statusBadgeStyle: 'bg-tertiary-fixed/20 text-tertiary',
-    statusDotStyle: 'bg-tertiary-fixed-dim',
+    statusBadgeStyle: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    statusDotStyle: 'bg-emerald-500',
   },
   {
     num: 2,
     initials: 'UK',
-    initialsStyle: 'bg-tertiary-fixed/25 text-tertiary',
+    initialsStyle: 'bg-emerald-100 text-emerald-700',
     name: 'Usman Khan',
     license: 'LIC-PK-43110',
     licenseType: 'Heavy Transport',
@@ -28,13 +39,13 @@ export const initialDriversData = [
     route: 'Route 2',
     routeSub: 'Model Town',
     status: 'Online',
-    statusBadgeStyle: 'bg-tertiary-fixed/20 text-tertiary',
-    statusDotStyle: 'bg-tertiary-fixed-dim',
+    statusBadgeStyle: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    statusDotStyle: 'bg-emerald-500',
   },
   {
     num: 3,
     initials: 'BA',
-    initialsStyle: 'bg-surface-container-high text-secondary',
+    initialsStyle: 'bg-slate-100 text-slate-700',
     name: 'Bilal Ahmed',
     license: 'LIC-PK-77402',
     licenseType: 'Heavy Transport',
@@ -43,13 +54,13 @@ export const initialDriversData = [
     route: 'Route 3',
     routeSub: 'University',
     status: 'Offline',
-    statusBadgeStyle: 'bg-surface-container text-secondary',
-    statusDotStyle: 'bg-outline',
+    statusBadgeStyle: 'bg-slate-100 text-slate-600 border border-slate-200',
+    statusDotStyle: 'bg-slate-400',
   },
   {
     num: 4,
     initials: 'RM',
-    initialsStyle: 'bg-secondary-container/70 text-on-secondary-container',
+    initialsStyle: 'bg-purple-100 text-purple-700',
     name: 'Rashid Mehmood',
     license: 'LIC-PK-32098',
     licenseType: 'Heavy Transport',
@@ -58,13 +69,13 @@ export const initialDriversData = [
     route: 'Route 4',
     routeSub: 'Johar Town',
     status: 'Online',
-    statusBadgeStyle: 'bg-tertiary-fixed/20 text-tertiary',
-    statusDotStyle: 'bg-tertiary-fixed-dim',
+    statusBadgeStyle: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    statusDotStyle: 'bg-emerald-500',
   },
   {
     num: 5,
     initials: 'FA',
-    initialsStyle: 'bg-surface-container-highest text-on-primary-fixed',
+    initialsStyle: 'bg-indigo-100 text-indigo-700',
     name: 'Farhan Ali',
     license: 'LIC-PK-19034',
     licenseType: 'Heavy Transport',
@@ -73,13 +84,13 @@ export const initialDriversData = [
     route: 'Route 5',
     routeSub: 'Canal Road',
     status: 'Online',
-    statusBadgeStyle: 'bg-tertiary-fixed/20 text-tertiary',
-    statusDotStyle: 'bg-tertiary-fixed-dim',
+    statusBadgeStyle: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    statusDotStyle: 'bg-emerald-500',
   },
   {
     num: 6,
     initials: 'TJ',
-    initialsStyle: 'bg-secondary-fixed/50 text-on-secondary-fixed-variant',
+    initialsStyle: 'bg-amber-100 text-amber-700',
     name: 'Tariq Jameel',
     license: 'LIC-PK-88901',
     licenseType: 'Heavy Transport',
@@ -88,13 +99,13 @@ export const initialDriversData = [
     route: 'Route 1',
     routeSub: 'Green Valley (Shift 2)',
     status: 'Idle / Break',
-    statusBadgeStyle: 'bg-secondary-container text-on-secondary-container',
-    statusDotStyle: 'bg-secondary',
+    statusBadgeStyle: 'bg-amber-50 text-amber-700 border border-amber-200',
+    statusDotStyle: 'bg-amber-500',
   },
   {
     num: 7,
     initials: 'HR',
-    initialsStyle: 'bg-primary-fixed-dim/40 text-on-primary-fixed',
+    initialsStyle: 'bg-teal-100 text-teal-700',
     name: 'Hamza Rauf',
     license: 'LIC-PK-62544',
     licenseType: 'Heavy Transport',
@@ -103,13 +114,13 @@ export const initialDriversData = [
     route: 'Route 2',
     routeSub: 'Model Town (Express)',
     status: 'Online',
-    statusBadgeStyle: 'bg-tertiary-fixed/20 text-tertiary',
-    statusDotStyle: 'bg-tertiary-fixed-dim',
+    statusBadgeStyle: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    statusDotStyle: 'bg-emerald-500',
   },
   {
     num: 8,
     initials: 'SN',
-    initialsStyle: 'bg-error-container text-on-error-container',
+    initialsStyle: 'bg-[#fee2e2] text-red-700',
     name: 'Shahzad Noor',
     license: 'LIC-PK-55129',
     licenseType: 'Heavy Transport',
@@ -118,8 +129,8 @@ export const initialDriversData = [
     route: 'Standby Fleet',
     routeSub: 'Reserve Support',
     status: 'Standby',
-    statusBadgeStyle: 'bg-secondary-container text-on-secondary-container',
-    statusDotStyle: 'bg-secondary',
+    statusBadgeStyle: 'bg-amber-50 text-amber-700 border border-amber-200',
+    statusDotStyle: 'bg-amber-500',
   },
 ];
 
@@ -159,30 +170,28 @@ const DriversTableSection = ({
   };
 
   return (
-    <section className="bg-surface-container-lowest rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden">
+    <section className="bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col overflow-hidden">
       {/* Top Bar: Title, Action Buttons & Search Input */}
-      <div className="p-gutter-lg pb-space-lg flex flex-col gap-space-md border-b border-surface-container-high/40">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
-          <div className="flex items-center gap-space-md">
-            <h2 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+      <div className="p-5 pb-4 flex flex-col gap-3 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-900 tracking-tight">
               Drivers Management
             </h2>
-            <span className="px-3 py-1 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold tracking-wide">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold text-[11px]">
               {driversList.length} Total Drivers
             </span>
           </div>
 
           {/* Export & Add Driver Actions on the Right */}
-          <div className="flex items-center gap-space-sm">
+          <div className="flex items-center gap-2">
             {/* Export Action */}
             <button
               type="button"
               onClick={handleExport}
-              className="h-9 px-space-md rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3.5 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px] text-outline">
-                file_download
-              </span>
+              <MdFileDownload className="w-4 h-4 text-slate-500" />
               <span>Export</span>
             </button>
 
@@ -190,9 +199,9 @@ const DriversTableSection = ({
             <button
               type="button"
               onClick={onAddDriverClick}
-              className="h-9 px-space-lg rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md font-semibold flex items-center justify-center gap-1 shadow-sm transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <MdAdd className="w-4 h-4" />
               <span>Add Driver</span>
             </button>
           </div>
@@ -200,13 +209,13 @@ const DriversTableSection = ({
 
         {/* Search Field under Drivers Management */}
         <div className="relative max-w-md w-full">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">
-            search
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+            <MdSearch className="w-4 h-4" />
           </span>
           <input
             id="driver-search-input"
             type="text"
-            className="w-full pl-9 pr-space-md py-1.5 h-9 bg-surface-container-low text-on-surface placeholder:text-outline rounded-lg font-body-sm text-body-sm focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary shadow-inner"
+            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="Search driver by name, phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -216,99 +225,101 @@ const DriversTableSection = ({
 
       {/* Data Table View */}
       <div className="w-full overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-surface-container-low text-outline font-label-sm text-label-sm uppercase tracking-wider">
-              <th className="py-3 px-space-lg text-center w-12 font-semibold">#</th>
-              <th className="py-3 px-space-lg font-semibold">Driver Name &amp; License</th>
-              <th className="py-3 px-space-lg font-semibold">Phone</th>
-              <th className="py-3 px-space-lg font-semibold">Vehicle</th>
-              <th className="py-3 px-space-lg font-semibold">Route</th>
-              <th className="py-3 px-space-lg font-semibold">Status</th>
-              <th className="py-3 px-space-lg font-semibold text-center">Action</th>
+            <tr className="bg-slate-50/75 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <th className="py-3 px-4 text-center w-10 font-bold">#</th>
+              <th className="py-3 px-4 font-bold">Driver Name &amp; License</th>
+              <th className="py-3 px-4 font-bold">Phone</th>
+              <th className="py-3 px-4 font-bold">Vehicle</th>
+              <th className="py-3 px-4 font-bold">Route</th>
+              <th className="py-3 px-4 font-bold">Status</th>
+              <th className="py-3 px-4 font-bold text-center">Action</th>
             </tr>
           </thead>
           <tbody
             id="driver-roster-body"
-            className="divide-y divide-surface-container-high/50 font-body-sm text-body-sm text-on-surface"
+            className="divide-y divide-slate-100 text-slate-800"
           >
             {filteredDrivers.length > 0 ? (
               filteredDrivers.map((driver, index) => (
                 <tr
                   key={driver.num || index}
-                  className="hover:bg-surface-container-low/60 transition-colors"
+                  className="hover:bg-slate-50/80 transition-colors"
                 >
-                  <td className="py-3.5 px-space-lg text-center font-label-md text-outline">
+                  <td className="py-3 px-4 text-center font-bold text-slate-400">
                     {driver.num || index + 1}
                   </td>
-                  <td className="py-3.5 px-space-lg">
-                    <div className="flex items-center gap-space-md">
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2.5">
                       <div
-                        className={`w-9 h-9 rounded-full ${driver.initialsStyle} font-label-md font-bold flex items-center justify-center shrink-0`}
+                        className={`w-8 h-8 rounded-full ${driver.initialsStyle} font-bold text-[11px] flex items-center justify-center shrink-0`}
                       >
                         {driver.initials}
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="font-label-lg text-label-lg text-on-surface font-semibold truncate">
+                        <span className="font-bold text-slate-900 truncate">
                           {driver.name}
                         </span>
-                        <span className="font-code-sm text-code-sm text-outline truncate">
+                        <span className="text-[10px] text-slate-500 font-mono truncate">
                           {driver.license} • {driver.licenseType || 'Heavy Transport'}
                         </span>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3.5 px-space-lg whitespace-nowrap text-on-surface-variant font-code-sm text-code-sm">
+                  <td className="py-3 px-4 whitespace-nowrap text-slate-600 font-mono text-[11px]">
                     <div className="flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[16px] text-outline">
-                        call
-                      </span>
+                      <MdCall className="w-3.5 h-3.5 text-slate-400" />
                       <span>{driver.phone}</span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-space-lg whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-low text-on-surface font-label-md text-label-md">
-                      <span className="material-symbols-outlined text-[16px] text-outline">
-                        directions_bus
-                      </span>
+                  <td className="py-3 px-4 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 font-medium text-[11px]">
+                      <MdDirectionsBus className="w-3.5 h-3.5 text-slate-500" />
                       {driver.vehicle}
                     </span>
                   </td>
-                  <td className="py-3.5 px-space-lg">
+                  <td className="py-3 px-4">
                     <div className="flex flex-col">
-                      <span className="font-label-md text-label-md text-on-surface font-medium">
+                      <span className="font-bold text-slate-900">
                         {driver.route}
                       </span>
-                      <span className="font-body-sm text-body-sm text-outline">
+                      <span className="text-[10px] text-slate-500">
                         {driver.routeSub}
                       </span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-space-lg whitespace-nowrap">
+                  <td className="py-3 px-4 whitespace-nowrap">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${driver.statusBadgeStyle} font-label-sm text-label-sm font-semibold`}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${
+                        driver.statusBadgeStyle || 'bg-emerald-50 text-emerald-700'
+                      } text-[10px] font-bold`}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${driver.statusDotStyle}`}></span>
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          driver.statusDotStyle || 'bg-emerald-500'
+                        }`}
+                      ></span>
                       {driver.status}
                     </span>
                   </td>
-                  <td className="py-3.5 px-space-lg text-center whitespace-nowrap">
-                    <div className="inline-flex items-center gap-space-xs text-outline">
+                  <td className="py-3 px-4 text-center whitespace-nowrap">
+                    <div className="inline-flex items-center gap-1 text-slate-400">
                       <button
                         type="button"
                         onClick={() => onEditDriver && onEditDriver(driver)}
-                        className="p-1 rounded hover:bg-surface-container hover:text-primary transition-colors cursor-pointer"
+                        className="p-1 rounded hover:bg-slate-100 hover:text-blue-600 transition-colors cursor-pointer"
                         title="Edit Driver"
                       >
-                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                        <MdEdit className="w-4 h-4" />
                       </button>
                       <button
                         type="button"
                         onClick={() => onViewDriver && onViewDriver(driver)}
-                        className="p-1 rounded hover:bg-surface-container hover:text-primary transition-colors cursor-pointer"
+                        className="p-1 rounded hover:bg-slate-100 hover:text-blue-600 transition-colors cursor-pointer"
                         title="View Details"
                       >
-                        <span className="material-symbols-outlined text-[18px]">visibility</span>
+                        <MdVisibility className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -316,7 +327,7 @@ const DriversTableSection = ({
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-outline font-body-sm">
+                <td colSpan={7} className="py-8 text-center text-slate-400 italic">
                   No drivers found matching the filter criteria.
                 </td>
               </tr>
@@ -326,31 +337,31 @@ const DriversTableSection = ({
       </div>
 
       {/* Bottom Pagination Section */}
-      <div className="p-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-md bg-surface-container-lowest border-t border-surface-container-high/40">
-        <span className="font-body-sm text-body-sm text-outline">
-          Showing <span className="font-semibold text-on-surface">1</span> to{' '}
-          <span className="font-semibold text-on-surface">{filteredDrivers.length}</span> of{' '}
-          <span className="font-semibold text-on-surface">{driversList.length}</span> drivers
+      <div className="p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white border-t border-slate-100 text-xs text-slate-500">
+        <span>
+          Showing <span className="font-semibold text-slate-900">1</span> to{' '}
+          <span className="font-semibold text-slate-900">{filteredDrivers.length}</span> of{' '}
+          <span className="font-semibold text-slate-900">{driversList.length}</span> drivers
         </span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 font-medium">
           <button
             type="button"
             disabled={activePage === 1}
             onClick={() => setActivePage((prev) => Math.max(1, prev - 1))}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-outline hover:bg-surface-container hover:text-on-surface transition-colors disabled:opacity-50 cursor-pointer"
+            className="w-7 h-7 rounded border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
             title="Previous Page"
           >
-            <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+            <MdChevronLeft className="w-4 h-4" />
           </button>
           {[1, 2, 3, 4].map((page) => (
             <button
               key={page}
               type="button"
               onClick={() => setActivePage(page)}
-              className={`w-8 h-8 rounded-lg font-label-md text-label-md font-semibold flex items-center justify-center cursor-pointer transition-colors ${
+              className={`w-7 h-7 rounded font-semibold text-xs flex items-center justify-center cursor-pointer transition-colors ${
                 activePage === page
-                  ? 'bg-primary text-on-primary shadow-sm'
-                  : 'text-on-surface hover:bg-surface-container-low'
+                  ? 'bg-blue-600 text-white font-bold'
+                  : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >
               {page}
@@ -360,10 +371,10 @@ const DriversTableSection = ({
             type="button"
             disabled={activePage === 4}
             onClick={() => setActivePage((prev) => Math.min(4, prev + 1))}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-outline hover:bg-surface-container hover:text-on-surface transition-colors disabled:opacity-50 cursor-pointer"
+            className="w-7 h-7 rounded border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
             title="Next Page"
           >
-            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+            <MdChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>

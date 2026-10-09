@@ -57,7 +57,7 @@ const DriversManagment = ({
   const offDutyDrivers = drivers.filter((d) => d.status === 'Offline').length;
 
   return (
-    <div className="h-screen flex bg-background text-on-surface font-body-md text-body-md antialiased overflow-hidden">
+    <div className="h-screen flex bg-[#f8fafc] text-slate-800 antialiased overflow-hidden font-sans text-[13px]">
       {/* Sidebar */}
       <Sidebar
         onLogout={onLogout}
@@ -66,10 +66,10 @@ const DriversManagment = ({
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-background overflow-y-auto h-screen">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] overflow-y-auto h-screen">
         <Header />
 
-        <main className="flex-1 w-full pt-6 bg-surface px-gutter-lg py-gutter space-y-gutter-lg">
+        <main className="p-8 space-y-6 flex-1 max-w-[1400px] w-full mx-auto">
           {/* Top 4 KPI Metrics Grid */}
           <DriverKPICards
             totalDrivers={totalDrivers}
