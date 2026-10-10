@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import DashboardPage from './pages/DashboardPage'
 import ParentManagment from './pages/ParentManagment'
@@ -11,6 +11,7 @@ import LoginPage from './pages/LoginPage'
 import LandingPage from './pages/LandingPage'
 import RegisterPage from './pages/RegisterPage'
 import SOS from './pages/SOS'
+import LiveTracking from './pages/LiveTracking'
 
 const initialStudents = [
   {
@@ -112,6 +113,16 @@ const App = () => {
   
   const navigate = useNavigate()
 
+  useEffect(() => {
+    const handleAppNavigate = (e) => {
+      if (e.detail) {
+        setCurrentPage(e.detail)
+      }
+    }
+    window.addEventListener('app-navigate', handleAppNavigate)
+    return () => window.removeEventListener('app-navigate', handleAppNavigate)
+  }, [])
+
   const handleLogin = (user) => {
     localStorage.setItem('isLoggedIn', 'true')
     if (user) {
@@ -212,6 +223,16 @@ const App = () => {
     if (currentPage === 'SOS Alerts') {
       return (
         <SOS
+          onLogout={handleLogout}
+          onNavigate={setCurrentPage}
+          currentPage={currentPage}
+        />
+      )
+    }
+
+    if (currentPage === 'Live Tracking') {
+      return (
+        <LiveTracking
           onLogout={handleLogout}
           onNavigate={setCurrentPage}
           currentPage={currentPage}

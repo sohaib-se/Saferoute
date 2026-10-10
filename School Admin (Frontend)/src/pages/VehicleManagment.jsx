@@ -69,7 +69,7 @@ const VehicleManagment = ({
       />
 
       <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto h-screen">
-        <Header />
+        <Header onNavigate={onNavigate} />
 
         <main className="flex-1 p-8 space-y-6 max-w-[1440px] w-full mx-auto" data-purpose="dashboard-main-area">
           <VehicleStatCards

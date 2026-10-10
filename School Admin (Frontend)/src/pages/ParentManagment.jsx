@@ -144,7 +144,7 @@ const ParentManagment = ({
       />
 
       <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto h-screen">
-        <Header />
+        <Header onNavigate={onNavigate} />
 
         <main className="p-8 space-y-6 flex-1 max-w-[1440px] w-full mx-auto">
           <ParentStatCards />

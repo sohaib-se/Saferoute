@@ -19,7 +19,7 @@ const navItems = [
   { label: 'Drivers', icon: MdPerson },
   { label: 'Vehicles', icon: MdDirectionsBus },
   { label: 'Trips', icon: MdAccessTime },
-  { label: 'Live Tracking', icon: MdLocationOn },
+  { label: 'Live Tracking', icon: MdLocationOn, liveDot: true },
   { label: 'Notifications', icon: MdNotifications, badge: 3 },
   { label: 'SOS Alerts', icon: MdWarning, badge: 1, danger: true },
 ];
@@ -48,7 +48,7 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
 
         {/* Navigation items */}
         <nav className="px-3 pt-4 pb-2 space-y-1 flex-1 overflow-y-auto custom-scrollbar">
-          {navItems.map(({ label, icon: Icon, badge, danger }) => {
+          {navItems.map(({ label, icon: Icon, badge, danger, liveDot }) => {
             const active = currentPage === label || (label === 'Students' && currentPage === 'AddStudent');
 
             let itemClass = 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium';
@@ -87,6 +87,9 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
                   />
                   <span className="truncate">{label}</span>
                 </div>
+                {liveDot && !badge && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 animate-pulse shrink-0" />
+                )}
                 {badge && (
                   <span
                     className={`w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs ${

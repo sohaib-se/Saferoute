@@ -147,7 +147,7 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
       {/* Main Content Container */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto h-screen pb-28">
         {/* Header */}
-        <Header />
+        <Header onNavigate={onNavigate} />
 
         {/* Main Content */}
         <main className="px-8 pt-6 pb-8 max-w-[1440px] w-full mx-auto flex-1">

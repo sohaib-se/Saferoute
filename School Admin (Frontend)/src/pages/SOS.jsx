@@ -24,7 +24,7 @@ const SOS = ({ onLogout, onNavigate, currentPage = 'SOS Alerts' }) => {
       <Sidebar onLogout={onLogout} onNavigate={onNavigate} currentPage={currentPage} />
 
       <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto h-screen">
-        <Header />
+        <Header onNavigate={onNavigate} />
 
         {/* Floating Toast Notification */}
         {toastMessage && (
