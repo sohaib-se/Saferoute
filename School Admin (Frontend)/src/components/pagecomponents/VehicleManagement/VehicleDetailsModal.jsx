@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { MdDirectionsBus, MdEdit } from 'react-icons/md';
+import Modal from '../../common/Modal';
 
 const VehicleDetailsModal = ({ vehicle, isOpen, onClose, onSave, mode = 'view' }) => {
   const [isEditing, setIsEditing] = useState(mode === 'edit');
@@ -20,98 +22,94 @@ const VehicleDetailsModal = ({ vehicle, isOpen, onClose, onSave, mode = 'view' }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className={`w-9 h-9 rounded-lg ${vehicle.badgeStyle} font-semibold flex items-center justify-center text-xs flex-shrink-0`}>
-              {vehicle.code}
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-900">
-                {isEditing ? 'Edit Vehicle Information' : vehicle.name}
-              </h3>
-              <p className="text-xs text-slate-400">
-                {vehicle.regNo} • {vehicle.model}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"></path>
-            </svg>
-          </button>
-        </div>
-
-        {/* Form or Details */}
-        {isEditing ? (
-          <form onSubmit={handleSave} className="p-6 space-y-4 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-700 uppercase tracking-wide">Vehicle Name</label>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      icon={<MdDirectionsBus size={20} />}
+      title={isEditing ? 'Edit Vehicle Information' : vehicle.name}
+      subtitle={
+        isEditing
+          ? 'Update bus specs, driver link, or telematics status'
+          : `${vehicle.regNo} • ${vehicle.model}`
+      }
+      maxWidth="max-w-lg"
+    >
+      {isEditing ? (
+        <form onSubmit={handleSave}>
+          <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Vehicle Name <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="text"
                   required
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
                   value={formData.name || ''}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-700 uppercase tracking-wide">Registration No</label>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Registration No <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="text"
                   required
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
                   value={formData.regNo || ''}
                   onChange={(e) => setFormData({ ...formData, regNo: e.target.value })}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-700 uppercase tracking-wide">Assigned Driver</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Assigned Driver
+                </label>
                 <input
                   type="text"
                   required
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
                   value={formData.driverName || ''}
                   onChange={(e) => setFormData({ ...formData, driverName: e.target.value })}
                 />
               </div>
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-700 uppercase tracking-wide">Driver Phone</label>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Driver Phone
+                </label>
                 <input
                   type="text"
                   required
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
                   value={formData.driverPhone || ''}
                   onChange={(e) => setFormData({ ...formData, driverPhone: e.target.value })}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-700 uppercase tracking-wide">Assigned Route</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Assigned Route
+                </label>
                 <input
                   type="text"
                   required
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
                   value={formData.route || ''}
                   onChange={(e) => setFormData({ ...formData, route: e.target.value })}
                 />
               </div>
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-700 uppercase tracking-wide">Status</label>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Status
+                </label>
                 <select
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans cursor-pointer"
                   value={formData.status || 'Running'}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 >
@@ -122,87 +120,91 @@ const VehicleDetailsModal = ({ vehicle, isOpen, onClose, onSave, mode = 'view' }
                 </select>
               </div>
             </div>
+          </div>
 
-            <div className="pt-4 border-t border-slate-200 flex items-center justify-end space-x-3">
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors shadow-sm cursor-pointer"
-              >
-                Save Changes
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="p-6 space-y-4 text-xs">
-            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+          <div className="px-6 py-4 bg-slate-50/60 border-t border-slate-100 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition cursor-pointer"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div>
+          <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="bg-slate-50/70 rounded-xl border border-slate-200/80 p-4 grid grid-cols-2 gap-4">
               <div>
-                <span className="font-semibold text-slate-400 block uppercase tracking-wide text-[10px]">
+                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-0.5">
                   Assigned Driver
                 </span>
-                <span className="font-bold text-slate-900 mt-0.5 block">
+                <span className="text-xs text-slate-900 font-semibold block">
                   {vehicle.driverName} ({vehicle.driverPhone})
                 </span>
               </div>
               <div>
-                <span className="font-semibold text-slate-400 block uppercase tracking-wide text-[10px]">
+                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-0.5">
                   Assigned Route
                 </span>
-                <span className="font-bold text-slate-900 mt-0.5 block">
+                <span className="text-xs text-slate-900 font-semibold block">
                   {vehicle.route} ({vehicle.routeSub})
                 </span>
               </div>
               <div>
-                <span className="font-semibold text-slate-400 block uppercase tracking-wide text-[10px]">
-                  Seating &amp; Capacity
+                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-0.5">
+                  Seating Capacity
                 </span>
-                <span className="font-bold text-slate-900 mt-0.5 block">
+                <span className="text-xs text-slate-900 font-semibold block">
                   {vehicle.capacitySeats} - {vehicle.capacitySub}
                 </span>
               </div>
               <div>
-                <span className="font-semibold text-slate-400 block uppercase tracking-wide text-[10px]">
-                  Current Status &amp; Telematics
+                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-0.5">
+                  Telematics &amp; Status
                 </span>
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium ${vehicle.statusBadgeStyle}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${vehicle.statusDotStyle} mr-1.5`}></span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${vehicle.statusBadgeStyle}`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${vehicle.statusDotStyle} mr-1.5`}
+                    ></span>
                     {vehicle.status}
                   </span>
-                  <span className="text-slate-500 font-medium">({vehicle.speed})</span>
+                  <span className="text-xs text-slate-500 font-medium">({vehicle.speed})</span>
                 </div>
               </div>
             </div>
-
-            <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="px-4 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                  <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" strokeLinecap="round" strokeLinejoin="round"></path>
-                </svg>
-                <span>Edit Vehicle</span>
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
           </div>
-        )}
-      </div>
-    </div>
+
+          <div className="px-6 py-4 bg-slate-50/60 border-t border-slate-100 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className="px-4 py-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100/80 font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <MdEdit size={15} />
+              <span>Edit Vehicle</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2 rounded-xl bg-blue-600 text-white font-semibold text-xs hover:bg-blue-700 active:bg-blue-800 transition cursor-pointer shadow-xs"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
   );
 };
 

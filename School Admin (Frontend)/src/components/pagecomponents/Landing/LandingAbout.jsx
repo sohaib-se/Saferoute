@@ -1,48 +1,97 @@
+import { MdCheck, MdDirectionsBus, MdSecurity, MdSpeed } from 'react-icons/md';
+
 const LandingAbout = () => {
   return (
-    <section className="py-24 px-6 sm:px-12 lg:px-24 relative z-10">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="order-2 lg:order-1 relative">
-            <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full" />
-            <div className="relative bg-[#0a1122] border border-white/10 rounded-2xl p-2 shadow-2xl">
-              <div className="aspect-[4/3] rounded-xl overflow-hidden bg-slate-800 flex items-center justify-center relative">
-                {/* Mockup or Image placeholder */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-[#020813] z-10" />
-                <div className="w-full h-full opacity-30 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSIvPgo8L3N2Zz4=')]" />
-                <div className="absolute z-20 text-center">
-                  <div className="w-20 h-20 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-blue-500/50 mb-4 transform -rotate-6">
-                    <span className="text-3xl font-bold text-white">S</span>
+    <section id="about" className="py-20 px-6 sm:px-10 lg:px-12 relative z-10">
+      <div className="max-w-[1440px] mx-auto">
+        <div className="grid lg:grid-cols-12 gap-12 items-center">
+          {/* Left Visual Card (Col-5) */}
+          <div className="lg:col-span-5 relative">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-[0_10px_35px_rgba(0,0,0,0.04)] p-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                    <MdDirectionsBus size={18} />
                   </div>
-                  <div className="text-blue-100 font-medium bg-blue-950/80 px-4 py-2 rounded-full border border-blue-500/30 backdrop-blur-sm">System Overview Dashboard</div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900">SafeRoute Core Engine</h4>
+                    <p className="text-[10px] text-slate-400">Institutional Safety Layer</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  100% Operational
+                </span>
+              </div>
+
+              {/* 3 Value Pillars */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <MdSecurity className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">Child Transit Security</p>
+                      <p className="text-[10px] text-slate-400">Zero unauthorized drop-offs</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-slate-900">100%</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <MdSpeed className="w-4 h-4 text-emerald-600" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">Telemetry Refresh Rate</p>
+                      <p className="text-[10px] text-slate-400">Low-latency GPS streaming</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-emerald-600">&lt; 2s</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <MdDirectionsBus className="w-4 h-4 text-purple-600" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">School Gate Congestion</p>
+                      <p className="text-[10px] text-slate-400">Reduced parent car lines</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-purple-600">-65%</span>
                 </div>
               </div>
             </div>
           </div>
-          
-          <div className="order-1 lg:order-2 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium">
-              About SafeRoute
+
+          {/* Right Description (Col-7) */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[11px] font-bold uppercase tracking-wider">
+              About The SafeRoute Platform
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
-              Bridging the gap between schools and parents.
+
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
+              Bridging the Communication Gap Between Schools and Families.
             </h2>
-            <p className="text-slate-400 text-lg leading-relaxed">
-              SafeRoute was built with a singular mission: to ensure every child's journey to and from school is safe, transparent, and stress-free. We provide schools with the tools they need to manage fleets efficiently, while giving parents the visibility they deserve.
+
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              SafeRoute was built with one goal: to eliminate stress, confusion, and safety risks from daily school commutes. We replace chaotic phone calls and manual gate sign-ins with an intelligent fleet ecosystem where every trip is verified, monitored, and transparent.
             </p>
-            
-            <ul className="space-y-4 pt-4">
-              {['Real-time visibility for peace of mind', 'Reduced administrative overhead for schools', 'Streamlined communication during transit'].map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+
+            <div className="grid sm:grid-cols-2 gap-4 pt-2">
+              {[
+                'Sub-second real-time GPS tracking',
+                'Reduced gate traffic & waiting anxiety',
+                'Verified passenger manifests for every stop',
+                'Instant driver panic distress linkage',
+                'Comprehensive driver background audits',
+                'Direct two-way dispatcher audio bridge',
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
+                  <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+                    <MdCheck className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-slate-300">{item}</span>
-                </li>
+                  <span>{item}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         </div>
       </div>

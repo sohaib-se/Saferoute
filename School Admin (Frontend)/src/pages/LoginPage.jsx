@@ -4,39 +4,20 @@ import LoginFooter from '../components/pagecomponents/Login/LoginFooter';
 
 const LoginPage = ({ onLogin }) => {
   return (
-    <div
-      className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden dot-grid"
-      style={{ background: 'linear-gradient(135deg, #060d1f 0%, #0a1a3e 40%, #0d2260 70%, #061228 100%)' }}
-    >
-      {/* Decorative glowing orbs */}
-      <div
-        className="orb-pulse absolute top-[-8%] left-[-6%] w-[420px] h-[420px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(6,82,187,0.45) 0%, transparent 70%)' }}
-      />
-      <div
-        className="orb-pulse-slow absolute bottom-[-10%] right-[-6%] w-[380px] h-[380px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(79,135,224,0.35) 0%, transparent 70%)' }}
-      />
-      <div
-        className="orb-pulse absolute top-[50%] right-[5%] w-[220px] h-[220px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(6,82,187,0.2) 0%, transparent 70%)' }}
-      />
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#F8FAFC] relative overflow-hidden font-sans p-4 antialiased">
+      {/* Subtle ambient background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-blue-100/40 via-blue-50/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-100/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-slate-200/40 rounded-full blur-3xl pointer-events-none" />
 
       {/* Centered Login Card */}
-      <div className="relative w-full max-w-[440px] mx-4 z-10">
-        {/* Glow ring behind card */}
-        <div
-          className="absolute inset-0 rounded-3xl blur-2xl opacity-30 pointer-events-none"
-          style={{ background: 'linear-gradient(135deg, #0652bb, #4f87e0)' }}
-        />
-
-        {/* Card */}
-        <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl px-8 py-8 border border-white/20">
+      <div className="relative w-full max-w-[420px] mx-auto z-10">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_8px_30px_rgba(0,0,0,0.04)] px-8 py-8">
           <LoginHeader />
           <LoginForm onLogin={onLogin} />
         </div>
 
-        {/* Footer below card */}
+        {/* Footer */}
         <LoginFooter />
       </div>
     </div>

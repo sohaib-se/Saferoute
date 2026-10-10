@@ -1,4 +1,14 @@
 import React, { useState } from 'react';
+import {
+  MdSearch,
+  MdAdd,
+  MdFileDownload,
+  MdKeyboardArrowDown,
+  MdEdit,
+  MdVisibility,
+  MdChevronLeft,
+  MdChevronRight,
+} from 'react-icons/md';
 
 export const initialVehiclesData = [
   {
@@ -19,7 +29,7 @@ export const initialVehiclesData = [
     speedDot: 'bg-emerald-500',
     signalSub: 'Signal: Strong 5G',
     status: 'Running',
-    statusBadgeStyle: 'bg-emerald-50 text-emerald-600 border-emerald-200/70',
+    statusBadgeStyle: 'bg-emerald-50 text-emerald-600 border border-emerald-200/70',
     statusDotStyle: 'bg-emerald-500',
   },
   {
@@ -40,7 +50,7 @@ export const initialVehiclesData = [
     speedDot: 'bg-emerald-500',
     signalSub: 'Signal: Strong 5G',
     status: 'Running',
-    statusBadgeStyle: 'bg-emerald-50 text-emerald-600 border-emerald-200/70',
+    statusBadgeStyle: 'bg-emerald-50 text-emerald-600 border border-emerald-200/70',
     statusDotStyle: 'bg-emerald-500',
   },
   {
@@ -61,7 +71,7 @@ export const initialVehiclesData = [
     speedDot: 'bg-emerald-500',
     signalSub: 'Signal: Strong 5G',
     status: 'On Route',
-    statusBadgeStyle: 'bg-blue-50 text-blue-600 border-blue-200/70',
+    statusBadgeStyle: 'bg-blue-50 text-blue-600 border border-blue-200/70',
     statusDotStyle: 'bg-blue-500',
   },
   {
@@ -82,7 +92,7 @@ export const initialVehiclesData = [
     speedDot: 'bg-amber-500',
     signalSub: 'Parked at Depot',
     status: 'Idle',
-    statusBadgeStyle: 'bg-amber-50 text-amber-600 border-amber-200/70',
+    statusBadgeStyle: 'bg-amber-50 text-amber-600 border border-amber-200/70',
     statusDotStyle: 'bg-amber-500',
   },
   {
@@ -103,7 +113,7 @@ export const initialVehiclesData = [
     speedDot: 'bg-slate-400',
     signalSub: 'Telemetry Disconnected',
     status: 'Maintenance',
-    statusBadgeStyle: 'bg-rose-50 text-rose-600 border-rose-200/70',
+    statusBadgeStyle: 'bg-rose-50 text-rose-600 border border-rose-200/70',
     statusDotStyle: 'bg-rose-500',
   },
   {
@@ -124,7 +134,7 @@ export const initialVehiclesData = [
     speedDot: 'bg-emerald-500',
     signalSub: 'Signal: Strong 5G',
     status: 'Running',
-    statusBadgeStyle: 'bg-emerald-50 text-emerald-600 border-emerald-200/70',
+    statusBadgeStyle: 'bg-emerald-50 text-emerald-600 border border-emerald-200/70',
     statusDotStyle: 'bg-emerald-500',
   },
   {
@@ -145,7 +155,7 @@ export const initialVehiclesData = [
     speedDot: 'bg-emerald-500',
     signalSub: 'Signal: Strong 5G',
     status: 'Running',
-    statusBadgeStyle: 'bg-emerald-50 text-emerald-600 border-emerald-200/70',
+    statusBadgeStyle: 'bg-emerald-50 text-emerald-600 border border-emerald-200/70',
     statusDotStyle: 'bg-emerald-500',
   },
   {
@@ -166,7 +176,7 @@ export const initialVehiclesData = [
     speedDot: 'bg-amber-500',
     signalSub: 'Depot Ready',
     status: 'Standby',
-    statusBadgeStyle: 'bg-amber-50 text-amber-600 border-amber-200/70',
+    statusBadgeStyle: 'bg-amber-50 text-amber-600 border border-amber-200/70',
     statusDotStyle: 'bg-amber-500',
   },
 ];
@@ -216,33 +226,29 @@ const VehiclesTableSection = ({
   };
 
   return (
-    <section className="bg-white border border-slate-200/90 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden" data-purpose="fleet-management-table-container">
+    <section className="bg-white border border-slate-200/80 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden font-sans" data-purpose="fleet-management-table-container">
       {/* Card Header Toolbar */}
-      <div className="p-5 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+      <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-3">
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Vehicles Management</h2>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200/70">
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Vehicles Directory</h3>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
               {vehiclesList.length} Registered Buses
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Manage school bus fleet health, capacity, driver assignments, and live GPS telematics.
+          <p className="text-xs text-slate-500 mt-1 font-normal">
+            Fleet maintenance status, live GPS tracking, and route assignments.
           </p>
         </div>
 
         {/* Controls: Search, Filters, Export, Add Vehicle */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Search Inside Card */}
+          {/* Search Input */}
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round"></path>
-              </svg>
-            </div>
+            <MdSearch className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-700 bg-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-36 sm:w-44"
+              className="pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-200 text-slate-800 bg-slate-50/70 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white w-40 sm:w-48 font-sans transition-all"
               placeholder="Search vehicle..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -254,7 +260,7 @@ const VehiclesTableSection = ({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none pl-3 pr-8 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-700 bg-white hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+              className="appearance-none pl-3.5 pr-8 py-2 text-xs rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:border-blue-500 cursor-pointer font-medium shadow-2xs"
             >
               <option value="All Statuses">All Statuses</option>
               <option value="Running">Running</option>
@@ -262,11 +268,7 @@ const VehiclesTableSection = ({
               <option value="Idle">Idle</option>
               <option value="Maintenance">Maintenance</option>
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round"></path>
-              </svg>
-            </div>
+            <MdKeyboardArrowDown className="pointer-events-none absolute inset-y-0 right-2.5 my-auto text-slate-400 text-base" />
           </div>
 
           {/* Route Filter */}
@@ -274,7 +276,7 @@ const VehiclesTableSection = ({
             <select
               value={routeFilter}
               onChange={(e) => setRouteFilter(e.target.value)}
-              className="appearance-none pl-3 pr-8 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-700 bg-white hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+              className="appearance-none pl-3.5 pr-8 py-2 text-xs rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:border-blue-500 cursor-pointer font-medium shadow-2xs"
             >
               <option value="All Routes">All Routes</option>
               <option value="Route 1">Route 1</option>
@@ -282,126 +284,113 @@ const VehiclesTableSection = ({
               <option value="Route 3">Route 3</option>
               <option value="Route 4">Route 4</option>
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round"></path>
-              </svg>
-            </div>
+            <MdKeyboardArrowDown className="pointer-events-none absolute inset-y-0 right-2.5 my-auto text-slate-400 text-base" />
           </div>
 
           {/* Export Button */}
           <button
             type="button"
             onClick={handleExport}
-            className="inline-flex items-center px-3 py-1.5 border border-slate-200 text-xs font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 text-xs font-semibold rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition shadow-2xs cursor-pointer"
           >
-            <svg className="w-3.5 h-3.5 mr-1.5 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" strokeLinecap="round" strokeLinejoin="round"></path>
-            </svg>
-            Export
+            <MdFileDownload size={16} className="text-slate-500" />
+            <span>Export</span>
           </button>
 
           {/* Add Vehicle Button */}
           <button
             type="button"
             onClick={onAddVehicleClick}
-            className="inline-flex items-center px-3.5 py-1.5 border border-transparent text-xs font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 border border-transparent text-xs font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-xs transition cursor-pointer"
           >
-            <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round"></path>
-            </svg>
-            Add Vehicle
+            <MdAdd size={16} />
+            <span>Add Vehicle</span>
           </button>
         </div>
       </div>
 
       {/* Table Responsive Wrapper */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-100 text-left">
+        <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-slate-50/60 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              <th className="py-3.5 pl-6 pr-3 w-12 text-slate-400" scope="col">#</th>
-              <th className="py-3.5 px-3" scope="col">VEHICLE DETAILS</th>
-              <th className="py-3.5 px-3" scope="col">CAPACITY</th>
-              <th className="py-3.5 px-3" scope="col">ASSIGNED DRIVER</th>
-              <th className="py-3.5 px-3" scope="col">ASSIGNED ROUTE</th>
-              <th className="py-3.5 px-3" scope="col">GPS &amp; SPEED</th>
-              <th className="py-3.5 px-3" scope="col">STATUS</th>
-              <th className="py-3.5 pl-3 pr-6 text-center" scope="col">ACTION</th>
+            <tr className="bg-slate-50/60 border-b border-slate-100 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              <th className="py-3.5 px-4 w-12 text-center" scope="col">#</th>
+              <th className="py-3.5 px-4 font-bold" scope="col">VEHICLE DETAILS</th>
+              <th className="py-3.5 px-4 font-bold" scope="col">CAPACITY</th>
+              <th className="py-3.5 px-4 font-bold" scope="col">ASSIGNED DRIVER</th>
+              <th className="py-3.5 px-4 font-bold" scope="col">ASSIGNED ROUTE</th>
+              <th className="py-3.5 px-4 font-bold" scope="col">GPS &amp; SPEED</th>
+              <th className="py-3.5 px-4 font-bold" scope="col">STATUS</th>
+              <th className="py-3.5 px-4 text-center font-bold" scope="col">ACTION</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-xs text-slate-600 font-normal">
+          <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
             {filteredVehicles.length > 0 ? (
               filteredVehicles.map((vehicle, idx) => (
                 <tr key={vehicle.num || idx} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="py-3.5 pl-6 pr-3 text-slate-400 font-medium">{vehicle.num || idx + 1}</td>
-                  <td className="py-3.5 px-3">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-9 h-9 rounded-lg ${vehicle.badgeStyle} font-semibold flex items-center justify-center text-xs flex-shrink-0`}>
+                  <td className="py-3.5 px-4 text-center text-slate-400 font-medium">{vehicle.num || idx + 1}</td>
+                  <td className="py-3.5 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-xl ${vehicle.badgeStyle} font-bold flex items-center justify-center text-xs shrink-0`}>
                         {vehicle.code}
                       </div>
                       <div>
                         <p className="font-bold text-slate-900 leading-snug">
                           {vehicle.name} <span className="font-normal text-slate-400 text-[11px] ml-1">| {vehicle.regNo}</span>
                         </p>
-                        <p className="text-[11px] text-slate-400">{vehicle.model}</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.model}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3.5 px-3">
+                  <td className="py-3.5 px-4">
                     <p className="font-semibold text-slate-900 leading-snug">{vehicle.capacitySeats}</p>
-                    <p className="text-[11px] text-slate-400">{vehicle.capacitySub}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.capacitySub}</p>
                   </td>
-                  <td className="py-3.5 px-3">
-                    <div className="flex items-center space-x-2.5">
-                      <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200/80 text-slate-600 font-semibold flex items-center justify-center text-[10px] flex-shrink-0">
+                  <td className="py-3.5 px-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold flex items-center justify-center text-[10px] shrink-0">
                         {vehicle.driverInitials}
                       </div>
                       <div>
                         <p className="font-semibold text-slate-900 leading-snug">{vehicle.driverName}</p>
-                        <p className="text-[11px] text-slate-400">{vehicle.driverPhone}</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.driverPhone}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3.5 px-3">
+                  <td className="py-3.5 px-4">
                     <p className="font-semibold text-slate-900 leading-snug">{vehicle.route}</p>
-                    <p className="text-[11px] text-slate-400">{vehicle.routeSub}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.routeSub}</p>
                   </td>
-                  <td className="py-3.5 px-3">
-                    <div className="flex items-center space-x-1.5 leading-snug font-semibold text-slate-900">
+                  <td className="py-3.5 px-4">
+                    <div className="flex items-center gap-1.5 leading-snug font-semibold text-slate-900">
                       <span className={`w-1.5 h-1.5 rounded-full ${vehicle.speedDot}`}></span>
                       <span>{vehicle.speed}</span>
                     </div>
-                    <p className="text-[11px] text-slate-400">{vehicle.signalSub}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.signalSub}</p>
                   </td>
-                  <td className="py-3.5 px-3">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium ${vehicle.statusBadgeStyle}`}>
+                  <td className="py-3.5 px-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${vehicle.statusBadgeStyle}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${vehicle.statusDotStyle} mr-1.5`}></span>
                       {vehicle.status}
                     </span>
                   </td>
-                  <td className="py-3.5 pl-3 pr-6 text-center">
-                    <div className="flex items-center justify-center space-x-2.5 text-slate-400">
+                  <td className="py-3.5 px-4 text-center">
+                    <div className="flex items-center justify-center gap-2 text-slate-400">
                       <button
                         type="button"
                         onClick={() => onEditVehicle && onEditVehicle(vehicle)}
-                        className="hover:text-slate-600 transition-colors cursor-pointer"
-                        title="Edit"
+                        className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer"
+                        title="Edit Vehicle"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                          <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" strokeLinecap="round" strokeLinejoin="round"></path>
-                        </svg>
+                        <MdEdit size={16} />
                       </button>
                       <button
                         type="button"
                         onClick={() => onViewVehicle && onViewVehicle(vehicle)}
-                        className="hover:text-slate-600 transition-colors cursor-pointer"
-                        title="View"
+                        className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer"
+                        title="View Vehicle"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                          <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round"></path>
-                          <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeLinecap="round" strokeLinejoin="round"></path>
-                        </svg>
+                        <MdVisibility size={16} />
                       </button>
                     </div>
                   </td>
@@ -409,7 +398,7 @@ const VehiclesTableSection = ({
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-slate-400 text-xs">
+                <td colSpan={8} className="py-8 text-center text-slate-400 text-xs font-normal">
                   No vehicles found matching the specified search criteria.
                 </td>
               </tr>
@@ -419,30 +408,28 @@ const VehiclesTableSection = ({
       </div>
 
       {/* Pagination Footer */}
-      <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+      <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
         <div>
           Showing <span className="font-semibold text-slate-700">1</span> to <span className="font-semibold text-slate-700">{filteredVehicles.length}</span> of <span className="font-semibold text-slate-700">{vehiclesList.length}</span> vehicles
         </div>
-        <div className="flex items-center space-x-1.5">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             disabled={activePage === 1}
             onClick={() => setActivePage((prev) => Math.max(1, prev - 1))}
-            className="w-7 h-7 rounded border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:border-slate-300 flex items-center justify-center transition-colors disabled:opacity-50 cursor-pointer"
+            className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-700 hover:bg-slate-50 flex items-center justify-center transition disabled:opacity-50 cursor-pointer"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"></path>
-            </svg>
+            <MdChevronLeft size={16} />
           </button>
           {[1, 2, 3, 4].map((page) => (
             <button
               key={page}
               type="button"
               onClick={() => setActivePage(page)}
-              className={`w-7 h-7 rounded font-medium flex items-center justify-center transition-colors cursor-pointer ${
+              className={`w-7 h-7 rounded-lg font-medium flex items-center justify-center transition cursor-pointer ${
                 activePage === page
-                  ? 'bg-blue-600 text-white'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  ? 'bg-blue-600 text-white font-bold shadow-xs'
+                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
               }`}
             >
               {page}
@@ -452,11 +439,9 @@ const VehiclesTableSection = ({
             type="button"
             disabled={activePage === 4}
             onClick={() => setActivePage((prev) => Math.min(4, prev + 1))}
-            className="w-7 h-7 rounded border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:border-slate-300 flex items-center justify-center transition-colors disabled:opacity-50 cursor-pointer"
+            className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-700 hover:bg-slate-50 flex items-center justify-center transition disabled:opacity-50 cursor-pointer"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"></path>
-            </svg>
+            <MdChevronRight size={16} />
           </button>
         </div>
       </div>

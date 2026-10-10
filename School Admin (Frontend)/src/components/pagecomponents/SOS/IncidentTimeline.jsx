@@ -2,8 +2,8 @@ import { MdAccessTime } from 'react-icons/md';
 
 const IncidentTimeline = ({ onViewArchive }) => {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+      <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
         <h3 className="text-xs font-bold text-slate-900">Incident Dispatch Timeline</h3>
         <span className="text-[11px] text-slate-400 font-medium">Case #SOS-9042</span>
       </div>
@@ -66,7 +66,7 @@ const IncidentTimeline = ({ onViewArchive }) => {
       {/* Action Button: Diagnostic Telemetry */}
       <button
         onClick={onViewArchive}
-        className="w-full mt-5 py-2.5 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+        className="w-full mt-5 py-2.5 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer border border-blue-100 shadow-xs"
       >
         <MdAccessTime className="w-4 h-4 text-blue-600" />
         View Full Diagnostic Telemetry Archive

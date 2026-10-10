@@ -1,3 +1,4 @@
+import React from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import StatCards from '../components/pagecomponents/Dashboard/StatCards';
@@ -9,21 +10,20 @@ import DashboardFooter from '../components/pagecomponents/Dashboard/DashboardFoo
 
 const DashboardPage = ({ onLogout, onNavigate, currentPage = 'Dashboard' }) => {
   return (
-    <div className="h-screen flex bg-[#EEF2F6] antialiased text-[#1E293B] overflow-hidden font-sans">
+    <div className="h-screen flex bg-[#F8FAFC] antialiased text-slate-800 overflow-hidden font-sans">
       <Sidebar onLogout={onLogout} onNavigate={onNavigate} currentPage={currentPage} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto h-screen">
         <Header />
         
-        <main className="p-8 space-y-6 flex-1 max-w-[1400px]">
+        <main className="p-8 space-y-6 flex-1 max-w-[1440px] w-full mx-auto">
           {/* Page Title & Operational Status */}
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h2 className="text-[22px] font-bold text-slate-900 tracking-tight">Dashboard</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Real-time school transport operational overview &amp; telematics.</p>
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard</h2>
             </div>
-            <div className="inline-flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
-              <span className="text-xs font-medium text-slate-700">Live Telematics System Active</span>
+            <div className="inline-flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-slate-200/80 shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-xs font-semibold text-slate-700">Live Telematics System Active</span>
             </div>
           </div>
           
@@ -38,6 +38,8 @@ const DashboardPage = ({ onLogout, onNavigate, currentPage = 'Dashboard' }) => {
             <RecentActivity />
             <VehicleStatus />
           </section>
+
+          <div className="h-4"></div>
         </main>
         
         <DashboardFooter />

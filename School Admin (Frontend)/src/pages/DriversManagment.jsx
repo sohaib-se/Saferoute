@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import DriverKPICards from '../components/pagecomponents/DriverManagement/DriverKPICards';
@@ -57,20 +57,17 @@ const DriversManagment = ({
   const offDutyDrivers = drivers.filter((d) => d.status === 'Offline').length;
 
   return (
-    <div className="h-screen flex bg-[#f8fafc] text-slate-800 antialiased overflow-hidden font-sans text-[13px]">
-      {/* Sidebar */}
+    <div className="h-screen flex bg-[#F8FAFC] text-slate-800 antialiased overflow-hidden font-sans">
       <Sidebar
         onLogout={onLogout}
         currentPage={currentPage}
         onNavigate={onNavigate}
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] overflow-y-auto h-screen">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto h-screen">
         <Header />
 
-        <main className="p-8 space-y-6 flex-1 max-w-[1400px] w-full mx-auto">
-          {/* Top 4 KPI Metrics Grid */}
+        <main className="p-8 space-y-6 flex-1 max-w-[1440px] w-full mx-auto">
           <DriverKPICards
             totalDrivers={totalDrivers}
             activeDrivers={activeDrivers}
@@ -78,7 +75,6 @@ const DriversManagment = ({
             offDutyDrivers={offDutyDrivers}
           />
 
-          {/* Main Management Container */}
           <DriversTableSection
             driversList={drivers}
             onAddDriverClick={() => setIsAddModalOpen(true)}
@@ -86,14 +82,12 @@ const DriversManagment = ({
             onEditDriver={handleEditDriver}
           />
 
-          <div className="h-8"></div>
+          <div className="h-4"></div>
         </main>
 
-        {/* Footer */}
         <DriverManagementFooter />
       </div>
 
-      {/* Modals */}
       <AddDriverModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}

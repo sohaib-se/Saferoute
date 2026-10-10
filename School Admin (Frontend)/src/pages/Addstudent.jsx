@@ -6,6 +6,7 @@ import CardStudentPhoto from '../components/pagecomponents/addstudents/CardStude
 import CardBasicProfile from '../components/pagecomponents/addstudents/CardBasicProfile';
 import CardParentGuardian from '../components/pagecomponents/addstudents/CardParentGuardian';
 import CardRouteFleet from '../components/pagecomponents/addstudents/CardRouteFleet';
+import CardResidenceGeofence from '../components/pagecomponents/addstudents/CardResidenceGeofence';
 import AddStudentFooter from '../components/pagecomponents/addstudents/AddStudentFooter';
 import AddParentModal from '../components/pagecomponents/ParentManagement/AddParentModal';
 
@@ -135,7 +136,7 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
   };
 
   return (
-    <div className="h-screen flex bg-[#f2f6fa] text-slate-800 antialiased font-sans overflow-hidden">
+    <div className="h-screen flex bg-[#F8FAFC] text-slate-800 antialiased font-sans overflow-hidden">
       {/* Sidebar */}
       <Sidebar
         onLogout={onLogout}
@@ -144,12 +145,12 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
       />
 
       {/* Main Content Container */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#f2f6fa] overflow-y-auto h-screen pb-24">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto h-screen pb-28">
         {/* Header */}
         <Header />
 
         {/* Main Content */}
-        <main className="px-8 pt-6 max-w-[1360px] w-full mx-auto flex-1">
+        <main className="px-8 pt-6 pb-8 max-w-[1440px] w-full mx-auto flex-1">
           <form onSubmit={handleSubmit}>
             {/* Breadcrumb & Header Title */}
             <AddStudentHeader onCancel={handleCancel} onSubmit={handleSubmit} />
@@ -182,6 +183,11 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
                   formData={formData}
                   onChange={handleChange}
                   onNewParentClick={() => setIsAddParentModalOpen(true)}
+                />
+
+                <CardResidenceGeofence
+                  formData={formData}
+                  onChange={handleChange}
                 />
               </div>
             </div>

@@ -1,4 +1,15 @@
 import React, { useState } from 'react';
+import {
+  MdDirectionsBus,
+  MdCheckCircle,
+  MdWarning,
+  MdEmergency,
+  MdReceipt,
+  MdPerson,
+  MdChevronLeft,
+  MdChevronRight,
+  MdArrowForward,
+} from 'react-icons/md';
 
 export const initialNotificationsData = [
   {
@@ -101,94 +112,77 @@ const NotificationsListSection = ({
 }) => {
   const [activePage, setActivePage] = useState(1);
 
-  // Filter based on selected category tab
   const filteredNotifications = notificationsList.filter((item) => {
     if (activeTab === 'All') return true;
     return item.category === activeTab;
   });
 
+  const getCategoryIcon = (category, title) => {
+    switch (category) {
+      case 'Pickup':
+        return <MdDirectionsBus size={20} />;
+      case 'Drop':
+        return <MdCheckCircle size={20} />;
+      case 'Delay':
+        return <MdWarning size={20} />;
+      case 'Emergency':
+        return <MdEmergency size={20} />;
+      case 'System & Fee':
+        return title.includes('Fee') ? <MdReceipt size={20} /> : <MdPerson size={20} />;
+      default:
+        return <MdDirectionsBus size={20} />;
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* BEGIN: Notifications List */}
+    <div className="space-y-6 font-sans">
       <section aria-label="Notifications List" className="space-y-3.5">
         {filteredNotifications.length > 0 ? (
           filteredNotifications.map((item) => (
             <article
               key={item.id}
-              className={`bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between p-4 pl-5 border-l-4 ${item.borderLeft} gap-4`}
+              className={`bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-md transition-shadow relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between p-5 border-l-4 ${item.borderLeft} gap-4`}
             >
-              <div className="flex items-start gap-3.5">
+              <div className="flex items-start gap-3.5 min-w-0">
                 {/* Icon */}
-                <div className={`w-10 h-10 rounded-full ${item.iconBg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                  {item.category === 'Pickup' && (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                      <rect height="12" rx="2" width="18" x="3" y="6"></rect>
-                      <circle cx="7" cy="18" r="2"></circle>
-                      <circle cx="17" cy="18" r="2"></circle>
-                    </svg>
-                  )}
-                  {item.category === 'Drop' && (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                      <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" strokeLinecap="round" strokeLinejoin="round"></path>
-                    </svg>
-                  )}
-                  {item.category === 'Delay' && (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                      <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round"></path>
-                    </svg>
-                  )}
-                  {item.category === 'Emergency' && (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="9"></circle>
-                      <path d="M12 8v4m0 4h.01" strokeLinecap="round" strokeLinejoin="round"></path>
-                    </svg>
-                  )}
-                  {item.category === 'System & Fee' && item.title.includes('Fee') && (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                      <path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" strokeLinecap="round" strokeLinejoin="round"></path>
-                    </svg>
-                  )}
-                  {item.category === 'System & Fee' && !item.title.includes('Fee') && (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                      <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" strokeLinecap="round" strokeLinejoin="round"></path>
-                    </svg>
-                  )}
+                <div className={`w-11 h-11 rounded-xl ${item.iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
+                  {getCategoryIcon(item.category, item.title)}
                 </div>
 
                 {/* Details */}
-                <div className="space-y-1">
+                <div className="space-y-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-sm font-bold text-slate-900">{item.title}</h2>
-                    <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${item.badgeStyle}`}>
+                    <h3 className="text-sm font-bold text-slate-900">{item.title}</h3>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${item.badgeStyle}`}>
                       {item.badgeText}
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">
                       {item.category}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 font-normal">
+                  <p className="text-xs text-slate-600 font-normal leading-relaxed">
                     {item.content}
                   </p>
-                  <div className="text-[11px] text-slate-400 font-normal pt-0.5 flex items-center gap-2">
+                  <div className="text-[11px] text-slate-400 font-medium pt-0.5">
                     <span>{item.subInfo}</span>
                   </div>
                 </div>
               </div>
 
               {/* Right side timestamp and action */}
-              <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center gap-1.5 flex-shrink-0 pl-14 md:pl-0">
-                <span className="text-xs font-semibold text-slate-800">{item.timestamp}</span>
+              <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center gap-2 shrink-0 pl-14 md:pl-0">
+                <span className="text-xs font-semibold text-slate-700">{item.timestamp}</span>
 
                 {item.actionType === 'links' && (
-                  <div className="text-xs font-medium text-slate-500 flex items-center gap-1">
-                    <a className="text-blue-600 hover:text-blue-700" href="#">{item.link1}</a>
+                  <div className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                    <a className="text-blue-600 hover:text-blue-700 font-semibold" href="#">{item.link1}</a>
                     <span>•</span>
                     <a className="hover:text-slate-700" href="#">{item.link2}</a>
                   </div>
                 )}
 
                 {item.actionType === 'link' && (
-                  <a className="text-xs font-medium text-blue-600 hover:text-blue-700" href="#">
+                  <a className="text-xs font-semibold text-blue-600 hover:text-blue-700" href="#">
                     {item.link1}
                   </a>
                 )}
@@ -196,7 +190,7 @@ const NotificationsListSection = ({
                 {item.actionType === 'button' && (
                   <button
                     type="button"
-                    className={`px-3 py-1.5 rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer ${item.buttonStyle}`}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer ${item.buttonStyle}`}
                   >
                     {item.buttonText}
                   </button>
@@ -205,60 +199,54 @@ const NotificationsListSection = ({
                 {item.actionType === 'arrowLink' && (
                   <a className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1" href="#">
                     <span>{item.link1}</span>
-                    <span>→</span>
+                    <MdArrowForward size={14} />
                   </a>
                 )}
               </div>
             </article>
           ))
         ) : (
-          <div className="bg-white rounded-xl p-8 text-center text-slate-400 text-xs border border-slate-200">
+          <div className="bg-white rounded-2xl p-8 text-center text-slate-400 text-xs border border-slate-200/80 font-normal">
             No notifications found in this category.
           </div>
         )}
       </section>
 
-      {/* BEGIN: Pagination Section */}
-      <footer className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200 text-xs text-slate-500">
+      {/* Pagination Section */}
+      <footer className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs text-slate-500">
         <div>
           Showing <span className="font-semibold text-slate-700">1</span> to <span className="font-semibold text-slate-700">{filteredNotifications.length}</span> of <span className="font-semibold text-slate-700">{notificationsList.length}</span> notifications
         </div>
-        <div className="flex items-center gap-1">
-          {/* Prev Button */}
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             disabled={activePage === 1}
             onClick={() => setActivePage((prev) => Math.max(1, prev - 1))}
-            className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:bg-slate-50 transition-colors disabled:opacity-50 cursor-pointer"
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition disabled:opacity-50 cursor-pointer"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"></path>
-            </svg>
+            <MdChevronLeft size={16} />
           </button>
           {[1, 2, 3, 4, 5].map((page) => (
             <button
               key={page}
               type="button"
               onClick={() => setActivePage(page)}
-              className={`w-8 h-8 flex items-center justify-center rounded-lg font-medium transition-colors cursor-pointer ${
+              className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activePage === page
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                  : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-100'
               }`}
             >
               {page}
             </button>
           ))}
-          {/* Next Button */}
           <button
             type="button"
             disabled={activePage === 5}
             onClick={() => setActivePage((prev) => Math.min(5, prev + 1))}
-            className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 cursor-pointer"
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition disabled:opacity-50 cursor-pointer"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"></path>
-            </svg>
+            <MdChevronRight size={16} />
           </button>
         </div>
       </footer>

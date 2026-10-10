@@ -7,18 +7,12 @@ import LandingFooter from '../components/pagecomponents/Landing/LandingFooter';
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen w-full flex flex-col font-sans bg-[#020813] text-white overflow-x-hidden relative">
-      {/* Background Effects */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div 
-          className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-30 blur-3xl"
-          style={{ background: 'radial-gradient(circle, #0652bb 0%, transparent 70%)' }}
-        />
-        <div 
-          className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full opacity-20 blur-3xl"
-          style={{ background: 'radial-gradient(circle, #4f87e0 0%, transparent 70%)' }}
-        />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-20" />
+    <div className="min-h-screen w-full flex flex-col font-sans bg-[#F8FAFC] text-slate-900 overflow-x-hidden relative selection:bg-blue-100 selection:text-blue-800 antialiased">
+      {/* Subtle ambient background glow */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-gradient-to-b from-blue-100/60 via-blue-50/25 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-40 w-[600px] h-[600px] bg-gradient-to-tr from-sky-100/40 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-2/3 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-indigo-50/50 to-transparent rounded-full blur-3xl" />
       </div>
 
       <LandingHeader />

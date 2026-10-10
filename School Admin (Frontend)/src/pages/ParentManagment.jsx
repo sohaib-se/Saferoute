@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import ParentStatCards from '../components/pagecomponents/ParentManagement/ParentStatCards';
@@ -137,38 +137,29 @@ const ParentManagment = ({
 
   return (
     <div className="h-screen flex bg-[#F8FAFC] text-slate-800 font-sans antialiased overflow-hidden">
-      {/* Sidebar */}
       <Sidebar
         onLogout={onLogout}
         currentPage={currentPage}
         onNavigate={onNavigate}
       />
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto h-screen">
-        {/* Top Header */}
         <Header />
 
-        {/* Page Content */}
-        <main className="p-8 space-y-6 flex-1">
-          {/* Stat Cards */}
+        <main className="p-8 space-y-6 flex-1 max-w-[1440px] w-full mx-auto">
           <ParentStatCards />
 
-          {/* Table Section */}
           <ParentsTableSection
             onAddParentClick={() => setIsAddModalOpen(true)}
             parentsList={parentsList}
           />
 
-          {/* Bottom spacing */}
-          <div className="h-20"></div>
+          <div className="h-4"></div>
         </main>
 
-        {/* Footer */}
         <ParentManagementFooter />
       </div>
 
-      {/* Add Parent Modal */}
       <AddParentModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}

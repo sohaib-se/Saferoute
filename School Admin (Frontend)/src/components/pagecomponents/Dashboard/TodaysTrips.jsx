@@ -1,8 +1,8 @@
-﻿import { MdChevronRight, MdDirectionsBus } from 'react-icons/md';
+import { MdChevronRight, MdDirectionsBus } from 'react-icons/md';
 
 const TodaysTrips = () => {
   return (
-    <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between" data-purpose="todays-trips-card">
+    <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between" data-purpose="todays-trips-card">
       <div className="p-5 pb-3">
         <div className="flex items-center justify-between">
           <div>

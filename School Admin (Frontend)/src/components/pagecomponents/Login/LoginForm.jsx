@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { MdEmail, MdLock, MdErrorOutline, MdArrowForward } from 'react-icons/md';
 
 const LoginForm = ({ onLogin }) => {
   const [identifier, setIdentifier] = useState('');
@@ -13,7 +14,6 @@ const LoginForm = ({ onLogin }) => {
     setError('');
 
     try {
-      // Calling the Supabase Edge Function (Cloud or Local)
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321';
       const response = await fetch(`${supabaseUrl}/functions/v1/school-account`, {
         method: 'POST',
@@ -32,7 +32,6 @@ const LoginForm = ({ onLogin }) => {
       if (!response.ok) {
         setError(data.error || 'Invalid email or password');
       } else {
-        // We successfully logged in via the centralized backend
         onLogin(data.user);
       }
     } catch (err) {
@@ -44,93 +43,88 @@ const LoginForm = ({ onLogin }) => {
   };
 
   return (
-    <form
-      action="#"
-      method="POST"
-      onSubmit={handleSubmit}
-      className="w-full space-y-3.5"
-    >
-      {error && <div className="text-red-500 text-xs text-center font-medium">{error}</div>}
-      {/* Label + Input: Email or Phone */}
+    <form onSubmit={handleSubmit} className="w-full space-y-4">
+      {error && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium">
+          <MdErrorOutline className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Email / Phone Field */}
       <div>
-        <label htmlFor="identifier" className="block text-[12px] font-semibold text-slate-600 mb-1.5 ml-1">
+        <label htmlFor="identifier" className="block text-xs font-semibold text-slate-700 mb-1.5">
           Email or Phone Number
         </label>
-        <div className="relative w-full input-field-shadow rounded-xl border border-slate-200 bg-slate-50 hover:border-slate-300 transition-colors">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
-            </svg>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <MdEmail className="w-4 h-4" />
           </div>
           <input
             id="identifier"
             name="identifier"
             type="text"
-            placeholder="school@example.com"
+            placeholder="admin@school.edu"
             required
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 bg-transparent border-0 rounded-xl focus:ring-0 focus:outline-none"
+            className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
           />
         </div>
       </div>
 
-      {/* Label + Input: Password */}
+      {/* Password Field */}
       <div>
-        <label htmlFor="password" className="block text-[12px] font-semibold text-slate-600 mb-1.5 ml-1">
+        <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-1.5">
           Password
         </label>
-        <div className="relative w-full input-field-shadow rounded-xl border border-slate-200 bg-slate-50 hover:border-slate-300 transition-colors">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
-            </svg>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <MdLock className="w-4 h-4" />
           </div>
           <input
             id="password"
             name="password"
             type="password"
-            placeholder="Enter your password"
+            placeholder="••••••••"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 bg-transparent border-0 rounded-xl focus:ring-0 focus:outline-none"
+            className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
           />
         </div>
       </div>
 
-      {/* Remember me + Forgot Password */}
-      <div className="flex items-center justify-between pt-0.5">
-        <label className="flex items-center gap-2 cursor-pointer select-none">
+      {/* Remember me & Forgot Password */}
+      <div className="flex items-center justify-between text-xs pt-0.5">
+        <label className="flex items-center gap-2 cursor-pointer select-none text-slate-600">
           <input
             type="checkbox"
-            className="w-3.5 h-3.5 rounded border-slate-300 text-[#0652bb] focus:ring-[#0652bb] focus:ring-offset-0"
+            className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
           />
-          <span className="text-[12px] text-slate-500">Remember me</span>
+          <span>Remember me</span>
         </label>
-        <a href="#" className="text-[12px] font-semibold text-[#0652bb] hover:text-blue-800 transition-colors">
+        <a href="#" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
           Forgot Password?
         </a>
       </div>
 
-      {/* Login Button */}
+      {/* Submit Button */}
       <div className="pt-1">
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 text-white text-[14px] font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg hover:shadow-blue-500/30 hover:brightness-110 disabled:opacity-70 disabled:cursor-not-allowed"
-          style={{ background: 'linear-gradient(135deg, #0652bb 0%, #4f87e0 100%)' }}
+          className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white text-xs font-semibold rounded-xl shadow-xs shadow-blue-500/20 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          {loading ? 'Signing in...' : 'Sign In'}
+          <span>{loading ? 'Authenticating...' : 'Sign In to Dashboard'}</span>
+          {!loading && <MdArrowForward className="w-3.5 h-3.5" />}
         </button>
       </div>
 
       {/* Register Link */}
-      <div className="text-center mt-4 pt-4 border-t border-slate-100">
-        <span className="text-[13px] text-slate-500">Don't have an account? </span>
-        <Link to="/register" className="text-[13px] font-semibold text-[#0652bb] hover:text-blue-800 transition-colors">
+      <div className="text-center pt-3 border-t border-slate-100">
+        <span className="text-xs text-slate-500">Need a portal account? </span>
+        <Link to="/register" className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
           Register your school
         </Link>
       </div>

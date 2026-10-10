@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { MdBadge, MdClose } from 'react-icons/md';
+import { MdBadge } from 'react-icons/md';
+import Modal from '../../common/Modal';
 
 const AddDriverModal = ({ isOpen, onClose, onAddDriver }) => {
   const [formData, setFormData] = useState({
@@ -80,77 +81,66 @@ const AddDriverModal = ({ isOpen, onClose, onAddDriver }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <MdBadge size={18} />
-            </div>
-            <h3 className="text-base font-bold text-slate-900">Add New Driver</h3>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-100 transition cursor-pointer"
-          >
-            <MdClose size={18} />
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
-          <div className="space-y-1">
-            <label className="block text-xs font-semibold text-slate-700">
-              Driver Full Name *
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      icon={<MdBadge size={20} />}
+      title="Add New Driver"
+      subtitle="Enroll transport personnel and assign fleet vehicle & route"
+      maxWidth="max-w-lg"
+    >
+      <form onSubmit={handleSubmit}>
+        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Driver Full Name <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               required
               placeholder="e.g. Muhammad Ali"
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800"
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-slate-700">
-                License Number *
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                License Number <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 placeholder="e.g. LIC-PK-98214"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800 font-mono"
+                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
                 value={formData.license}
                 onChange={(e) => setFormData({ ...formData, license: e.target.value })}
               />
             </div>
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-slate-700">
-                Phone Number *
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Phone Number <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 placeholder="e.g. 0300 1112233"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800 font-mono"
+                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-slate-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Assigned Vehicle
               </label>
               <select
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-slate-800 cursor-pointer"
+                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans cursor-pointer"
                 value={formData.vehicle}
                 onChange={(e) => setFormData({ ...formData, vehicle: e.target.value })}
               >
@@ -165,12 +155,12 @@ const AddDriverModal = ({ isOpen, onClose, onAddDriver }) => {
                 <option value="Bus 22">Bus 22</option>
               </select>
             </div>
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-slate-700">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Duty Status
               </label>
               <select
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-slate-800 cursor-pointer"
+                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans cursor-pointer"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               >
@@ -182,52 +172,52 @@ const AddDriverModal = ({ isOpen, onClose, onAddDriver }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-slate-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Assigned Route
               </label>
               <input
                 type="text"
                 placeholder="e.g. Route 1"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800"
+                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
                 value={formData.route}
                 onChange={(e) => setFormData({ ...formData, route: e.target.value })}
               />
             </div>
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-slate-700">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Area / Sub Route
               </label>
               <input
                 type="text"
                 placeholder="e.g. Green Valley"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800"
+                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
                 value={formData.routeSub}
                 onChange={(e) => setFormData({ ...formData, routeSub: e.target.value })}
               />
             </div>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition shadow-xs cursor-pointer"
-            >
-              Save Driver
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Unified Modal Footer */}
+        <div className="px-6 py-4 bg-slate-50/60 border-t border-slate-100 flex items-center justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition cursor-pointer"
+          >
+            Save Driver
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 
