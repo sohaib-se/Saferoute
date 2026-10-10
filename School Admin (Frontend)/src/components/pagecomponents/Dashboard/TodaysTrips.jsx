@@ -9,7 +9,13 @@ const TodaysTrips = () => {
             <h3 className="text-sm font-bold text-slate-800">Today's Trips</h3>
             <p className="text-xs text-slate-400 mt-0.5">Active and upcoming school schedules</p>
           </div>
-          <a className="text-xs font-semibold text-[#2563EB] hover:text-blue-700" href="#">View All</a>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('app-navigate', { detail: 'Trips' }))}
+            className="text-xs font-semibold text-[#2563EB] hover:text-blue-700 cursor-pointer"
+          >
+            View All
+          </button>
         </div>
         
         {/* Trips Table */}

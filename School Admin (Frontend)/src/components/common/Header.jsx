@@ -12,10 +12,29 @@ import {
   MdWarning,
   MdDashboard,
   MdArrowForward,
+  MdAccessTime,
 } from 'react-icons/md';
 
 const searchableItems = [
   // Navigation / Pages
+  {
+    type: 'Page',
+    title: 'School Profile & Settings',
+    subtitle: 'Manage school details, administrator account & password',
+    targetPage: 'Profile',
+    badge: 'Settings',
+    badgeColor: 'bg-purple-50 text-purple-600',
+    icon: MdPerson,
+  },
+  {
+    type: 'Page',
+    title: 'Trips Management',
+    subtitle: 'Daily morning pickups, afternoon drops & route dispatch',
+    targetPage: 'Trips',
+    badge: 'Trips',
+    badgeColor: 'bg-blue-50 text-blue-600',
+    icon: MdAccessTime,
+  },
   {
     type: 'Page',
     title: 'Live Tracking',
@@ -464,7 +483,10 @@ const Header = ({ onNavigate }) => {
                 <button
                   type="button"
                   className="flex-1 flex justify-center items-center gap-1.5 px-3 py-2.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:text-blue-600 rounded-xl transition-all cursor-pointer shadow-2xs"
-                  onClick={() => setIsDropdownOpen(false)}
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    navigateToPage('Profile');
+                  }}
                 >
                   <MdPerson size={16} className="text-slate-400 group-hover:text-blue-500" />
                   <span>Profile</span>

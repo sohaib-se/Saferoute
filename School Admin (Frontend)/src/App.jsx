@@ -12,6 +12,8 @@ import LandingPage from './pages/LandingPage'
 import RegisterPage from './pages/RegisterPage'
 import SOS from './pages/SOS'
 import LiveTracking from './pages/LiveTracking'
+import Trips from './pages/Trips'
+import Profile from './pages/Profile'
 
 const initialStudents = [
   {
@@ -233,6 +235,26 @@ const App = () => {
     if (currentPage === 'Live Tracking') {
       return (
         <LiveTracking
+          onLogout={handleLogout}
+          onNavigate={setCurrentPage}
+          currentPage={currentPage}
+        />
+      )
+    }
+
+    if (currentPage === 'Trips') {
+      return (
+        <Trips
+          onLogout={handleLogout}
+          onNavigate={setCurrentPage}
+          currentPage={currentPage}
+        />
+      )
+    }
+
+    if (currentPage === 'Profile') {
+      return (
+        <Profile
           onLogout={handleLogout}
           onNavigate={setCurrentPage}
           currentPage={currentPage}
