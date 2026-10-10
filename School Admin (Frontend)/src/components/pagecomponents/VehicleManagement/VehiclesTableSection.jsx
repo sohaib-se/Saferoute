@@ -228,84 +228,86 @@ const VehiclesTableSection = ({
   return (
     <section className="bg-white border border-slate-200/80 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden font-sans" data-purpose="fleet-management-table-container">
       {/* Card Header Toolbar */}
-      <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-3">
-            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Vehicles Directory</h3>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
-              {vehiclesList.length} Registered Buses
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1 font-normal">
-            Fleet maintenance status, live GPS tracking, and route assignments.
-          </p>
-        </div>
+      <div className="p-6 border-b border-slate-100">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Left Side: Title, Subtitle & Search Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex flex-col">
+              <div className="flex items-center space-x-3">
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight whitespace-nowrap">Vehicles Directory</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100 whitespace-nowrap">
+                  {vehiclesList.length} Registered Buses
+                </span>
+              </div>
+            </div>
 
-        {/* Controls: Search, Filters, Export, Add Vehicle */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Search Input */}
-          <div className="relative">
-            <MdSearch className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              className="pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-200 text-slate-800 bg-slate-50/70 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white w-40 sm:w-48 font-sans transition-all"
-              placeholder="Search vehicle..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            {/* Search Input */}
+            <div className="relative w-full sm:w-64">
+              <MdSearch className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-200 text-slate-800 bg-slate-50/70 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                placeholder="Search vehicle..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
 
-          {/* Status Filter */}
-          <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none pl-3.5 pr-8 py-2 text-xs rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:border-blue-500 cursor-pointer font-medium shadow-2xs"
+          {/* Right Side: Controls (Filters, Export, Add) */}
+          <div className="flex flex-wrap items-center justify-end gap-2.5">
+            {/* Status Filter */}
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="appearance-none pl-3.5 pr-8 py-2 text-xs rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:border-blue-500 cursor-pointer font-medium shadow-2xs"
+              >
+                <option value="All Statuses">All Statuses</option>
+                <option value="Running">Running</option>
+                <option value="On Route">On Route</option>
+                <option value="Idle">Idle</option>
+                <option value="Maintenance">Maintenance</option>
+              </select>
+              <MdKeyboardArrowDown className="pointer-events-none absolute inset-y-0 right-2.5 my-auto text-slate-400 text-base" />
+            </div>
+
+            {/* Route Filter */}
+            <div className="relative">
+              <select
+                value={routeFilter}
+                onChange={(e) => setRouteFilter(e.target.value)}
+                className="appearance-none pl-3.5 pr-8 py-2 text-xs rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:border-blue-500 cursor-pointer font-medium shadow-2xs"
+              >
+                <option value="All Routes">All Routes</option>
+                <option value="Route 1">Route 1</option>
+                <option value="Route 2">Route 2</option>
+                <option value="Route 3">Route 3</option>
+                <option value="Route 4">Route 4</option>
+              </select>
+              <MdKeyboardArrowDown className="pointer-events-none absolute inset-y-0 right-2.5 my-auto text-slate-400 text-base" />
+            </div>
+
+            {/* Export Button */}
+            <button
+              type="button"
+              onClick={handleExport}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 text-xs font-semibold rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition shadow-2xs cursor-pointer"
             >
-              <option value="All Statuses">All Statuses</option>
-              <option value="Running">Running</option>
-              <option value="On Route">On Route</option>
-              <option value="Idle">Idle</option>
-              <option value="Maintenance">Maintenance</option>
-            </select>
-            <MdKeyboardArrowDown className="pointer-events-none absolute inset-y-0 right-2.5 my-auto text-slate-400 text-base" />
-          </div>
+              <MdFileDownload size={16} className="text-slate-500" />
+              <span>Export</span>
+            </button>
 
-          {/* Route Filter */}
-          <div className="relative">
-            <select
-              value={routeFilter}
-              onChange={(e) => setRouteFilter(e.target.value)}
-              className="appearance-none pl-3.5 pr-8 py-2 text-xs rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:border-blue-500 cursor-pointer font-medium shadow-2xs"
+            {/* Add Vehicle Button */}
+            <button
+              type="button"
+              onClick={onAddVehicleClick}
+              className="inline-flex items-center gap-1.5 px-4 py-2 border border-transparent text-xs font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-xs transition cursor-pointer"
             >
-              <option value="All Routes">All Routes</option>
-              <option value="Route 1">Route 1</option>
-              <option value="Route 2">Route 2</option>
-              <option value="Route 3">Route 3</option>
-              <option value="Route 4">Route 4</option>
-            </select>
-            <MdKeyboardArrowDown className="pointer-events-none absolute inset-y-0 right-2.5 my-auto text-slate-400 text-base" />
+              <MdAdd size={16} />
+              <span>Add Vehicle</span>
+            </button>
           </div>
-
-          {/* Export Button */}
-          <button
-            type="button"
-            onClick={handleExport}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 text-xs font-semibold rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition shadow-2xs cursor-pointer"
-          >
-            <MdFileDownload size={16} className="text-slate-500" />
-            <span>Export</span>
-          </button>
-
-          {/* Add Vehicle Button */}
-          <button
-            type="button"
-            onClick={onAddVehicleClick}
-            className="inline-flex items-center gap-1.5 px-4 py-2 border border-transparent text-xs font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-xs transition cursor-pointer"
-          >
-            <MdAdd size={16} />
-            <span>Add Vehicle</span>
-          </button>
         </div>
       </div>
 

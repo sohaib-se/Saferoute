@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   MdSearch,
   MdAdd,
@@ -154,6 +154,22 @@ const StudentsTableSection = ({
   const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
   const [isRouteDropdownOpen, setIsRouteDropdownOpen] = useState(false);
 
+  const classDropdownRef = useRef(null);
+  const routeDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (classDropdownRef.current && !classDropdownRef.current.contains(event.target)) {
+        setIsClassDropdownOpen(false);
+      }
+      if (routeDropdownRef.current && !routeDropdownRef.current.contains(event.target)) {
+        setIsRouteDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const filteredStudents = studentsList.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -184,18 +200,19 @@ const StudentsTableSection = ({
   return (
     <section className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden font-sans">
       {/* Card Header & Controls */}
-      <div className="p-6 border-b border-slate-100 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Students Directory</h3>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
-              312 Enrolled
-            </span>
-          </div>
+      <div className="p-6 border-b border-slate-100">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Left Side: Title & Search Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight whitespace-nowrap">Students Directory</h3>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100 whitespace-nowrap">
+                {filteredStudents.length} Enrolled
+              </span>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
             {/* Search Input */}
-            <div className="relative w-64">
+            <div className="relative w-full sm:w-64">
               <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
               <input
                 className="w-full pl-9 pr-3.5 py-2 text-xs bg-slate-50/70 text-slate-800 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:bg-white placeholder:text-slate-400 transition-all font-sans"
@@ -205,12 +222,18 @@ const StudentsTableSection = ({
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+          </div>
 
+          {/* Right Side: 4 Action Buttons in 1 Horizontal Row */}
+          <div className="flex flex-wrap items-center justify-end gap-2.5">
             {/* Class Filter */}
-            <div className="relative">
+            <div className="relative" ref={classDropdownRef}>
               <button
                 type="button"
-                onClick={() => setIsClassDropdownOpen(!isClassDropdownOpen)}
+                onClick={() => {
+                  setIsClassDropdownOpen(!isClassDropdownOpen);
+                  setIsRouteDropdownOpen(false);
+                }}
                 className="inline-flex items-center text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl px-3.5 py-2 hover:bg-slate-50 cursor-pointer transition shadow-2xs gap-1.5"
               >
                 <span>{selectedClass}</span>
@@ -238,10 +261,13 @@ const StudentsTableSection = ({
             </div>
 
             {/* Route Filter */}
-            <div className="relative">
+            <div className="relative" ref={routeDropdownRef}>
               <button
                 type="button"
-                onClick={() => setIsRouteDropdownOpen(!isRouteDropdownOpen)}
+                onClick={() => {
+                  setIsRouteDropdownOpen(!isRouteDropdownOpen);
+                  setIsClassDropdownOpen(false);
+                }}
                 className="inline-flex items-center text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl px-3.5 py-2 hover:bg-slate-50 cursor-pointer transition shadow-2xs gap-1.5"
               >
                 <span>{selectedRoute}</span>
@@ -270,6 +296,7 @@ const StudentsTableSection = ({
 
             {/* Export Button */}
             <button
+              type="button"
               onClick={handleExport}
               className="inline-flex items-center text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl px-3.5 py-2 hover:bg-slate-50 transition shadow-2xs gap-1.5 cursor-pointer"
             >
@@ -279,6 +306,7 @@ const StudentsTableSection = ({
 
             {/* Add Student Button */}
             <button
+              type="button"
               onClick={onAddStudentClick}
               className="inline-flex items-center text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl px-4 py-2 transition shadow-xs gap-1.5 cursor-pointer"
             >
