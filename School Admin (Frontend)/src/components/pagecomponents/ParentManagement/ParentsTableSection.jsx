@@ -1,4 +1,16 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import {
+  MdSearch,
+  MdAdd,
+  MdFileDownload,
+  MdCall,
+  MdDirectionsBus,
+  MdEdit,
+  MdVisibility,
+  MdChevronLeft,
+  MdChevronRight,
+  MdSchool,
+} from 'react-icons/md';
 
 const initialParents = [
   {
@@ -134,82 +146,69 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
   };
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden" data-purpose="parents-management-container">
-      {/* Table Top Control Bar */}
-      <div className="p-6 border-b border-slate-200/80">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+    <section className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden font-sans" data-purpose="parents-management-container">
+      {/* Table Top Toolbar */}
+      <div className="p-6 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-bold text-slate-900">Parents Management</h2>
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Parents Directory</h3>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
-              248 Registered
+              {parentsList.length} Registered
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-64">
+              <MdSearch className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                className="w-full pl-9 pr-3.5 py-2 text-xs bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800 placeholder-slate-400 transition-all font-sans"
+                placeholder="Search parent, phone, child..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
             {/* Export Button */}
             <button
               onClick={handleExport}
-              className="inline-flex items-center gap-2 px-3.5 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 transition shadow-2xs cursor-pointer"
             >
-              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" x2="12" y1="15" y2="3"></line>
-              </svg>
+              <MdFileDownload size={16} className="text-slate-500" />
               <span>Export</span>
             </button>
 
             {/* Add Parent Primary Button */}
             <button
               onClick={onAddParentClick}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition shadow-sm cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-semibold transition shadow-xs cursor-pointer"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <line x1="12" x2="12" y1="5" y2="19"></line>
-                <line x1="5" x2="19" y1="12" y2="12"></line>
-              </svg>
+              <MdAdd size={16} />
               <span>Add Parent</span>
             </button>
-          </div>
-        </div>
-
-        {/* Filters Row */}
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          {/* Search Bar */}
-          <div className="relative w-full sm:w-80 md:w-96">
-            <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
-            </svg>
-            <input
-              type="text"
-              className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white text-slate-800 placeholder-slate-400"
-              placeholder="Search parent by name, phone, or child..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
           </div>
         </div>
       </div>
 
       {/* Table Responsive Wrapper */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-slate-50/75 border-b border-slate-200 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
-            <tr>
-              <th className="py-3 px-4 w-12 text-center" scope="col">#</th>
-              <th className="py-3 px-4" scope="col">Profile</th>
-              <th className="py-3 px-4" scope="col">Name & Email</th>
-              <th className="py-3 px-4" scope="col">Phone Number</th>
-              <th className="py-3 px-4" scope="col">Linked Children</th>
-              <th className="py-3 px-4" scope="col">Assigned Route & Bus</th>
-              <th className="py-3 px-4 text-center" scope="col">Action</th>
+        <table className="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr className="bg-slate-50/60 border-b border-slate-100 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
+              <th className="py-3.5 px-4 w-12 text-center" scope="col">#</th>
+              <th className="py-3.5 px-4" scope="col">PROFILE</th>
+              <th className="py-3.5 px-4" scope="col">NAME &amp; EMAIL</th>
+              <th className="py-3.5 px-4" scope="col">PHONE NUMBER</th>
+              <th className="py-3.5 px-4" scope="col">LINKED CHILDREN</th>
+              <th className="py-3.5 px-4" scope="col">ASSIGNED ROUTE &amp; BUS</th>
+              <th className="py-3.5 px-4 text-center" scope="col">ACTION</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 font-normal">
+          <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
             {filteredParents.length > 0 ? (
               filteredParents.map((parent, idx) => (
-                <tr key={parent.phone + idx} className="hover:bg-slate-50/50 transition">
+                <tr key={parent.phone + idx} className="hover:bg-slate-50/60 transition-colors">
                   <td className="py-3.5 px-4 text-center text-slate-400 font-medium">
                     {parent.num || idx + 1}
                   </td>
@@ -220,51 +219,38 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
                   </td>
                   <td className="py-3.5 px-4">
                     <div className="font-bold text-slate-900 leading-tight">{parent.name}</div>
-                    <div className="text-slate-400 text-[11px]">{parent.email}</div>
+                    <div className="text-slate-400 text-[11px] mt-0.5">{parent.email}</div>
                   </td>
                   <td className="py-3.5 px-4 text-slate-600">
-                    <div className="flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                      </svg>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <MdCall className="text-slate-400" size={14} />
                       <span>{parent.phone}</span>
                     </div>
                   </td>
                   <td className="py-3.5 px-4">
                     <div className="flex flex-col gap-1">
                       {parent.children.map((child, cIdx) => (
-                        <span key={cIdx} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] bg-slate-100 text-slate-700 max-w-fit">
-                          <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z"></path>
-                          </svg>
+                        <span key={cIdx} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] bg-slate-100/80 text-slate-700 max-w-fit font-medium">
+                          <MdSchool className="text-blue-600" size={13} />
                           {child.name} <span className="text-slate-400 font-normal">({child.grade})</span>
                         </span>
                       ))}
                     </div>
                   </td>
                   <td className="py-3.5 px-4">
-                    <div className="font-medium text-slate-800">{parent.route}</div>
+                    <div className="font-semibold text-slate-800">{parent.route}</div>
                     <div className="flex items-center gap-1 text-blue-600 font-semibold text-[11px] mt-0.5">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <rect height="14" rx="2" width="18" x="3" y="4"></rect>
-                        <path d="M7 15h.01M17 15h.01M4 9h16"></path>
-                      </svg>
-                      {parent.bus}
+                      <MdDirectionsBus size={13} />
+                      <span>{parent.bus}</span>
                     </div>
                   </td>
                   <td className="py-3.5 px-4 text-center">
                     <div className="flex items-center justify-center gap-2 text-slate-400">
-                      <button className="hover:text-blue-600 transition p-1 cursor-pointer" title="Edit Parent">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
+                      <button className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer" title="Edit Parent">
+                        <MdEdit size={16} />
                       </button>
-                      <button className="hover:text-blue-600 transition p-1 cursor-pointer" title="View Details">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
+                      <button className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer" title="View Details">
+                        <MdVisibility size={16} />
                       </button>
                     </div>
                   </td>
@@ -272,8 +258,8 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
-                  No parents found matching the specified filters.
+                <td colSpan={7} className="py-8 text-center text-slate-400 text-xs font-normal">
+                  No parents found matching the specified search.
                 </td>
               </tr>
             )}
@@ -281,29 +267,27 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
         </table>
       </div>
 
-      {/* Table Footer / Pagination */}
-      <div className="p-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-        <div className="text-slate-500">
-          Showing <span className="font-semibold text-slate-700">1</span> to <span className="font-semibold text-slate-700">{filteredParents.length}</span> of <span className="font-semibold text-slate-700">248</span> parents
+      {/* Table Pagination Footer */}
+      <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+        <div>
+          Showing <span className="font-semibold text-slate-700">1</span> to <span className="font-semibold text-slate-700">{filteredParents.length}</span> of <span className="font-semibold text-slate-700">{parentsList.length}</span> parents
         </div>
-        <div className="inline-flex items-center gap-1">
+        <div className="inline-flex items-center gap-1.5">
           <button
             onClick={() => setActivePage(Math.max(1, activePage - 1))}
-            className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:bg-slate-50 flex items-center justify-center cursor-pointer"
+            className="w-7 h-7 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 flex items-center justify-center transition cursor-pointer"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
+            <MdChevronLeft size={16} />
           </button>
 
           {[1, 2, 3, 4, 5].map((page) => (
             <button
               key={page}
               onClick={() => setActivePage(page)}
-              className={`w-8 h-8 rounded font-semibold flex items-center justify-center transition cursor-pointer ${
+              className={`w-7 h-7 rounded-lg text-xs transition cursor-pointer font-medium ${
                 activePage === page
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  ? 'bg-blue-600 text-white font-bold shadow-xs'
+                  : 'border border-slate-200 text-slate-600 hover:bg-slate-100'
               }`}
             >
               {page}
@@ -312,11 +296,9 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
 
           <button
             onClick={() => setActivePage(Math.min(5, activePage + 1))}
-            className="w-8 h-8 rounded border border-slate-200 text-slate-400 hover:bg-slate-50 flex items-center justify-center cursor-pointer"
+            className="w-7 h-7 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 flex items-center justify-center transition cursor-pointer"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
+            <MdChevronRight size={16} />
           </button>
         </div>
       </div>

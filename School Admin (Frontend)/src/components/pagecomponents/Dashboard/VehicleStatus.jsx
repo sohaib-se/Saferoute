@@ -1,6 +1,6 @@
-﻿const VehicleStatus = () => {
+const VehicleStatus = () => {
   return (
-    <div className="lg:col-span-6 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between" data-purpose="vehicle-status-card">
+    <div className="lg:col-span-6 bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between" data-purpose="vehicle-status-card">
       <div>
         <h3 className="text-sm font-bold text-slate-800">Vehicle Status</h3>
         <p className="text-xs text-slate-400 mt-0.5">Current availability &amp; maintenance split</p>

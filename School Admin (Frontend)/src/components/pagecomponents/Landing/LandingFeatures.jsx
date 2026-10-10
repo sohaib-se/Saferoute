@@ -1,68 +1,109 @@
-import { FiMapPin, FiBell, FiShield, FiUsers, FiClock, FiActivity } from 'react-icons/fi';
+import {
+  MdLocationOn,
+  MdNotificationsActive,
+  MdWarning,
+  MdPeople,
+  MdRadar,
+  MdAltRoute,
+} from 'react-icons/md';
 
 const LandingFeatures = () => {
   const features = [
     {
-      icon: <FiMapPin size={24} />,
-      color: "blue",
-      title: "Live Tracking",
-      description: "Real-time GPS broadcast gives parents and admins exact vehicle locations instantly on the map."
+      icon: <MdLocationOn size={22} />,
+      badgeBg: 'bg-blue-50 text-blue-600 border-blue-100',
+      title: 'Sub-Second Live GPS Radar',
+      description:
+        'Continuous telematics tracking with high-precision GPS coordinates, live vehicle speed monitoring, and real-time transit telemetry.',
+      tag: 'Real-Time Telemetry',
     },
     {
-      icon: <FiBell size={24} />,
-      color: "emerald",
-      title: "Smart Notifications",
-      description: "Automated alerts for pick-up, drop-off, and proximity to keep parents informed without effort."
+      icon: <MdNotificationsActive size={22} />,
+      badgeBg: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+      title: 'Automated Parent Alerts',
+      description:
+        'Instant automated SMS and push notifications sent to guardians when the bus departs, arrives at stops, or completes drop-off.',
+      tag: 'Zero-Effort Push/SMS',
     },
     {
-      icon: <FiShield size={24} />,
-      color: "purple",
-      title: "Verified Security",
-      description: "School-issued credentials and dedicated SOS features ensure maximum safety during transit."
+      icon: <MdWarning size={22} />,
+      badgeBg: 'bg-rose-50 text-rose-600 border-rose-100',
+      title: 'Dispatcher Code-Red SOS',
+      description:
+        'Dedicated driver emergency panic triggers that instantly alert dispatch supervisors, stream cabin audio, and deploy emergency links.',
+      tag: 'Critical Safety',
     },
     {
-      icon: <FiUsers size={24} />,
-      color: "orange",
-      title: "Parent & Driver Apps",
-      description: "Dedicated mobile applications for both drivers to broadcast and parents to monitor the journey."
+      icon: <MdPeople size={22} />,
+      badgeBg: 'bg-purple-50 text-purple-600 border-purple-100',
+      title: 'Verified Student Manifest',
+      description:
+        'Eliminate transit uncertainty with digital passenger manifests, attendance rosters, and bus pass verification for every stop.',
+      tag: 'Passenger Security',
     },
     {
-      icon: <FiClock size={24} />,
-      color: "rose",
-      title: "Route Optimization",
-      description: "Smart routing suggestions to minimize travel time and save fuel for school transport fleets."
+      icon: <MdRadar size={22} />,
+      badgeBg: 'bg-amber-50 text-amber-600 border-amber-100',
+      title: 'Smart Geofence Safe Zones',
+      description:
+        'Automated 500m proximity perimeters around student homes and schools so parents never wait unnecessarily in extreme weather.',
+      tag: 'Proximity Sensors',
     },
     {
-      icon: <FiActivity size={24} />,
-      color: "cyan",
-      title: "Admin Dashboard",
-      description: "Centralized control panel for school administrators to oversee the entire transport network."
-    }
+      icon: <MdAltRoute size={22} />,
+      badgeBg: 'bg-teal-50 text-teal-600 border-teal-100',
+      title: 'Route Fleet Optimization',
+      description:
+        'Centralized assignment of buses, assigned drivers, and schedules to reduce transit duration and optimize fuel efficiency.',
+      tag: 'Fleet Efficiency',
+    },
   ];
 
   return (
-    <section className="py-24 px-6 sm:px-12 lg:px-24 relative z-10 bg-white/[0.02] border-y border-white/5">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Everything You Need for Safe Transit</h2>
-          <p className="text-slate-400 max-w-2xl mx-auto">Powerful features designed to ensure the safety of students and provide peace of mind to parents and administrators.</p>
+    <section id="features" className="py-20 px-6 sm:px-10 lg:px-12 bg-white border-y border-slate-200/80">
+      <div className="max-w-[1440px] mx-auto">
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[11px] font-bold uppercase tracking-wider mb-3">
+            Platform Capabilities
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+            Built for Complete School Fleet Security
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
+            Engineered to give school administrators complete operational control while delivering complete transparency to families.
+          </p>
         </div>
 
+        {/* Feature Cards Grid (Inspired by Bento & Buffer) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, idx) => (
-            <div key={idx} className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors duration-300 group">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 
-                ${feature.color === 'blue' ? 'bg-blue-500/20 text-blue-400' : ''}
-                ${feature.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400' : ''}
-                ${feature.color === 'purple' ? 'bg-purple-500/20 text-purple-400' : ''}
-                ${feature.color === 'orange' ? 'bg-orange-500/20 text-orange-400' : ''}
-                ${feature.color === 'rose' ? 'bg-rose-500/20 text-rose-400' : ''}
-                ${feature.color === 'cyan' ? 'bg-cyan-500/20 text-cyan-400' : ''}
-              `}>
-                {feature.icon}
+            <div
+              key={idx}
+              className="bg-[#F8FAFC]/60 hover:bg-white rounded-2xl p-6 border border-slate-200/80 hover:border-blue-200 shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-5">
+                  <div
+                    className={`w-11 h-11 rounded-xl flex items-center justify-center border ${feature.badgeBg}`}
+                  >
+                    {feature.icon}
+                  </div>
+                  <span className="text-[10px] font-semibold text-slate-500 bg-white border border-slate-200/80 px-2.5 py-1 rounded-full shadow-2xs">
+                    {feature.tag}
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                  {feature.title}
+                </h3>
+                <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                  {feature.description}
+                </p>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-slate-100 group-hover:text-white transition-colors">{feature.title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed group-hover:text-slate-300 transition-colors">{feature.description}</p>
+
+              <div className="pt-4 mt-4 border-t border-slate-200/60 flex items-center text-[11px] font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform">
+                <span>Learn more details &rarr;</span>
+              </div>
             </div>
           ))}
         </div>

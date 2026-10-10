@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { MdPeople } from 'react-icons/md';
+import Modal from '../../common/Modal';
 
 const AddParentModal = ({ isOpen, onClose, onAddParent }) => {
   const [formData, setFormData] = useState({
@@ -34,111 +36,122 @@ const AddParentModal = ({ isOpen, onClose, onAddParent }) => {
       initials,
       avatarBg: 'bg-blue-100 text-blue-600',
       children: childrenArray,
+      route: 'Route 1 (Green Valley)',
+      bus: 'Bus 12',
+      status: 'Active',
     });
 
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      children: '',
+      address: '',
+    });
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="8.5" cy="7" r="4"></circle>
-                <line x1="20" x2="20" y1="8" y2="14"></line>
-                <line x1="23" x2="17" y1="11" y2="11"></line>
-              </svg>
-            </div>
-            <h3 className="text-base font-bold text-slate-900">Add New Parent</h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-100 transition cursor-pointer"
-          >
-            <i className="fa-solid fa-xmark text-base"></i>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      icon={<MdPeople size={20} />}
+      title="Add New Parent"
+      subtitle="Register a student guardian into the school transport system"
+      maxWidth="max-w-lg"
+    >
+      <form onSubmit={handleSubmit}>
+        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Parent Full Name *</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Parent Full Name <span className="text-rose-500">*</span>
+            </label>
             <input
               type="text"
               required
               placeholder="e.g. Sana Ahmed"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800"
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Email Address
+              </label>
               <input
                 type="email"
                 placeholder="sana.ahmed@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800"
+                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Phone Number *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Phone Number <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="text"
                 required
                 placeholder="+92 300 1234567"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800"
+                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Linked Children (Name (Grade))</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Linked Children
+            </label>
             <input
               type="text"
               placeholder="e.g. Ayesha Khan (Grade 5), Zoya Malik (Grade 5)"
               value={formData.children}
               onChange={(e) => setFormData({ ...formData, children: e.target.value })}
-              className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800"
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
             />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Comma-separated names with grade in parentheses
+            </p>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Address</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Residential Address
+            </label>
             <input
               type="text"
               placeholder="e.g. House #12, Street 4, Model Town, Lahore"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800"
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
             />
           </div>
+        </div>
 
-          <div className="pt-3 flex items-center justify-end space-x-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition shadow-sm"
-            >
-              Save Parent
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Unified Modal Footer */}
+        <div className="px-6 py-4 bg-slate-50/60 border-t border-slate-100 flex items-center justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition cursor-pointer"
+          >
+            Save Parent
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 

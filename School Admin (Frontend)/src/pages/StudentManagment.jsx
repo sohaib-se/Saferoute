@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import KPIStatsCards from '../components/pagecomponents/StudentManagement/KPIStatsCards';
 import StudentsTableSection from '../components/pagecomponents/StudentManagement/StudentsTableSection';
 import StudentManagementFooter from '../components/pagecomponents/StudentManagement/StudentManagementFooter';
-import AddStudentModal from '../components/pagecomponents/StudentManagement/AddStudentModal';
 import StudentDetailsModal from '../components/pagecomponents/StudentManagement/StudentDetailsModal';
 
 const StudentManagment = ({
@@ -141,45 +140,31 @@ const StudentManagment = ({
   };
 
   return (
-    <div className="h-screen flex bg-[#F8FAFC] text-[#1E293B] font-sans antialiased overflow-hidden">
-      {/* BEGIN: Sidebar */}
+    <div className="h-screen flex bg-[#F8FAFC] text-slate-800 font-sans antialiased overflow-hidden">
       <Sidebar
         onLogout={onLogout}
         currentPage={currentPage}
         onNavigate={onNavigate}
       />
-      {/* END: Sidebar */}
 
-      {/* BEGIN: MainContentArea */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto h-screen">
-        {/* BEGIN: TopBar */}
         <Header />
-        {/* END: TopBar */}
 
-        {/* BEGIN: PageContent */}
-        <main className="flex-1 p-8 space-y-6">
-          {/* BEGIN: KPIStatsCards */}
+        <main className="flex-1 p-8 space-y-6 max-w-[1440px] w-full mx-auto">
           <KPIStatsCards />
-          {/* END: KPIStatsCards */}
 
-          {/* BEGIN: StudentsTableSection */}
           <StudentsTableSection
             onAddStudentClick={handleAddStudentClick}
             onViewStudent={handleViewStudent}
             onEditStudent={handleEditStudent}
             studentsList={studentsList}
           />
-          {/* END: StudentsTableSection */}
 
-          {/* Generous space below main container matching layout visual */}
-          <div className="h-28"></div>
+          <div className="h-4"></div>
         </main>
-        {/* END: PageContent */}
 
-        {/* BEGIN: Footer */}
         <StudentManagementFooter />
       </div>
-      {/* END: MainContentArea */}
 
       <StudentDetailsModal
         student={selectedStudent}

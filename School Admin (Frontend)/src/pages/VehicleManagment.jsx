@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import VehicleStatCards from '../components/pagecomponents/VehicleManagement/VehicleStatCards';
@@ -61,20 +61,17 @@ const VehicleManagment = ({
   ).length;
 
   return (
-    <div className="h-screen flex bg-[#f4f6fa] text-slate-800 antialiased overflow-hidden font-sans">
-      {/* Sidebar */}
+    <div className="h-screen flex bg-[#F8FAFC] text-slate-800 antialiased overflow-hidden font-sans">
       <Sidebar
         onLogout={onLogout}
         currentPage={currentPage}
         onNavigate={onNavigate}
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#f4f6fa] overflow-y-auto h-screen">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto h-screen">
         <Header />
 
-        <main className="flex-1 p-6 space-y-6 max-w-7xl w-full mx-auto" data-purpose="dashboard-main-area">
-          {/* Stat Cards */}
+        <main className="flex-1 p-8 space-y-6 max-w-[1440px] w-full mx-auto" data-purpose="dashboard-main-area">
           <VehicleStatCards
             totalVehicles={totalVehicles}
             runningVehicles={runningVehicles}
@@ -82,20 +79,19 @@ const VehicleManagment = ({
             maintenanceVehicles={maintenanceVehicles}
           />
 
-          {/* Table Section */}
           <VehiclesTableSection
             vehiclesList={vehicles}
             onAddVehicleClick={() => setIsAddModalOpen(true)}
             onViewVehicle={handleViewVehicle}
             onEditVehicle={handleEditVehicle}
           />
+
+          <div className="h-4"></div>
         </main>
 
-        {/* Footer */}
         <VehicleManagementFooter />
       </div>
 
-      {/* Modals */}
       <AddVehicleModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}

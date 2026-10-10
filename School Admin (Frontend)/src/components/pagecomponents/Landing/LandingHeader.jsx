@@ -1,35 +1,60 @@
 import { Link } from 'react-router-dom';
-import { FiDownload } from 'react-icons/fi';
+import { MdDirectionsBus, MdArrowForward } from 'react-icons/md';
 
 const LandingHeader = () => {
   return (
-    <header className="w-full relative z-50 py-6 px-6 sm:px-12 lg:px-24">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Logo */}
+    <header className="sticky top-0 z-50 w-full bg-white/85 backdrop-blur-md border-b border-slate-200/80 transition-all">
+      <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 h-16 flex items-center justify-between">
+        {/* SafeRoute Brand Logo */}
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-all duration-300">
-            <span className="text-white font-bold text-xl tracking-tighter">S</span>
+          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform shrink-0">
+            <MdDirectionsBus size={20} />
           </div>
-          <span className="text-2xl font-bold text-white tracking-tight">
-            SafeRoute
-          </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-bold text-slate-900 tracking-tight leading-none">
+                SafeRoute
+              </span>
+              <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
+                School Transport
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
+              Fleet &amp; Student Safety
+            </p>
+          </div>
         </Link>
 
+        {/* Desktop Nav Links */}
+        <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-600">
+          <a href="#features" className="hover:text-blue-600 transition-colors">
+            Platform Features
+          </a>
+          <a href="#preview" className="hover:text-blue-600 transition-colors">
+            Live Telematics
+          </a>
+          <a href="#about" className="hover:text-blue-600 transition-colors">
+            About SafeRoute
+          </a>
+          <a href="#security" className="hover:text-blue-600 transition-colors">
+            SOS Security
+          </a>
+        </nav>
+
         {/* Action Buttons */}
-        <div className="flex items-center gap-4">
-          <button 
-            className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-semibold text-slate-200 backdrop-blur-md transition-colors duration-300 cursor-not-allowed opacity-80"
-            title="Coming Soon"
-          >
-            <FiDownload size={16} />
-            <span>Download App</span>
-          </button>
-          
-          <Link 
+        <div className="flex items-center gap-3">
+          <Link
             to="/login"
-            className="px-6 py-2.5 bg-white text-[#060d1f] hover:bg-blue-50 rounded-xl text-sm font-bold shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+            className="px-4 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 rounded-xl transition-all"
           >
-            Login
+            Sign In
+          </Link>
+          <Link
+            to="/register"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs shadow-blue-500/20 transition-all hover:shadow-md cursor-pointer"
+          >
+            <span>Register School</span>
+            <MdArrowForward className="w-3.5 h-3.5" />
           </Link>
         </div>
       </div>

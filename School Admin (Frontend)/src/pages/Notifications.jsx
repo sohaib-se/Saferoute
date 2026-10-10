@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import NotificationHeaderSection from '../components/pagecomponents/Notifications/NotificationHeaderSection';
@@ -34,20 +34,17 @@ const Notifications = ({
   const unreadCount = notifications.filter((item) => item.unread).length;
 
   return (
-    <div className="h-screen flex bg-[#f8fafc] text-slate-800 antialiased overflow-hidden font-sans">
-      {/* Sidebar */}
+    <div className="h-screen flex bg-[#F8FAFC] text-slate-800 antialiased overflow-hidden font-sans">
       <Sidebar
         onLogout={onLogout}
         currentPage={currentPage}
         onNavigate={onNavigate}
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] overflow-y-auto h-screen">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC] overflow-y-auto h-screen">
         <Header />
 
-        <main className="flex-1 p-8 space-y-6">
-          {/* Header Section */}
+        <main className="flex-1 p-8 space-y-6 max-w-[1440px] w-full mx-auto">
           <NotificationHeaderSection
             totalCount={totalCount}
             unreadCount={unreadCount}
@@ -55,10 +52,8 @@ const Notifications = ({
             onOpenSendModal={() => setIsSendModalOpen(true)}
           />
 
-          {/* Stat Cards */}
           <NotificationStatCards />
 
-          {/* Filter Bar */}
           <NotificationFilterBar
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -68,15 +63,15 @@ const Notifications = ({
             onDateFilterChange={setDateFilter}
           />
 
-          {/* Notifications List */}
           <NotificationsListSection
             notificationsList={notifications}
             activeTab={activeTab}
           />
+
+          <div className="h-4"></div>
         </main>
       </div>
 
-      {/* Send Notification Modal */}
       <SendNotificationModal
         isOpen={isSendModalOpen}
         onClose={() => setIsSendModalOpen(false)}

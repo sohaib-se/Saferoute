@@ -1,28 +1,24 @@
+import { MdGpsFixed, MdLocationOn, MdRadar } from 'react-icons/md';
+
 const CardResidenceGeofence = ({ formData, onChange }) => {
   return (
-    <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+    <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
       <div className="flex items-center justify-between pb-5 border-b border-slate-100 mb-5">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M12 2a8 8 0 00-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 00-8-8z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
+          <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <MdRadar className="w-4 h-4" />
           </div>
-          <h2 className="text-base font-bold text-slate-800">Residence & Geofence</h2>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">Residence & Geofence</h2>
+            <p className="text-[11px] text-slate-500">Proximity radar & alert radius</p>
+          </div>
         </div>
 
         <button
           type="button"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50/80 text-blue-600 text-xs font-semibold hover:bg-blue-100 transition-colors cursor-pointer shadow-xs"
         >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="22" x2="18" y1="12" y2="12"></line>
-            <line x1="6" x2="2" y1="12" y2="12"></line>
-            <line x1="12" x2="12" y1="6" y2="2"></line>
-            <line x1="12" x2="12" y1="22" y2="18"></line>
-          </svg>
+          <MdGpsFixed className="w-3.5 h-3.5" />
           Detect GPS
         </button>
       </div>
@@ -34,7 +30,7 @@ const CardResidenceGeofence = ({ formData, onChange }) => {
           <input
             type="text"
             required
-            className="w-full px-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white"
+            className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
             placeholder="e.g. House #42, Street 4, Sector B-1, Green Valley Housing Society, Lahore"
             value={formData.address || ''}
             onChange={(e) => onChange('address', e.target.value)}
@@ -42,7 +38,7 @@ const CardResidenceGeofence = ({ formData, onChange }) => {
         </div>
 
         {/* Embedded Map Preview */}
-        <div className="relative h-52 w-full rounded-xl overflow-hidden border border-slate-200 bg-[#dce7e1] flex items-center justify-center p-3">
+        <div className="relative h-48 w-full rounded-xl overflow-hidden border border-slate-200 bg-[#dce7e1] flex items-center justify-center p-3">
           {/* Simulated Map Feature Lines */}
           <div className="absolute inset-0 opacity-40 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.7)_0%,transparent_60%)]">
             <div className="absolute w-full h-1 bg-amber-200 top-12 rotate-[-6deg]"></div>
@@ -57,37 +53,30 @@ const CardResidenceGeofence = ({ formData, onChange }) => {
           {/* Geofence Radius Circle and Pin with Real-time Address */}
           <div className="relative flex flex-col items-center justify-center z-10 -mt-2">
             {/* Realtime Address Tooltip */}
-            <div className="mb-2 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-lg shadow-md border border-blue-200 text-center max-w-[280px] transition-all">
+            <div className="mb-2 px-3 py-1 bg-white/95 backdrop-blur-md rounded-lg shadow-sm border border-blue-200 text-center max-w-[280px] transition-all">
               <p className="text-[10px] font-bold text-blue-700 truncate leading-tight">
                 📍 {formData.address ? formData.address : 'Type address above to set location...'}
               </p>
             </div>
 
-            <div className="w-24 h-24 rounded-full bg-blue-500/15 border border-blue-500/40 flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full bg-blue-500/20 border border-blue-500/60 flex items-center justify-center">
-                <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg border-2 border-white">
-                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"></path>
-                  </svg>
+            <div className="w-20 h-20 rounded-full bg-blue-500/15 border border-blue-500/40 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-blue-500/20 border border-blue-500/60 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg border-2 border-white">
+                  <MdLocationOn className="w-3.5 h-3.5" />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Overlay Pill at Bottom of Map */}
-          <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-white/95 backdrop-blur-xs py-1.5 px-3 rounded-lg border border-slate-200/90 shadow-sm flex items-center justify-between text-[10px] z-20">
+          <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-white/95 backdrop-blur-xs py-1.5 px-3 rounded-lg border border-slate-200/90 shadow-xs flex items-center justify-between text-[10px] z-20">
             <div className="flex items-center gap-1.5 text-slate-700 font-semibold truncate mr-2">
-              <svg className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-              </svg>
-              <span className="truncate">Smart Alert Geofence: <strong>500m Radius</strong></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+              <span className="truncate">Geofence: <strong>500m Radius</strong></span>
             </div>
-            <span className="text-slate-400 font-mono text-[9px] flex-shrink-0">31.4826° N, 74.2982° E</span>
+            <span className="text-slate-400 font-mono text-[9px] shrink-0">31.4826° N, 74.2982° E</span>
           </div>
         </div>
-
-
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
-﻿import { MdOpenInNew, MdAdd, MdRemove, MdFlag, MdDirectionsBus } from 'react-icons/md';
+import { MdOpenInNew, MdAdd, MdRemove, MdFlag, MdDirectionsBus } from 'react-icons/md';
 
 const LiveTrackingMap = () => {
   return (
-    <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col" data-purpose="live-tracking-card">
+    <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col" data-purpose="live-tracking-card">
       <div className="p-5 pb-4 flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-slate-800">Live Tracking</h3>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { MdErrorOutline, MdArrowForward } from 'react-icons/md';
 
 const RegisterForm = ({ onRegister }) => {
   const [formData, setFormData] = useState({
@@ -52,101 +53,136 @@ const RegisterForm = ({ onRegister }) => {
   };
 
   return (
-    <form action="#" method="POST" onSubmit={handleSubmit} className="w-full space-y-3.5">
-      {error && <div className="text-red-500 text-xs text-center font-medium">{error}</div>}
+    <form onSubmit={handleSubmit} className="w-full space-y-3.5">
+      {error && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium">
+          <MdErrorOutline className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* School Name */}
         <div>
-          <label htmlFor="schoolName" className="block text-[12px] font-semibold text-slate-600 mb-1.5 ml-1">School Name</label>
-          <div className="relative w-full input-field-shadow rounded-xl border border-slate-200 bg-slate-50 hover:border-slate-300 transition-colors">
-            <input
-              id="schoolName" name="schoolName" type="text" placeholder="Greenwood High" required
-              value={formData.schoolName} onChange={handleChange}
-              className="w-full px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 bg-transparent border-0 rounded-xl focus:ring-0 focus:outline-none"
-            />
-          </div>
+          <label htmlFor="schoolName" className="block text-xs font-semibold text-slate-700 mb-1.5">
+            School Name *
+          </label>
+          <input
+            id="schoolName"
+            name="schoolName"
+            type="text"
+            placeholder="e.g. Beaconhouse High"
+            required
+            value={formData.schoolName}
+            onChange={handleChange}
+            className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+          />
         </div>
 
         {/* Phone */}
         <div>
-          <label htmlFor="phone" className="block text-[12px] font-semibold text-slate-600 mb-1.5 ml-1">Phone Number</label>
-          <div className="relative w-full input-field-shadow rounded-xl border border-slate-200 bg-slate-50 hover:border-slate-300 transition-colors">
-            <input
-              id="phone" name="phone" type="text" placeholder="+1 234 567 890" required
-              value={formData.phone} onChange={handleChange}
-              className="w-full px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 bg-transparent border-0 rounded-xl focus:ring-0 focus:outline-none"
-            />
-          </div>
+          <label htmlFor="phone" className="block text-xs font-semibold text-slate-700 mb-1.5">
+            Official Phone *
+          </label>
+          <input
+            id="phone"
+            name="phone"
+            type="text"
+            placeholder="+92 300 1234567"
+            required
+            value={formData.phone}
+            onChange={handleChange}
+            className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+          />
         </div>
       </div>
 
       {/* Address */}
       <div>
-        <label htmlFor="address" className="block text-[12px] font-semibold text-slate-600 mb-1.5 ml-1">Address</label>
-        <div className="relative w-full input-field-shadow rounded-xl border border-slate-200 bg-slate-50 hover:border-slate-300 transition-colors">
-          <input
-            id="address" name="address" type="text" placeholder="123 Education Lane, City" required
-            value={formData.address} onChange={handleChange}
-            className="w-full px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 bg-transparent border-0 rounded-xl focus:ring-0 focus:outline-none"
-          />
-        </div>
+        <label htmlFor="address" className="block text-xs font-semibold text-slate-700 mb-1.5">
+          Campus Street Address *
+        </label>
+        <input
+          id="address"
+          name="address"
+          type="text"
+          placeholder="Sector H-8/4, Education Hub, Islamabad"
+          required
+          value={formData.address}
+          onChange={handleChange}
+          className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+        />
       </div>
 
       {/* Email */}
       <div>
-        <label htmlFor="email" className="block text-[12px] font-semibold text-slate-600 mb-1.5 ml-1">Admin Email Address</label>
-        <div className="relative w-full input-field-shadow rounded-xl border border-slate-200 bg-slate-50 hover:border-slate-300 transition-colors">
-          <input
-            id="email" name="email" type="email" placeholder="school@example.com" required
-            value={formData.email} onChange={handleChange}
-            className="w-full px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 bg-transparent border-0 rounded-xl focus:ring-0 focus:outline-none"
-          />
-        </div>
+        <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1.5">
+          Principal / Admin Email *
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="transport@school.edu.pk"
+          required
+          value={formData.email}
+          onChange={handleChange}
+          className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Password */}
         <div>
-          <label htmlFor="password" className="block text-[12px] font-semibold text-slate-600 mb-1.5 ml-1">Password</label>
-          <div className="relative w-full input-field-shadow rounded-xl border border-slate-200 bg-slate-50 hover:border-slate-300 transition-colors">
-            <input
-              id="password" name="password" type="password" placeholder="••••••••" required
-              value={formData.password} onChange={handleChange}
-              className="w-full px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 bg-transparent border-0 rounded-xl focus:ring-0 focus:outline-none"
-            />
-          </div>
+          <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-1.5">
+            Password *
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="••••••••"
+            required
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+          />
         </div>
 
         {/* Confirm Password */}
         <div>
-          <label htmlFor="confirmPassword" className="block text-[12px] font-semibold text-slate-600 mb-1.5 ml-1">Confirm Password</label>
-          <div className="relative w-full input-field-shadow rounded-xl border border-slate-200 bg-slate-50 hover:border-slate-300 transition-colors">
-            <input
-              id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••" required
-              value={formData.confirmPassword} onChange={handleChange}
-              className="w-full px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 bg-transparent border-0 rounded-xl focus:ring-0 focus:outline-none"
-            />
-          </div>
+          <label htmlFor="confirmPassword" className="block text-xs font-semibold text-slate-700 mb-1.5">
+            Confirm Password *
+          </label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            required
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+          />
         </div>
       </div>
 
       {/* Register Button */}
-      <div className="pt-3">
+      <div className="pt-2">
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 text-white text-[14px] font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg hover:shadow-blue-500/30 hover:brightness-110 disabled:opacity-70 disabled:cursor-not-allowed"
-          style={{ background: 'linear-gradient(135deg, #0652bb 0%, #4f87e0 100%)' }}
+          className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white text-xs font-semibold rounded-xl shadow-xs shadow-blue-500/20 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          {loading ? 'Creating account...' : 'Register School'}
+          <span>{loading ? 'Creating Portal Account...' : 'Complete Enrollment & Access Portal'}</span>
+          {!loading && <MdArrowForward className="w-3.5 h-3.5" />}
         </button>
       </div>
 
       {/* Login Link */}
-      <div className="text-center mt-4 pt-4 border-t border-slate-100">
-        <span className="text-[13px] text-slate-500">Already have an account? </span>
-        <Link to="/login" className="text-[13px] font-semibold text-[#0652bb] hover:text-blue-800 transition-colors">
+      <div className="text-center pt-3 border-t border-slate-100">
+        <span className="text-xs text-slate-500">Already registered your school? </span>
+        <Link to="/login" className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
           Sign In
         </Link>
       </div>

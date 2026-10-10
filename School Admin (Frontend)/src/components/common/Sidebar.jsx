@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   MdDashboard,
   MdDirectionsBus,
@@ -26,33 +27,39 @@ const navItems = [
 const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
   return (
     <aside
-      className="w-[230px] flex-shrink-0 flex flex-col justify-between select-none"
-      style={{ background: '#0C1425' }}
+      className="w-[240px] flex-shrink-0 flex flex-col justify-between h-screen sticky top-0 z-40 select-none bg-white border-r border-slate-200/80 font-sans shadow-[1px_0_3px_rgba(0,0,0,0.02)]"
       data-purpose="sidebar"
     >
-      <div>
-        {/* Brand */}
-        <div className="px-5 pt-6 pb-6 flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
-            style={{ background: '#2563EB', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}
-          >
+      <div className="flex flex-col flex-1 min-h-0">
+        {/* Brand Header */}
+        <div className="px-5 pt-6 pb-5 flex items-center gap-3 border-b border-slate-100/80">
+          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
             <MdDirectionsBus size={20} />
           </div>
-          <div>
-            <h1 className="text-sm font-bold text-white tracking-tight leading-snug">
+          <div className="min-w-0">
+            <h1 className="text-sm font-bold text-slate-900 tracking-tight leading-snug">
               SafeRoute
             </h1>
-            <p className="text-[11px] font-medium" style={{ color: '#94A3B8' }}>
+            <p className="text-[11px] font-medium text-slate-400 truncate">
               Admin Fleet Portal
             </p>
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="px-3 space-y-0.5 text-[13px]">
+        {/* Navigation items */}
+        <nav className="px-3 pt-4 pb-2 space-y-1 flex-1 overflow-y-auto custom-scrollbar">
           {navItems.map(({ label, icon: Icon, badge, danger }) => {
-            const active = currentPage === label;
+            const active = currentPage === label || (label === 'Students' && currentPage === 'AddStudent');
+
+            let itemClass = 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium';
+            if (active) {
+              itemClass = danger
+                ? 'bg-rose-50 text-rose-600 font-semibold shadow-xs'
+                : 'bg-blue-50 text-blue-600 font-semibold shadow-xs';
+            } else if (danger) {
+              itemClass = 'text-rose-600 hover:bg-rose-50/70 font-medium';
+            }
+
             return (
               <a
                 key={label}
@@ -63,33 +70,28 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
                     onNavigate(label);
                   }
                 }}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-150"
-                style={{
-                  background: active ? '#2563EB' : 'transparent',
-                  color: active ? '#fff' : danger ? '#FB7185' : '#94A3B8',
-                  fontWeight: active ? 600 : 500,
-                }}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.background = '#152038';
-                    if (!danger) e.currentTarget.style.color = '#E2E8F0';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = danger ? '#FB7185' : '#94A3B8';
-                  }
-                }}
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-150 text-xs ${itemClass}`}
               >
-                <div className="flex items-center gap-3.5">
-                  <Icon size={16} className="flex-shrink-0" />
-                  <span>{label}</span>
+                <div className="flex items-center gap-3 min-w-0">
+                  <Icon
+                    size={17}
+                    className={`shrink-0 ${
+                      active
+                        ? danger
+                          ? 'text-rose-600'
+                          : 'text-blue-600'
+                        : danger
+                        ? 'text-rose-500'
+                        : 'text-slate-400'
+                    }`}
+                  />
+                  <span className="truncate">{label}</span>
                 </div>
                 {badge && (
                   <span
-                    className="w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-                    style={{ background: danger ? '#E11D48' : '#1D4ED8' }}
+                    className={`w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs ${
+                      danger ? 'bg-rose-500' : 'bg-blue-600'
+                    }`}
                   >
                     {badge}
                   </span>
@@ -100,14 +102,15 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
         </nav>
       </div>
 
-      {/* Logout button */}
-      <div className="px-5 py-6">
-        <button 
+      {/* User Status & Logout Footer */}
+      <div className="p-3 border-t border-slate-100 bg-slate-50/50">
+        <button
           onClick={onLogout}
-          className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl transition-all duration-150 text-[#94A3B8] hover:text-[#FB7185] hover:bg-[#152038]"
+          type="button"
+          className="flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-xl transition-all duration-150 text-slate-600 hover:text-rose-600 hover:bg-white border border-transparent hover:border-slate-200/80 text-xs font-semibold cursor-pointer shadow-xs"
         >
-          <MdLogout size={18} />
-          <span className="text-[13px] font-semibold">Logout</span>
+          <MdLogout size={16} className="text-slate-400 group-hover:text-rose-600" />
+          <span>Sign Out</span>
         </button>
       </div>
     </aside>

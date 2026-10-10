@@ -1,19 +1,19 @@
+import { MdPersonOutline, MdLocationOn } from 'react-icons/md';
+
 const CardBasicProfile = ({ formData, onChange, onGenderSelect }) => {
   return (
-    <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+    <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
       <div className="flex items-center justify-between pb-5 border-b border-slate-100 mb-5">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <rect height="18" rx="2" ry="2" width="18" x="3" y="4"></rect>
-              <line x1="16" x2="16" y1="2" y2="6"></line>
-              <line x1="8" x2="8" y1="2" y2="6"></line>
-              <line x1="3" x2="21" y1="10" y2="10"></line>
-            </svg>
+          <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <MdPersonOutline className="w-4 h-4" />
           </div>
-          <h2 className="text-base font-bold text-slate-800">Basic Student Profile</h2>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">Basic Student Profile</h2>
+            <p className="text-[11px] text-slate-500">Legal identification and grade placement</p>
+          </div>
         </div>
-        <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-semibold">
+        <span className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full text-[11px] font-semibold border border-blue-100">
           Academic Year 2024-25
         </span>
       </div>
@@ -26,7 +26,7 @@ const CardBasicProfile = ({ formData, onChange, onGenderSelect }) => {
             <input
               type="text"
               required
-              className="w-full px-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white"
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
               placeholder="e.g. Ayesha Khan"
               value={formData.name || ''}
               onChange={(e) => onChange('name', e.target.value)}
@@ -35,11 +35,11 @@ const CardBasicProfile = ({ formData, onChange, onGenderSelect }) => {
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">Admission / Student ID *</label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">#</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-semibold">#</span>
               <input
                 type="text"
                 required
-                className="w-full pl-8 pr-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                className="w-full pl-8 pr-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
                 placeholder="e.g. ST-9041"
                 value={formData.id || ''}
                 onChange={(e) => onChange('id', e.target.value)}
@@ -55,7 +55,7 @@ const CardBasicProfile = ({ formData, onChange, onGenderSelect }) => {
             <select
               value={formData.class || 'Grade 5'}
               onChange={(e) => onChange('class', e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:bg-white cursor-pointer"
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none cursor-pointer"
             >
               <option value="Grade 5">Grade 5</option>
               <option value="Grade 6">Grade 6</option>
@@ -69,7 +69,7 @@ const CardBasicProfile = ({ formData, onChange, onGenderSelect }) => {
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">Section</label>
             <input
               type="text"
-              className="w-full px-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white"
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
               placeholder="e.g. A"
               value={formData.section || ''}
               onChange={(e) => onChange('section', e.target.value)}
@@ -79,7 +79,7 @@ const CardBasicProfile = ({ formData, onChange, onGenderSelect }) => {
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">Roll Number</label>
             <input
               type="text"
-              className="w-full px-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white"
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
               placeholder="e.g. 14"
               value={formData.rollNo || ''}
               onChange={(e) => onChange('rollNo', e.target.value)}
@@ -91,73 +91,39 @@ const CardBasicProfile = ({ formData, onChange, onGenderSelect }) => {
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1.5">Residential Address *</label>
           <div className="relative">
-            <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M12 2a8 8 0 00-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 00-8-8z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
+            <MdLocationOn className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               required
-              className="w-full pl-10 pr-3.5 py-2.5 bg-[#f0f5fa] border-0 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white"
+              className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
               placeholder="e.g. House #42, Street 4, Sector B-1, Green Valley Housing Society, Lahore"
               value={formData.address || ''}
               onChange={(e) => onChange('address', e.target.value)}
             />
           </div>
         </div>
+
+        {/* Gender Selection */}
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1.5">Gender</label>
           <div className="grid grid-cols-3 gap-3">
-            <button
-              type="button"
-              onClick={() => onGenderSelect('Male')}
-              className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                formData.gender === 'Male'
-                  ? 'bg-[#1664ec] text-white shadow-sm shadow-blue-500/30'
-                  : 'bg-[#f0f5fa] text-slate-700 hover:bg-slate-200/80'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="10" cy="14" r="5"></circle>
-                <line x1="19" x2="13.6" y1="5" y2="10.4"></line>
-                <line x1="19" x2="14" y1="5" y2="5"></line>
-                <line x1="19" x2="19" y1="5" y2="10"></line>
-              </svg>
-              Male
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onGenderSelect('Female')}
-              className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                formData.gender === 'Female'
-                  ? 'bg-[#1664ec] text-white shadow-sm shadow-blue-500/30'
-                  : 'bg-[#f0f5fa] text-slate-700 hover:bg-slate-200/80'
-              }`}
-            >
-              <svg className="w-4 h-4 text-current" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="9" r="5"></circle>
-                <line x1="12" x2="12" y1="14" y2="21"></line>
-                <line x1="8.5" x2="15.5" y1="17.5" y2="17.5"></line>
-              </svg>
-              Female
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onGenderSelect('Other')}
-              className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                formData.gender === 'Other'
-                  ? 'bg-[#1664ec] text-white shadow-sm shadow-blue-500/30'
-                  : 'bg-[#f0f5fa] text-slate-700 hover:bg-slate-200/80'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="4"></circle>
-                <path d="M12 2v4m0 12v4M2 12h4m12 0h4"></path>
-              </svg>
-              Other
-            </button>
+            {['Male', 'Female', 'Other'].map((g) => {
+              const isSelected = formData.gender === g;
+              return (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => onGenderSelect(g)}
+                  className={`py-2 px-4 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-slate-50/70 text-slate-700 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  {g}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

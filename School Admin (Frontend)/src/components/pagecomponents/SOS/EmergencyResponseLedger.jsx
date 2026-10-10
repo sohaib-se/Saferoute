@@ -126,7 +126,7 @@ const EmergencyResponseLedger = () => {
   return (
     <div className="space-y-4">
       {/* Filter Navigation Tabs & Controls */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3 shadow-xs">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
         {/* Tabs Bar */}
         <div className="flex items-center gap-2 border-b border-slate-100 pb-3 flex-wrap">
           {[
@@ -141,7 +141,7 @@ const EmergencyResponseLedger = () => {
               <button
                 key={tab.name}
                 onClick={() => setActiveTab(tab.name)}
-                className={`px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
                   isActive
                     ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200'
                     : 'text-slate-600 hover:text-slate-900 font-medium hover:bg-slate-50'
@@ -157,7 +157,7 @@ const EmergencyResponseLedger = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <span className="text-xs text-slate-500 font-medium">Auto-sync:</span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-[11px] font-bold">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100 text-[11px] font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping"></span>
               Live 5s Polling
             </span>
@@ -165,27 +165,27 @@ const EmergencyResponseLedger = () => {
 
           <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
             {/* Search within alerts */}
-            <div className="relative w-full sm:w-60">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-400">
+            <div className="relative w-full sm:w-64">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
                 <MdSearch className="w-3.5 h-3.5" />
               </span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by Alert ID, Bus No, Parent, d..."
-                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Search by Alert ID, Bus No, Parent..."
+                className="w-full pl-9 pr-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
               />
             </div>
 
             {/* Date Dropdown */}
-            <button className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 font-medium flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-slate-50">
+            <button className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-medium flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-slate-50 shadow-xs">
               <MdCalendarToday className="w-3.5 h-3.5 text-slate-400" />
               Today, Sep 28
             </button>
 
             {/* Severity Dropdown */}
-            <button className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 font-medium flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-slate-50">
+            <button className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-medium flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-slate-50 shadow-xs">
               All Severity Levels
               <MdKeyboardArrowDown className="w-3 h-3 text-slate-400" />
             </button>
@@ -194,13 +194,13 @@ const EmergencyResponseLedger = () => {
       </div>
 
       {/* Response Ledger Table Card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden">
         {/* Table Header summary */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-slate-900">Emergency Response Ledger</h3>
-              <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-bold rounded-full">
+              <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-bold rounded-full border border-blue-100">
                 {filteredData.length} Total Events
               </span>
             </div>
@@ -357,49 +357,32 @@ const EmergencyResponseLedger = () => {
         </div>
 
         {/* Pagination Bar */}
-        <div className="p-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
           <span>Showing 1-5 of 12 Recorded Incidents This Week</span>
           <div className="flex items-center gap-1 font-medium">
             <button
               disabled={page === 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-2.5 py-1 rounded border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50 cursor-pointer transition-colors"
             >
               Prev
             </button>
-            <button
-              onClick={() => setPage(1)}
-              className={`px-2.5 py-1 rounded cursor-pointer ${
-                page === 1
-                  ? 'bg-blue-600 text-white font-bold'
-                  : 'border border-slate-200 hover:bg-slate-50 text-slate-600'
-              }`}
-            >
-              1
-            </button>
-            <button
-              onClick={() => setPage(2)}
-              className={`px-2.5 py-1 rounded cursor-pointer ${
-                page === 2
-                  ? 'bg-blue-600 text-white font-bold'
-                  : 'border border-slate-200 hover:bg-slate-50 text-slate-600'
-              }`}
-            >
-              2
-            </button>
-            <button
-              onClick={() => setPage(3)}
-              className={`px-2.5 py-1 rounded cursor-pointer ${
-                page === 3
-                  ? 'bg-blue-600 text-white font-bold'
-                  : 'border border-slate-200 hover:bg-slate-50 text-slate-600'
-              }`}
-            >
-              3
-            </button>
+            {[1, 2, 3].map((num) => (
+              <button
+                key={num}
+                onClick={() => setPage(num)}
+                className={`w-7 h-7 rounded-lg text-xs font-semibold flex items-center justify-center cursor-pointer transition-colors ${
+                  page === num
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'border border-slate-200 hover:bg-slate-50 text-slate-600'
+                }`}
+              >
+                {num}
+              </button>
+            ))}
             <button
               onClick={() => setPage((p) => Math.min(3, p + 1))}
-              className="px-2.5 py-1 rounded border border-slate-200 hover:bg-slate-50 text-slate-600 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 cursor-pointer transition-colors"
             >
               Next
             </button>
