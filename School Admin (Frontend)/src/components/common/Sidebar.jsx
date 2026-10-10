@@ -10,6 +10,7 @@ import {
   MdWarning,
   MdPersonOutline,
   MdLogout,
+  MdSettings,
 } from 'react-icons/md';
 
 const navItems = [
@@ -19,7 +20,7 @@ const navItems = [
   { label: 'Drivers', icon: MdPerson },
   { label: 'Vehicles', icon: MdDirectionsBus },
   { label: 'Trips', icon: MdAccessTime },
-  { label: 'Live Tracking', icon: MdLocationOn },
+  { label: 'Live Tracking', icon: MdLocationOn, liveDot: true },
   { label: 'Notifications', icon: MdNotifications, badge: 3 },
   { label: 'SOS Alerts', icon: MdWarning, badge: 1, danger: true },
 ];
@@ -48,7 +49,7 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
 
         {/* Navigation items */}
         <nav className="px-3 pt-4 pb-2 space-y-1 flex-1 overflow-y-auto custom-scrollbar">
-          {navItems.map(({ label, icon: Icon, badge, danger }) => {
+          {navItems.map(({ label, icon: Icon, badge, danger, liveDot }) => {
             const active = currentPage === label || (label === 'Students' && currentPage === 'AddStudent');
 
             let itemClass = 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium';
@@ -87,6 +88,9 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
                   />
                   <span className="truncate">{label}</span>
                 </div>
+                {liveDot && !badge && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 animate-pulse shrink-0" />
+                )}
                 {badge && (
                   <span
                     className={`w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs ${
@@ -102,15 +106,37 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
         </nav>
       </div>
 
-      {/* User Status & Logout Footer */}
-      <div className="p-3 border-t border-slate-100 bg-slate-50/50">
+      {/* User Status, Settings & Logout Footer */}
+      <div className="p-3 border-t border-slate-100 bg-slate-50/50 flex items-center gap-2">
         <button
           onClick={onLogout}
           type="button"
-          className="flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-xl transition-all duration-150 text-slate-600 hover:text-rose-600 hover:bg-white border border-transparent hover:border-slate-200/80 text-xs font-semibold cursor-pointer shadow-xs"
+          className="flex-1 flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-150 text-slate-600 hover:text-rose-600 hover:bg-white border border-transparent hover:border-slate-200/80 text-xs font-semibold cursor-pointer shadow-xs min-w-0"
+          title="Sign out of portal"
         >
-          <MdLogout size={16} className="text-slate-400 group-hover:text-rose-600" />
-          <span>Sign Out</span>
+          <MdLogout size={16} className="text-slate-400 shrink-0 group-hover:text-rose-600" />
+          <span className="truncate">Sign Out</span>
+        </button>
+
+        <button
+          onClick={() => onNavigate && onNavigate('Profile')}
+          type="button"
+          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 cursor-pointer shadow-xs shrink-0 ${
+            currentPage === 'Profile'
+              ? 'bg-blue-50 text-blue-600 border border-blue-200 shadow-2xs'
+              : 'text-slate-500 hover:text-slate-900 bg-white hover:bg-slate-100/80 border border-slate-200/80'
+          }`}
+          title="School Profile & Settings"
+          aria-label="Settings"
+        >
+          <MdSettings
+            size={18}
+            className={
+              currentPage === 'Profile'
+                ? 'text-blue-600 rotate-45 transition-transform'
+                : 'text-slate-500 hover:rotate-45 transition-transform'
+            }
+          />
         </button>
       </div>
     </aside>
