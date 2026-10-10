@@ -1,6 +1,4 @@
-import React from 'react';
-
-const DriverManagementFooter = () => {
+const SOSFooter = () => {
   return (
     <footer className="mt-auto border-t border-slate-200 bg-white px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
       <div>
@@ -25,4 +23,4 @@ const DriverManagementFooter = () => {
   );
 };
 
-export default DriverManagementFooter;
+export default SOSFooter;

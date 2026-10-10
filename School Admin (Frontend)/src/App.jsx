@@ -10,6 +10,7 @@ import Addstudent from './pages/Addstudent'
 import LoginPage from './pages/LoginPage'
 import LandingPage from './pages/LandingPage'
 import RegisterPage from './pages/RegisterPage'
+import SOS from './pages/SOS'
 
 const initialStudents = [
   {
@@ -201,6 +202,16 @@ const App = () => {
     if (currentPage === 'Notifications') {
       return (
         <Notifications
+          onLogout={handleLogout}
+          onNavigate={setCurrentPage}
+          currentPage={currentPage}
+        />
+      )
+    }
+
+    if (currentPage === 'SOS Alerts') {
+      return (
+        <SOS
           onLogout={handleLogout}
           onNavigate={setCurrentPage}
           currentPage={currentPage}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { MdBadge, MdTimelapse, MdSchedule, MdBlock } from 'react-icons/md';
 
 const DriverKPICards = ({
   totalDrivers = 28,
@@ -7,79 +8,93 @@ const DriverKPICards = ({
   offDutyDrivers = 3,
 }) => {
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-gutter">
+    <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" data-purpose="kpi-metrics-grid">
       {/* Card 1: Total Drivers */}
-      <div className="bg-surface-container-lowest rounded-xl p-space-xl shadow-[0_1px_4px_rgba(0,0,0,0.04)] flex items-center justify-between transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-        <div className="flex flex-col min-w-0 pr-space-sm">
-          <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider font-semibold">
-            Total Drivers
-          </span>
-          <span className="font-display-lg text-display-lg text-on-surface font-bold mt-space-xs leading-none">
-            {totalDrivers}
-          </span>
-          <span className="font-body-sm text-body-sm text-outline mt-space-sm">
-            Registered personnel
-          </span>
+      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Total Drivers
+            </p>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-2xl font-bold text-slate-900">
+                {totalDrivers}
+              </span>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <MdBadge size={22} />
+          </div>
         </div>
-        <div className="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-primary shrink-0">
-          <span className="material-symbols-outlined text-[24px]">badge</span>
+        <div className="mt-3 text-xs text-slate-500 font-medium">
+          Registered personnel
         </div>
       </div>
 
       {/* Card 2: On Duty / Active */}
-      <div className="bg-surface-container-lowest rounded-xl p-space-xl shadow-[0_1px_4px_rgba(0,0,0,0.04)] flex items-center justify-between transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-        <div className="flex flex-col min-w-0 pr-space-sm">
-          <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider font-semibold">
-            On Duty / Active
-          </span>
-          <span className="font-display-lg text-display-lg text-on-surface font-bold mt-space-xs leading-none">
-            {activeDrivers}
-          </span>
-          <div className="flex items-center gap-1.5 mt-space-sm">
-            <span className="w-2 h-2 rounded-full bg-tertiary-fixed-dim shrink-0"></span>
-            <span className="font-body-sm text-body-sm text-on-surface truncate">
-              Currently driving routes
-            </span>
+      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              On Duty / Active
+            </p>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-2xl font-bold text-slate-900">
+                {activeDrivers}
+              </span>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <MdTimelapse size={22} />
           </div>
         </div>
-        <div className="w-12 h-12 rounded-xl bg-tertiary-fixed/20 flex items-center justify-center text-tertiary-container shrink-0">
-          <span className="material-symbols-outlined text-[24px]">timelapse</span>
+        <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+          Currently driving routes
         </div>
       </div>
 
       {/* Card 3: Standby / Idle */}
-      <div className="bg-surface-container-lowest rounded-xl p-space-xl shadow-[0_1px_4px_rgba(0,0,0,0.04)] flex items-center justify-between transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-        <div className="flex flex-col min-w-0 pr-space-sm">
-          <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider font-semibold">
-            Standby / Idle
-          </span>
-          <span className="font-display-lg text-display-lg text-on-secondary-container font-bold mt-space-xs leading-none">
-            {standbyDrivers}
-          </span>
-          <span className="font-body-sm text-body-sm text-outline mt-space-sm">
-            Available for backup/shift
-          </span>
+      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Standby / Idle
+            </p>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-2xl font-bold text-slate-900">
+                {standbyDrivers}
+              </span>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <MdSchedule size={22} />
+          </div>
         </div>
-        <div className="w-12 h-12 rounded-xl bg-secondary-container/60 flex items-center justify-center text-on-secondary-container shrink-0">
-          <span className="material-symbols-outlined text-[24px]">schedule</span>
+        <div className="mt-3 text-xs text-slate-500 font-medium">
+          Available for backup/shift
         </div>
       </div>
 
       {/* Card 4: On Leave / Off-Duty */}
-      <div className="bg-surface-container-lowest rounded-xl p-space-xl shadow-[0_1px_4px_rgba(0,0,0,0.04)] flex items-center justify-between transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-        <div className="flex flex-col min-w-0 pr-space-sm">
-          <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider font-semibold">
-            On Leave / Off-Duty
-          </span>
-          <span className="font-display-lg text-display-lg text-on-surface font-bold mt-space-xs leading-none">
-            {offDutyDrivers}
-          </span>
-          <span className="font-body-sm text-body-sm text-outline mt-space-sm">
-            Scheduled off-duty
-          </span>
+      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              On Leave / Off-Duty
+            </p>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-2xl font-bold text-slate-900">
+                {offDutyDrivers}
+              </span>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+            <MdBlock size={22} />
+          </div>
         </div>
-        <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-secondary shrink-0">
-          <span className="material-symbols-outlined text-[24px]">block</span>
+        <div className="mt-3 text-xs text-slate-500 font-medium">
+          Scheduled off-duty
         </div>
       </div>
     </section>
