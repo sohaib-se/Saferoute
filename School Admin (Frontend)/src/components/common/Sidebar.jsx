@@ -11,6 +11,7 @@ import {
   MdPersonOutline,
   MdLogout,
   MdSettings,
+  MdRoute,
 } from 'react-icons/md';
 
 const navItems = [
@@ -19,6 +20,7 @@ const navItems = [
   { label: 'Parents', icon: MdPeople },
   { label: 'Drivers', icon: MdPerson },
   { label: 'Vehicles', icon: MdDirectionsBus },
+  { label: 'Routes', icon: MdRoute },
   { label: 'Trips', icon: MdAccessTime },
   { label: 'Live Tracking', icon: MdLocationOn, liveDot: true },
   { label: 'Notifications', icon: MdNotifications, badge: 3 },

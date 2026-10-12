@@ -1,17 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import AddStudentHeader from '../components/pagecomponents/addstudents/AddStudentHeader';
 import CardStudentPhoto from '../components/pagecomponents/addstudents/CardStudentPhoto';
 import CardBasicProfile from '../components/pagecomponents/addstudents/CardBasicProfile';
-import CardParentGuardian from '../components/pagecomponents/addstudents/CardParentGuardian';
 import CardRouteFleet from '../components/pagecomponents/addstudents/CardRouteFleet';
-import CardResidenceGeofence from '../components/pagecomponents/addstudents/CardResidenceGeofence';
 import AddStudentFooter from '../components/pagecomponents/addstudents/AddStudentFooter';
-import AddParentModal from '../components/pagecomponents/ParentManagement/AddParentModal';
+import { getDrivers } from '../services/driversService';
+import { getVehicles } from '../services/vehiclesService';
 
 const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStudent }) => {
-  const [isAddParentModalOpen, setIsAddParentModalOpen] = useState(false);
+  const [availableDrivers, setAvailableDrivers] = useState([]);
+  const [availableVehicles, setAvailableVehicles] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     id: '',
@@ -19,23 +19,40 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
     section: '',
     rollNo: '',
     gender: 'Female',
-    
-    // Parent info
-    parentSearch: '',
-    parentName: '',
-    relationship: '',
 
     // Route & Fleet info
-    driver: 'Muhammad Ali',
-    vehicle: 'Bus 12',
+    driver: '',
+    vehicle: '',
     status: 'Waiting',
 
-    // Residence & Geofence
+    // Residence
     address: '',
     
     // Image
     photoUrl: null,
   });
+
+  useEffect(() => {
+    const loadFleetData = async () => {
+      try {
+        const [driversData, vehiclesData] = await Promise.all([
+          getDrivers().catch(() => []),
+          getVehicles().catch(() => []),
+        ]);
+        setAvailableDrivers(driversData);
+        setAvailableVehicles(vehiclesData);
+        if (driversData.length > 0) {
+          setFormData((prev) => ({ ...prev, driver: prev.driver || driversData[0].name }));
+        }
+        if (vehiclesData.length > 0) {
+          setFormData((prev) => ({ ...prev, vehicle: prev.vehicle || vehiclesData[0].name }));
+        }
+      } catch (err) {
+        console.error('Error loading fleet data for student enrollment:', err);
+      }
+    };
+    loadFleetData();
+  }, []);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -55,15 +72,6 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
 
   const handleRemovePhoto = () => {
     setFormData((prev) => ({ ...prev, photoUrl: null }));
-  };
-
-  const handleAddParentFromModal = (newParent) => {
-    setFormData((prev) => ({
-      ...prev,
-      parentName: newParent.name,
-      parentSearch: newParent.name,
-    }));
-    setIsAddParentModalOpen(false);
   };
 
   const handleSubmit = (e) => {
@@ -177,18 +185,10 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
                 <CardRouteFleet
                   formData={formData}
                   onChange={handleChange}
+                  drivers={availableDrivers}
+                  vehicles={availableVehicles}
                 />
 
-                <CardParentGuardian
-                  formData={formData}
-                  onChange={handleChange}
-                  onNewParentClick={() => setIsAddParentModalOpen(true)}
-                />
-
-                <CardResidenceGeofence
-                  formData={formData}
-                  onChange={handleChange}
-                />
               </div>
             </div>
           </form>
@@ -201,13 +201,6 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
           onSubmit={handleSubmit}
         />
       </div>
-
-      {/* Add Parent Modal loaded from Parent Management */}
-      <AddParentModal
-        isOpen={isAddParentModalOpen}
-        onClose={() => setIsAddParentModalOpen(false)}
-        onAddParent={handleAddParentFromModal}
-      />
     </div>
   );
 };

@@ -146,6 +146,7 @@ const StudentsTableSection = ({
   onViewStudent,
   onEditStudent,
   studentsList = initialStudents,
+  isLoading = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('All Classes');
@@ -171,10 +172,12 @@ const StudentsTableSection = ({
   }, []);
 
   const filteredStudents = studentsList.filter((student) => {
+    const term = searchTerm.toLowerCase().trim();
     const matchesSearch =
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.vehicle.toLowerCase().includes(searchTerm.toLowerCase());
+      !term ||
+      (student.name || '').toLowerCase().includes(term) ||
+      (student.id || '').toLowerCase().includes(term) ||
+      (student.vehicle || '').toLowerCase().includes(term);
 
     const matchesClass =
       selectedClass === 'All Classes' || student.class === selectedClass;
@@ -333,7 +336,16 @@ const StudentsTableSection = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs">
-            {filteredStudents.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={8} className="py-12 text-center text-slate-400 text-xs font-normal">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-slate-500 font-medium">Fetching students roster from database...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredStudents.length > 0 ? (
               filteredStudents.map((student, idx) => (
                 <tr key={student.id + idx} className="hover:bg-slate-50/60 transition-colors">
                   <td className="py-3.5 px-6 text-center text-slate-400 font-medium">

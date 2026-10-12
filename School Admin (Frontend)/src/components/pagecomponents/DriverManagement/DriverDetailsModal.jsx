@@ -77,31 +77,17 @@ const DriverDetailsModal = ({ driver, isOpen, onClose, onSave, mode = 'view' }) 
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Assigned Route
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
-                  value={formData.route || ''}
-                  onChange={(e) => setFormData({ ...formData, route: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Route Area
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
-                  value={formData.routeSub || ''}
-                  onChange={(e) => setFormData({ ...formData, routeSub: e.target.value })}
-                />
-              </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Assigned Route
+              </label>
+              <input
+                type="text"
+                required
+                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
+                value={formData.route || ''}
+                onChange={(e) => setFormData({ ...formData, route: e.target.value })}
+              />
             </div>
 
             <div>
@@ -163,7 +149,7 @@ const DriverDetailsModal = ({ driver, isOpen, onClose, onSave, mode = 'view' }) 
                   Assigned Route
                 </span>
                 <span className="text-xs text-slate-900 font-semibold block">
-                  {driver.route} ({driver.routeSub})
+                  {driver.routeSub ? `${driver.route} (${driver.routeSub})` : driver.route}
                 </span>
               </div>
               <div>

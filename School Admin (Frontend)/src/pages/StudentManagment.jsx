@@ -11,6 +11,7 @@ const StudentManagment = ({
   onNavigate,
   currentPage = 'Students',
   students: externalStudents,
+  isLoading = false,
   onUpdateStudent,
 }) => {
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -151,13 +152,22 @@ const StudentManagment = ({
         <Header onNavigate={onNavigate} />
 
         <main className="flex-1 p-8 space-y-6 max-w-[1440px] w-full mx-auto">
-          <KPIStatsCards />
+          <KPIStatsCards
+            stats={{
+              totalStudents: studentsList.length,
+              onRoute: studentsList.filter((s) => s.status === 'On Route').length,
+              pickedUp: studentsList.filter((s) => s.status === 'Picked Up').length,
+              waitingPickup: studentsList.filter((s) => s.status === 'Waiting').length,
+              droppedSafely: studentsList.filter((s) => s.status === 'Dropped').length,
+            }}
+          />
 
           <StudentsTableSection
             onAddStudentClick={handleAddStudentClick}
             onViewStudent={handleViewStudent}
             onEditStudent={handleEditStudent}
             studentsList={studentsList}
+            isLoading={isLoading}
           />
 
           <div className="h-4"></div>

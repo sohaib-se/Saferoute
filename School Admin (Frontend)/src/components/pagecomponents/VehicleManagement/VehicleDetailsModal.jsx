@@ -1,15 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { MdDirectionsBus, MdEdit } from 'react-icons/md';
 import Modal from '../../common/Modal';
+import { getDrivers } from '../../../services/driversService';
+import { getRoutes } from '../../../services/routesService';
 
-const VehicleDetailsModal = ({ vehicle, isOpen, onClose, onSave, mode = 'view' }) => {
+const VehicleDetailsModal = ({
+  vehicle,
+  isOpen,
+  onClose,
+  onSave,
+  mode = 'view',
+  drivers: initialDrivers,
+  routes: initialRoutes,
+}) => {
   const [isEditing, setIsEditing] = useState(mode === 'edit');
   const [formData, setFormData] = useState(vehicle || {});
+  const [driversList, setDriversList] = useState(initialDrivers || []);
+  const [routesList, setRoutesList] = useState(initialRoutes || []);
 
   useEffect(() => {
     setIsEditing(mode === 'edit');
     setFormData(vehicle || {});
   }, [vehicle, mode, isOpen]);
+
+  useEffect(() => {
+    if (initialDrivers && initialDrivers.length > 0) {
+      setDriversList(initialDrivers);
+    } else if (isOpen) {
+      getDrivers()
+        .then((data) => setDriversList(data || []))
+        .catch((err) => console.error('Failed to load drivers for vehicle details modal:', err));
+    }
+  }, [initialDrivers, isOpen]);
+
+  useEffect(() => {
+    if (initialRoutes && initialRoutes.length > 0) {
+      setRoutesList(initialRoutes);
+    } else if (isOpen) {
+      getRoutes()
+        .then((data) => setRoutesList(data || []))
+        .catch((err) => console.error('Failed to load routes for vehicle details modal:', err));
+    }
+  }, [initialRoutes, isOpen]);
 
   if (!isOpen || !vehicle) return null;
 
@@ -30,7 +62,7 @@ const VehicleDetailsModal = ({ vehicle, isOpen, onClose, onSave, mode = 'view' }
       subtitle={
         isEditing
           ? 'Update bus specs, driver link, or telematics status'
-          : `${vehicle.regNo} • ${vehicle.model}`
+          : `${vehicle.regNo || ''}${vehicle.model ? ` • ${vehicle.model}` : ''}`
       }
       maxWidth="max-w-lg"
     >
@@ -67,26 +99,26 @@ const VehicleDetailsModal = ({ vehicle, isOpen, onClose, onSave, mode = 'view' }
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Assigned Driver
+                  Vehicle Model
                 </label>
                 <input
                   type="text"
-                  required
+                  placeholder="e.g. Toyota Coaster 2024"
                   className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
-                  value={formData.driverName || ''}
-                  onChange={(e) => setFormData({ ...formData, driverName: e.target.value })}
+                  value={formData.model || ''}
+                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                 />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Driver Phone
+                  Seating Capacity
                 </label>
                 <input
                   type="text"
-                  required
+                  placeholder="e.g. 30 Seats"
                   className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
-                  value={formData.driverPhone || ''}
-                  onChange={(e) => setFormData({ ...formData, driverPhone: e.target.value })}
+                  value={formData.capacitySeats || ''}
+                  onChange={(e) => setFormData({ ...formData, capacitySeats: e.target.value })}
                 />
               </div>
             </div>
@@ -94,31 +126,73 @@ const VehicleDetailsModal = ({ vehicle, isOpen, onClose, onSave, mode = 'view' }
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Assigned Route
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
-                  value={formData.route || ''}
-                  onChange={(e) => setFormData({ ...formData, route: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Status
+                  Assigned Driver
                 </label>
                 <select
                   className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans cursor-pointer"
-                  value={formData.status || 'Running'}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  value={formData.driverName || ''}
+                  onChange={(e) => {
+                    const selectedName = e.target.value;
+                    const matchedDriver = driversList.find((d) => d.name === selectedName);
+                    setFormData((prev) => ({
+                      ...prev,
+                      driverName: selectedName,
+                      route:
+                        matchedDriver?.route && matchedDriver.route !== 'Unassigned'
+                          ? matchedDriver.route
+                          : prev.route,
+                    }));
+                  }}
                 >
-                  <option value="Running">Running</option>
-                  <option value="On Route">On Route</option>
-                  <option value="Idle">Idle</option>
-                  <option value="Maintenance">Maintenance</option>
+                  <option value="">Unassigned (No Driver Assigned)</option>
+                  {driversList.map((driver) => (
+                    <option key={driver.id || driver.name} value={driver.name}>
+                      {driver.name} {driver.phone ? `(${driver.phone})` : ''}
+                    </option>
+                  ))}
+                  {formData.driverName &&
+                    !driversList.some((d) => d.name === formData.driverName) && (
+                      <option value={formData.driverName}>{formData.driverName}</option>
+                    )}
                 </select>
               </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Assigned Route
+                </label>
+                <select
+                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans cursor-pointer"
+                  value={formData.route || ''}
+                  onChange={(e) => setFormData({ ...formData, route: e.target.value })}
+                >
+                  <option value="">Unassigned (No Route Assigned)</option>
+                  {routesList.map((route) => (
+                    <option key={route.id || route.name} value={route.name}>
+                      {route.name}
+                    </option>
+                  ))}
+                  {formData.route &&
+                    !routesList.some((r) => r.name === formData.route) && (
+                      <option value={formData.route}>{formData.route}</option>
+                    )}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Status
+              </label>
+              <select
+                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans cursor-pointer"
+                value={formData.status || 'Running'}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              >
+                <option value="Running">Running</option>
+                <option value="On Route">On Route</option>
+                <option value="Idle">Idle</option>
+                <option value="Maintenance">Maintenance</option>
+              </select>
             </div>
           </div>
 
@@ -147,7 +221,7 @@ const VehicleDetailsModal = ({ vehicle, isOpen, onClose, onSave, mode = 'view' }
                   Assigned Driver
                 </span>
                 <span className="text-xs text-slate-900 font-semibold block">
-                  {vehicle.driverName} ({vehicle.driverPhone})
+                  {vehicle.driverPhone ? `${vehicle.driverName} (${vehicle.driverPhone})` : (vehicle.driverName || 'Unassigned')}
                 </span>
               </div>
               <div>
@@ -155,7 +229,7 @@ const VehicleDetailsModal = ({ vehicle, isOpen, onClose, onSave, mode = 'view' }
                   Assigned Route
                 </span>
                 <span className="text-xs text-slate-900 font-semibold block">
-                  {vehicle.route} ({vehicle.routeSub})
+                  {vehicle.routeSub ? `${vehicle.route} (${vehicle.routeSub})` : (vehicle.route || 'Route 1')}
                 </span>
               </div>
               <div>
@@ -163,7 +237,7 @@ const VehicleDetailsModal = ({ vehicle, isOpen, onClose, onSave, mode = 'view' }
                   Seating Capacity
                 </span>
                 <span className="text-xs text-slate-900 font-semibold block">
-                  {vehicle.capacitySeats} - {vehicle.capacitySub}
+                  {vehicle.capacitySub ? `${vehicle.capacitySeats} - ${vehicle.capacitySub}` : (vehicle.capacitySeats || '30 Seats')}
                 </span>
               </div>
               <div>
@@ -172,14 +246,16 @@ const VehicleDetailsModal = ({ vehicle, isOpen, onClose, onSave, mode = 'view' }
                 </span>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${vehicle.statusBadgeStyle}`}
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${vehicle.statusBadgeStyle || 'bg-emerald-50 text-emerald-600 border border-emerald-200/70'}`}
                   >
                     <span
-                      className={`w-1.5 h-1.5 rounded-full ${vehicle.statusDotStyle} mr-1.5`}
+                      className={`w-1.5 h-1.5 rounded-full ${vehicle.statusDotStyle || 'bg-emerald-500'} mr-1.5`}
                     ></span>
-                    {vehicle.status}
+                    {vehicle.status || 'Running'}
                   </span>
-                  <span className="text-xs text-slate-500 font-medium">({vehicle.speed})</span>
+                  {vehicle.speed && (
+                    <span className="text-xs text-slate-500 font-medium">({vehicle.speed})</span>
+                  )}
                 </div>
               </div>
             </div>

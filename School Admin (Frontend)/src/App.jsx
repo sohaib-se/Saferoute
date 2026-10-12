@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { getStudents, addStudent, updateStudent } from './services/studentsService'
 import DashboardPage from './pages/DashboardPage'
 import ParentManagment from './pages/ParentManagment'
 import StudentManagment from './pages/StudentManagment'
 import DriversManagment from './pages/DriversManagment'
 import VehicleManagment from './pages/VehicleManagment'
+import RouteManagment from './pages/RouteManagment'
 import Notifications from './pages/Notifications'
 import Addstudent from './pages/Addstudent'
 import LoginPage from './pages/LoginPage'
@@ -15,105 +17,32 @@ import LiveTracking from './pages/LiveTracking'
 import Trips from './pages/Trips'
 import Profile from './pages/Profile'
 
-const initialStudents = [
-  {
-    id: '#ST-9041',
-    num: 1,
-    name: 'Ayesha Khan',
-    class: 'Grade 5',
-    route: 'Route 1',
-    vehicle: 'Bus 12',
-    status: 'On Route',
-    initials: 'AK',
-    avatarBg: 'bg-rose-100 text-rose-500',
-  },
-  {
-    id: '#ST-8822',
-    num: 2,
-    name: 'Muhammad Ali',
-    class: 'Grade 6',
-    route: 'Route 2',
-    vehicle: 'Bus 07',
-    status: 'Picked Up',
-    initials: 'MA',
-    avatarBg: 'bg-blue-100 text-blue-600',
-  },
-  {
-    id: '#ST-7721',
-    num: 3,
-    name: 'Sara Khan',
-    class: 'Grade 7',
-    route: 'Route 3',
-    vehicle: 'Bus 09',
-    status: 'Waiting',
-    initials: 'SK',
-    avatarBg: 'bg-amber-100 text-amber-600',
-  },
-  {
-    id: '#ST-9055',
-    num: 4,
-    name: 'Hassan Ali',
-    class: 'Grade 5',
-    route: 'Route 1',
-    vehicle: 'Bus 12',
-    status: 'On Route',
-    initials: 'HA',
-    avatarBg: 'bg-teal-100 text-teal-600',
-  },
-  {
-    id: '#ST-6643',
-    num: 5,
-    name: 'Fatima Noor',
-    class: 'Grade 6',
-    route: 'Route 2',
-    vehicle: 'Bus 15',
-    status: 'Dropped',
-    initials: 'FN',
-    avatarBg: 'bg-indigo-100 text-indigo-600',
-  },
-  {
-    id: '#ST-7128',
-    num: 6,
-    name: 'Bilal Ahmed',
-    class: 'Grade 7',
-    route: 'Route 4',
-    vehicle: 'Bus 18',
-    status: 'Picked Up',
-    initials: 'BA',
-    avatarBg: 'bg-purple-100 text-purple-600',
-  },
-  {
-    id: '#ST-9080',
-    num: 7,
-    name: 'Zoya Malik',
-    class: 'Grade 5',
-    route: 'Route 1',
-    vehicle: 'Bus 12',
-    status: 'On Route',
-    initials: 'ZM',
-    avatarBg: 'bg-pink-100 text-pink-600',
-  },
-  {
-    id: '#ST-5510',
-    num: 8,
-    name: 'Hamza Tariq',
-    class: 'Grade 8',
-    route: 'Route 5',
-    vehicle: 'Bus 05',
-    status: 'Waiting',
-    initials: 'HT',
-    avatarBg: 'bg-cyan-100 text-cyan-700',
-  },
-];
-
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem('isLoggedIn') === 'true'
   })
   const [currentPage, setCurrentPage] = useState('Dashboard')
-  const [students, setStudents] = useState(initialStudents)
+  const [students, setStudents] = useState([])
+  const [studentsLoading, setStudentsLoading] = useState(true)
   
   const navigate = useNavigate()
+
+  const fetchStudentsList = useCallback(async () => {
+    if (!isLoggedIn) return;
+    try {
+      setStudentsLoading(true);
+      const data = await getStudents();
+      setStudents(data);
+    } catch (err) {
+      console.error('Failed to fetch students in App:', err);
+    } finally {
+      setStudentsLoading(false);
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    fetchStudentsList();
+  }, [fetchStudentsList]);
 
   useEffect(() => {
     const handleAppNavigate = (e) => {
@@ -141,20 +70,26 @@ const App = () => {
     navigate('/', { replace: true })
   }
 
-  const handleAddStudent = (newStudent) => {
-    setStudents((prev) => [
-      ...prev,
-      {
-        ...newStudent,
-        num: prev.length + 1,
-      },
-    ]);
+  const handleAddStudent = async (newStudent) => {
+    try {
+      await addStudent(newStudent);
+      await fetchStudentsList();
+    } catch (err) {
+      console.error('Failed to create student:', err);
+      alert('Failed to save student: ' + (err.message || 'Unknown error'));
+    }
   };
 
-  const handleUpdateStudent = (updatedStudent) => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === updatedStudent.id ? updatedStudent : s))
-    );
+  const handleUpdateStudent = async (updatedStudent) => {
+    try {
+      if (updatedStudent.dbId) {
+        await updateStudent(updatedStudent.dbId, updatedStudent);
+        await fetchStudentsList();
+      }
+    } catch (err) {
+      console.error('Failed to update student:', err);
+      alert('Failed to update student: ' + (err.message || 'Unknown error'));
+    }
   };
 
   const renderDashboardContent = () => {
@@ -164,6 +99,8 @@ const App = () => {
           onLogout={handleLogout}
           onNavigate={setCurrentPage}
           currentPage={currentPage}
+          students={students}
+          onRefreshStudents={fetchStudentsList}
         />
       )
     }
@@ -186,6 +123,7 @@ const App = () => {
           onNavigate={setCurrentPage}
           currentPage={currentPage}
           students={students}
+          isLoading={studentsLoading}
           onAddStudent={handleAddStudent}
           onUpdateStudent={handleUpdateStudent}
         />
@@ -205,6 +143,16 @@ const App = () => {
     if (currentPage === 'Vehicles') {
       return (
         <VehicleManagment
+          onLogout={handleLogout}
+          onNavigate={setCurrentPage}
+          currentPage={currentPage}
+        />
+      )
+    }
+
+    if (currentPage === 'Routes') {
+      return (
+        <RouteManagment
           onLogout={handleLogout}
           onNavigate={setCurrentPage}
           currentPage={currentPage}
