@@ -12,11 +12,12 @@ const StudentManagment = ({
   currentPage = 'Students',
   students: externalStudents,
   isLoading = false,
+  onAddStudent,
   onUpdateStudent,
   onDeleteStudent,
+  onEditStudent,
 }) => {
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [modalMode, setModalMode] = useState('view'); // 'view' or 'edit'
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   // Fallback initial state if external props aren't provided
@@ -115,14 +116,15 @@ const StudentManagment = ({
 
   const handleViewStudent = (student) => {
     setSelectedStudent(student);
-    setModalMode('view');
     setIsDetailsModalOpen(true);
   };
 
   const handleEditStudent = (student) => {
-    setSelectedStudent(student);
-    setModalMode('edit');
-    setIsDetailsModalOpen(true);
+    if (onEditStudent) {
+      onEditStudent(student);
+    } else if (onNavigate) {
+      onNavigate('AddStudent', student);
+    }
   };
 
   const handleSaveStudent = (updatedStudent) => {
@@ -200,8 +202,10 @@ const StudentManagment = ({
         student={selectedStudent}
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        onSave={handleSaveStudent}
-        mode={modalMode}
+        onEdit={(student) => {
+          setIsDetailsModalOpen(false);
+          handleEditStudent(student);
+        }}
       />
     </div>
   );

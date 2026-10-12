@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MdBadge } from 'react-icons/md';
 import Modal from '../../common/Modal';
 
-const AddDriverModal = ({ isOpen, onClose, onAddDriver }) => {
+const AddDriverModal = ({
+  isOpen,
+  onClose,
+  onAddDriver,
+  onUpdateDriver,
+  driver = null,
+}) => {
+  const isEditMode = Boolean(driver);
+
   const [formData, setFormData] = useState({
     name: '',
     license: '',
@@ -10,6 +18,26 @@ const AddDriverModal = ({ isOpen, onClose, onAddDriver }) => {
     phone: '',
     status: 'Online',
   });
+
+  useEffect(() => {
+    if (driver) {
+      setFormData({
+        name: driver.name || '',
+        license: driver.license || '',
+        licenseType: driver.licenseType || 'Heavy Transport',
+        phone: driver.phone || '',
+        status: driver.status || 'Online',
+      });
+    } else {
+      setFormData({
+        name: '',
+        license: '',
+        licenseType: 'Heavy Transport',
+        phone: '',
+        status: 'Online',
+      });
+    }
+  }, [driver, isOpen]);
 
   if (!isOpen) return null;
 
@@ -52,18 +80,25 @@ const AddDriverModal = ({ isOpen, onClose, onAddDriver }) => {
     if (!formData.name || !formData.phone || !formData.license) return;
 
     const styles = getStatusStyles(formData.status);
-    const newDriver = {
+    const driverPayload = {
+      ...(driver || {}),
       ...formData,
-      vehicle: 'Unassigned',
-      route: 'Unassigned',
+      vehicle: driver?.vehicle || 'Unassigned',
+      route: driver?.route || 'Unassigned',
       initials: getInitials(formData.name),
       initialsStyle: styles.initials,
       statusBadgeStyle: styles.badge,
       statusDotStyle: styles.dot,
     };
 
-    if (onAddDriver) {
-      onAddDriver(newDriver);
+    if (isEditMode) {
+      if (onUpdateDriver) {
+        onUpdateDriver(driverPayload);
+      }
+    } else {
+      if (onAddDriver) {
+        onAddDriver(driverPayload);
+      }
     }
 
     setFormData({
@@ -81,8 +116,12 @@ const AddDriverModal = ({ isOpen, onClose, onAddDriver }) => {
       isOpen={isOpen}
       onClose={onClose}
       icon={<MdBadge size={20} />}
-      title="Add New Driver"
-      subtitle="Enroll transport personnel into the active driver roster"
+      title={isEditMode ? 'Edit Driver Information' : 'Add New Driver'}
+      subtitle={
+        isEditMode
+          ? 'Update driver license, contact, or duty status'
+          : 'Enroll transport personnel into the active driver roster'
+      }
       maxWidth="max-w-lg"
     >
       <form onSubmit={handleSubmit}>
@@ -160,7 +199,7 @@ const AddDriverModal = ({ isOpen, onClose, onAddDriver }) => {
             type="submit"
             className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition cursor-pointer"
           >
-            Save Driver
+            {isEditMode ? 'Save Changes' : 'Save Driver'}
           </button>
         </div>
       </form>

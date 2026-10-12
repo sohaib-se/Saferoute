@@ -6,70 +6,113 @@ import {
   getDeterministicFallbackCode,
 } from './appCredentialsService';
 
-export const getDrivers = async () => {
+let driversCache = {
+  data: null,
+  timestamp: 0,
+  schoolId: null,
+};
+let driversInFlight = null;
+const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+
+export const clearDriversCache = () => {
+  driversCache = { data: null, timestamp: 0, schoolId: null };
+  driversInFlight = null;
+};
+
+export const getDrivers = async (forceRefresh = false) => {
   const schoolId = getCurrentSchoolId();
   if (!schoolId) {
     throw new Error('No active school session found. Please sign in again.');
   }
 
-  const { data, error } = await supabase
-    .from('drivers')
-    .select('*')
-    .eq('school_id', schoolId)
-    .order('created_at', { ascending: false });
+  const isCacheValid =
+    !forceRefresh &&
+    driversCache.data &&
+    driversCache.schoolId === schoolId &&
+    Date.now() - driversCache.timestamp < CACHE_TTL_MS;
 
-  if (error) {
-    console.error('Error fetching drivers:', error);
-    throw error;
+  if (isCacheValid) {
+    return driversCache.data;
   }
 
-  // Fetch app credentials for drivers
-  const credentialsMap = await getSchoolCredentialsMap().catch(() => ({}));
+  if (!forceRefresh && driversInFlight) {
+    return driversInFlight;
+  }
 
-  // Format into the structure expected by the frontend components
-  return (data || []).map((d, index) => {
-    const initials = d.name
-      ? d.name
-          .trim()
-          .split(' ')
-          .map((n) => n[0])
-          .slice(0, 2)
-          .join('')
-          .toUpperCase()
-      : 'DR';
+  driversInFlight = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('drivers')
+        .select('*')
+        .eq('school_id', schoolId)
+        .order('created_at', { ascending: false });
 
-    const cred = credentialsMap[d.id] || {
-      loginId: getDeterministicFallbackCode(d),
-      password: getDeterministicFallbackCode(d),
-    };
+      if (error) {
+        console.error('Error fetching drivers:', error);
+        throw error;
+      }
 
-    return {
-      id: d.id,
-      num: index + 1,
-      name: d.name,
-      license: d.license,
-      licenseType: d.license_type || 'Heavy Transport',
-      phone: d.phone,
-      vehicle: d.vehicle || 'Unassigned',
-      route: d.route || 'Unassigned',
-      status: d.status || 'Online',
-      initials,
-      initialsStyle: 'bg-blue-100 text-blue-700',
-      credentials: cred,
-      statusBadgeStyle:
-        d.status === 'Online'
-          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-          : d.status === 'Offline'
-          ? 'bg-slate-100 text-slate-600 border border-slate-200'
-          : 'bg-amber-50 text-amber-700 border border-amber-200',
-      statusDotStyle:
-        d.status === 'Online'
-          ? 'bg-emerald-500'
-          : d.status === 'Offline'
-          ? 'bg-slate-400'
-          : 'bg-amber-500',
-    };
-  });
+      // Fetch app credentials for drivers
+      const credentialsMap = await getSchoolCredentialsMap().catch(() => ({}));
+
+      // Format into the structure expected by the frontend components
+      const formatted = (data || []).map((d, index) => {
+        const initials = d.name
+          ? d.name
+              .trim()
+              .split(' ')
+              .map((n) => n[0])
+              .slice(0, 2)
+              .join('')
+              .toUpperCase()
+          : 'DR';
+
+        const cred = credentialsMap[d.id] || {
+          loginId: getDeterministicFallbackCode(d),
+          password: getDeterministicFallbackCode(d),
+        };
+
+        return {
+          id: d.id,
+          num: index + 1,
+          name: d.name,
+          license: d.license,
+          licenseType: d.license_type || 'Heavy Transport',
+          phone: d.phone,
+          vehicle: d.vehicle || 'Unassigned',
+          route: d.route || 'Unassigned',
+          status: d.status || 'Online',
+          initials,
+          initialsStyle: 'bg-blue-100 text-blue-700',
+          credentials: cred,
+          statusBadgeStyle:
+            d.status === 'Online'
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              : d.status === 'Offline'
+              ? 'bg-slate-100 text-slate-600 border border-slate-200'
+              : 'bg-amber-50 text-amber-700 border border-amber-200',
+          statusDotStyle:
+            d.status === 'Online'
+              ? 'bg-emerald-500'
+              : d.status === 'Offline'
+              ? 'bg-slate-400'
+              : 'bg-amber-500',
+        };
+      });
+
+      driversCache = {
+        data: formatted,
+        timestamp: Date.now(),
+        schoolId,
+      };
+
+      return formatted;
+    } finally {
+      driversInFlight = null;
+    }
+  })();
+
+  return driversInFlight;
 };
 
 export const addDriver = async (driverData) => {
@@ -99,6 +142,8 @@ export const addDriver = async (driverData) => {
     console.error('Error adding driver:', error);
     throw error;
   }
+
+  clearDriversCache();
 
   // Generate and store unique 4-digit ID and password in app_credentials
   let credentials = null;
@@ -142,6 +187,8 @@ export const updateDriver = async (driverId, driverData) => {
     throw error;
   }
 
+  clearDriversCache();
+
   return data;
 };
 
@@ -161,6 +208,8 @@ export const deleteDriver = async (driverId) => {
     console.error('Error deleting driver:', error);
     throw error;
   }
+
+  clearDriversCache();
 
   return true;
 };

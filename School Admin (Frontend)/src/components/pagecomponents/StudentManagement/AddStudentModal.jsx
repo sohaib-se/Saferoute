@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
-import { MdPersonAdd, MdCameraAlt } from 'react-icons/md';
+import React, { useState, useEffect } from 'react';
+import { MdPersonAdd, MdCameraAlt, MdEdit } from 'react-icons/md';
 import Modal from '../../common/Modal';
 
-const AddStudentModal = ({ isOpen, onClose, onAddStudent }) => {
+const AddStudentModal = ({
+  isOpen,
+  onClose,
+  onAddStudent,
+  onUpdateStudent,
+  student = null,
+}) => {
+  const isEditMode = Boolean(student);
+
   const [formData, setFormData] = useState({
     name: '',
     id: 'ST-9041',
@@ -12,7 +20,7 @@ const AddStudentModal = ({ isOpen, onClose, onAddStudent }) => {
     dob: '2014-05-12',
     bloodGroup: 'O+',
     gender: 'Female',
-    
+
     // Parent info
     parentName: '',
     relationship: 'Father',
@@ -29,10 +37,60 @@ const AddStudentModal = ({ isOpen, onClose, onAddStudent }) => {
     // Residence & Geofence
     address: '',
     instructions: '',
-    
+
     // Image
     photoUrl: null,
   });
+
+  useEffect(() => {
+    if (student) {
+      setFormData({
+        name: student.name || '',
+        id: student.id ? student.id.replace('#', '') : '',
+        class: student.class || student.class_grade || 'Grade 5',
+        section: student.section || 'A',
+        rollNo: student.rollNo || student.roll_no || '',
+        dob: student.dob || '2014-05-12',
+        bloodGroup: student.bloodGroup || 'O+',
+        gender: student.gender || 'Female',
+        parentName: student.parentName || student.parent_name || '',
+        relationship: student.relationship || 'Father',
+        parentPhone: student.parentPhone || '',
+        parentEmail: student.parentEmail || '',
+        route: student.route || 'Route 1',
+        vehicle: student.vehicle || 'Bus 12',
+        serviceMode: student.serviceMode || 'Two-Way',
+        allocatedSeat: student.allocatedSeat || 'Seat #18',
+        status: student.status || 'Waiting',
+        address: student.address || '',
+        instructions: student.instructions || '',
+        photoUrl: student.photo_url || student.photoUrl || null,
+      });
+    } else {
+      setFormData({
+        name: '',
+        id: `ST-${Math.floor(1000 + Math.random() * 9000)}`,
+        class: 'Grade 5',
+        section: 'A',
+        rollNo: '',
+        dob: '2014-05-12',
+        bloodGroup: 'O+',
+        gender: 'Female',
+        parentName: '',
+        relationship: 'Father',
+        parentPhone: '',
+        parentEmail: '',
+        route: 'Route 1',
+        vehicle: 'Bus 12',
+        serviceMode: 'Two-Way',
+        allocatedSeat: 'Seat #18',
+        status: 'Waiting',
+        address: '',
+        instructions: '',
+        photoUrl: null,
+      });
+    }
+  }, [student, isOpen]);
 
   if (!isOpen) return null;
 
@@ -57,23 +115,40 @@ const AddStudentModal = ({ isOpen, onClose, onAddStudent }) => {
     if (!formData.name) return;
 
     const names = formData.name.trim().split(' ');
-    const calculatedInitials = names.length >= 2
-      ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
-      : formData.name.slice(0, 2).toUpperCase();
-    
-    const formattedId = formData.id.startsWith('#') ? formData.id : `#${formData.id}`;
+    const calculatedInitials =
+      names.length >= 2
+        ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+        : formData.name.slice(0, 2).toUpperCase();
 
-    onAddStudent({
+    const formattedId = formData.id
+      ? formData.id.startsWith('#')
+        ? formData.id
+        : `#${formData.id}`
+      : student?.id || `#ST-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const studentPayload = {
+      ...(student || {}),
       ...formData,
       name: formData.name,
       id: formattedId,
       class: formData.class,
+      class_grade: formData.class,
       route: formData.route,
       vehicle: formData.vehicle,
       status: formData.status || 'Waiting',
       initials: calculatedInitials,
-      avatarBg: 'bg-rose-100 text-rose-500',
-    });
+      avatarBg: student?.avatarBg || 'bg-rose-100 text-rose-500',
+    };
+
+    if (isEditMode) {
+      if (onUpdateStudent) {
+        onUpdateStudent(studentPayload);
+      }
+    } else {
+      if (onAddStudent) {
+        onAddStudent(studentPayload);
+      }
+    }
     onClose();
   };
 
@@ -81,15 +156,19 @@ const AddStudentModal = ({ isOpen, onClose, onAddStudent }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      icon={<MdPersonAdd size={20} />}
-      title="Add New Student"
-      subtitle="Register student credentials, guardian contacts, and bus route"
+      icon={isEditMode ? <MdEdit size={20} /> : <MdPersonAdd size={20} />}
+      title={isEditMode ? 'Edit Student Details' : 'Add New Student'}
+      subtitle={
+        isEditMode
+          ? 'Modify student assignment, class, or guardian info'
+          : 'Register student credentials, guardian contacts, and bus route'
+      }
       maxWidth="max-w-2xl"
     >
       <form onSubmit={handleSubmit}>
         <div className="p-6 space-y-5 max-h-[72vh] overflow-y-auto custom-scrollbar">
           {/* Photo & Basic Details */}
-          <div className="flex flex-col sm:flex-row items-center gap-5 p-4 bg-slate-50/70 rounded-xl border border-slate-200/80">
+          <div className="flex flex-col sm:row items-center gap-5 p-4 bg-slate-50/70 rounded-xl border border-slate-200/80">
             <label className="w-20 h-20 rounded-full bg-blue-100/70 border-2 border-dashed border-blue-300 flex flex-col items-center justify-center text-blue-600 shrink-0 cursor-pointer hover:bg-blue-100 transition-colors overflow-hidden relative">
               {formData.photoUrl ? (
                 <img src={formData.photoUrl} alt="Student" className="w-full h-full object-cover" />
@@ -287,7 +366,7 @@ const AddStudentModal = ({ isOpen, onClose, onAddStudent }) => {
             type="submit"
             className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition cursor-pointer"
           >
-            Save Student
+            {isEditMode ? 'Save Changes' : 'Save Student'}
           </button>
         </div>
       </form>

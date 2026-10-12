@@ -37,26 +37,34 @@ const RouteManagment = ({
   }, [fetchRoutesList]);
 
   const handleAddRoute = async (newRoute) => {
+    setIsAddModalOpen(false);
+    setLoading(true);
     try {
       await addRoute(newRoute);
       await fetchRoutesList();
-      setIsAddModalOpen(false);
     } catch (err) {
       console.error('Failed to create route:', err);
       alert('Failed to save route to database: ' + (err.message || 'Unknown error'));
+      await fetchRoutesList();
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdateRoute = async (updatedRoute) => {
+    setIsDetailsModalOpen(false);
+    setLoading(true);
     try {
       if (updatedRoute.id) {
         await updateRoute(updatedRoute.id, updatedRoute);
         await fetchRoutesList();
       }
-      setIsDetailsModalOpen(false);
     } catch (err) {
       console.error('Failed to update route:', err);
       alert('Failed to update route in database: ' + (err.message || 'Unknown error'));
+      await fetchRoutesList();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,12 +72,19 @@ const RouteManagment = ({
     if (!window.confirm('Are you sure you want to delete this route? This action cannot be undone.')) {
       return;
     }
+    setLoading(true);
+    // Optimistic removal for instant UI feedback
+    setRoutes((prev) => prev.filter((r) => r.id !== routeId));
+
     try {
       await deleteRoute(routeId);
       await fetchRoutesList();
     } catch (err) {
       console.error('Failed to delete route:', err);
       alert('Failed to delete route from database: ' + (err.message || 'Unknown error'));
+      await fetchRoutesList();
+    } finally {
+      setLoading(false);
     }
   };
 

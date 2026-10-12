@@ -21,9 +21,9 @@ const VehicleManagment = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [editingVehicle, setEditingVehicle] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('view'); // 'view' or 'edit'
 
   const fetchVehiclesList = useCallback(async () => {
     try {
@@ -56,26 +56,34 @@ const VehicleManagment = ({
   }, [fetchVehiclesList]);
 
   const handleAddVehicle = async (newVehicle) => {
+    setIsAddModalOpen(false);
+    setLoading(true);
     try {
       await addVehicle(newVehicle);
       await fetchVehiclesList();
-      setIsAddModalOpen(false);
     } catch (err) {
       console.error('Failed to create vehicle:', err);
       alert('Failed to save vehicle to database: ' + (err.message || 'Unknown error'));
+      await fetchVehiclesList();
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdateVehicle = async (updatedVehicle) => {
+    setEditingVehicle(null);
+    setLoading(true);
     try {
       if (updatedVehicle.id) {
         await updateVehicle(updatedVehicle.id, updatedVehicle);
         await fetchVehiclesList();
       }
-      setIsDetailsModalOpen(false);
     } catch (err) {
       console.error('Failed to update vehicle:', err);
       alert('Failed to update vehicle in database: ' + (err.message || 'Unknown error'));
+      await fetchVehiclesList();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,25 +91,29 @@ const VehicleManagment = ({
     if (!window.confirm('Are you sure you want to delete this vehicle? This action cannot be undone.')) {
       return;
     }
+    setLoading(true);
+    // Optimistic removal for instant UI feedback
+    setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
+
     try {
       await deleteVehicle(vehicleId);
       await fetchVehiclesList();
     } catch (err) {
       console.error('Failed to delete vehicle:', err);
       alert('Failed to delete vehicle from database: ' + (err.message || 'Unknown error'));
+      await fetchVehiclesList();
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleViewVehicle = (vehicle) => {
     setSelectedVehicle(vehicle);
-    setModalMode('view');
     setIsDetailsModalOpen(true);
   };
 
   const handleEditVehicle = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setModalMode('edit');
-    setIsDetailsModalOpen(true);
+    setEditingVehicle(vehicle);
   };
 
   // Compute metrics dynamically
@@ -150,6 +162,7 @@ const VehicleManagment = ({
         <VehicleManagementFooter />
       </div>
 
+      {/* Add Vehicle Modal */}
       <AddVehicleModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -158,12 +171,25 @@ const VehicleManagment = ({
         routes={routes}
       />
 
+      {/* Edit Vehicle Modal (Uses the exact same modal as adding) */}
+      <AddVehicleModal
+        isOpen={Boolean(editingVehicle)}
+        onClose={() => setEditingVehicle(null)}
+        vehicle={editingVehicle}
+        onUpdateVehicle={handleUpdateVehicle}
+        drivers={drivers}
+        routes={routes}
+      />
+
+      {/* Vehicle Details Modal (View mode) */}
       <VehicleDetailsModal
         vehicle={selectedVehicle}
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        onSave={handleUpdateVehicle}
-        mode={modalMode}
+        onEdit={(vehicle) => {
+          setIsDetailsModalOpen(false);
+          setEditingVehicle(vehicle);
+        }}
         drivers={drivers}
         routes={routes}
       />

@@ -73,13 +73,14 @@ const ParentManagment = ({
   const parentsList = externalParents || parents;
 
   const handleAddParent = async (newParent) => {
+    setIsAddModalOpen(false);
+    setLoading(true);
     try {
       await addParent(newParent);
       await fetchParentsList();
       if (onRefreshStudents) {
         onRefreshStudents();
       }
-      setIsAddModalOpen(false);
     } catch (err) {
       console.error('Failed to create parent in database:', err);
       // Fallback local addition for offline / demo mode
@@ -91,7 +92,8 @@ const ParentManagment = ({
         },
         ...prev,
       ]);
-      setIsAddModalOpen(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -106,6 +108,8 @@ const ParentManagment = ({
   };
 
   const handleUpdateParent = async (updatedParent) => {
+    setIsEditModalOpen(false);
+    setLoading(true);
     try {
       if (updatedParent.id) {
         await updateParent(updatedParent.id, updatedParent);
@@ -114,13 +118,13 @@ const ParentManagment = ({
           onRefreshStudents();
         }
       }
-      setIsEditModalOpen(false);
     } catch (err) {
       console.error('Failed to update parent in database:', err);
       setParents((prev) =>
         prev.map((p) => (p.id === updatedParent.id ? { ...p, ...updatedParent } : p))
       );
-      setIsEditModalOpen(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -133,15 +137,23 @@ const ParentManagment = ({
       return;
     }
 
+    setLoading(true);
+    // Optimistic removal for instant UI feedback
+    setParents((prev) => prev.filter((p) => p.id !== parent.id));
+
     try {
       if (parent.id) {
         await deleteParent(parent.id);
         await fetchParentsList();
+        if (onRefreshStudents) {
+          onRefreshStudents();
+        }
       }
     } catch (err) {
       console.error('Failed to delete parent:', err);
-      // Fallback local deletion
-      setParents((prev) => prev.filter((p) => p.id !== parent.id));
+      await fetchParentsList();
+    } finally {
+      setLoading(false);
     }
   };
 

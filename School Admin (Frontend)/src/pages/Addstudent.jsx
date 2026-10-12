@@ -9,28 +9,54 @@ import AddStudentFooter from '../components/pagecomponents/addstudents/AddStuden
 import { getDrivers } from '../services/driversService';
 import { getVehicles } from '../services/vehiclesService';
 
-const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStudent }) => {
+const Addstudent = ({
+  onLogout,
+  onNavigate,
+  currentPage = 'Students',
+  onAddStudent,
+  onUpdateStudent,
+  studentToEdit = null,
+}) => {
+  const isEditMode = Boolean(studentToEdit);
   const [availableDrivers, setAvailableDrivers] = useState([]);
   const [availableVehicles, setAvailableVehicles] = useState([]);
   const [formData, setFormData] = useState({
-    name: '',
-    id: '',
-    class: 'Grade 5',
-    section: '',
-    rollNo: '',
-    gender: 'Female',
+    name: studentToEdit?.name || '',
+    id: studentToEdit?.id ? studentToEdit.id.replace('#', '') : '',
+    class: studentToEdit?.class || studentToEdit?.class_grade || 'Grade 5',
+    section: studentToEdit?.section || '',
+    rollNo: studentToEdit?.rollNo || studentToEdit?.roll_no || '',
+    gender: studentToEdit?.gender || 'Female',
 
     // Route & Fleet info
-    driver: '',
-    vehicle: '',
-    status: 'Waiting',
+    driver: studentToEdit?.driver || '',
+    vehicle: studentToEdit?.vehicle || '',
+    status: studentToEdit?.status || 'Waiting',
 
     // Residence
-    address: '',
-    
+    address: studentToEdit?.address || '',
+
     // Image
-    photoUrl: null,
+    photoUrl: studentToEdit?.photo_url || studentToEdit?.photoUrl || null,
   });
+
+  useEffect(() => {
+    if (studentToEdit) {
+      setFormData({
+        name: studentToEdit.name || '',
+        id: studentToEdit.id ? studentToEdit.id.replace('#', '') : '',
+        class: studentToEdit.class || studentToEdit.class_grade || 'Grade 5',
+        section: studentToEdit.section || '',
+        rollNo: studentToEdit.rollNo || studentToEdit.roll_no || '',
+        gender: studentToEdit.gender || 'Female',
+        driver: studentToEdit.driver || '',
+        vehicle: studentToEdit.vehicle || '',
+        status: studentToEdit.status || 'Waiting',
+        address: studentToEdit.address || '',
+        photoUrl: studentToEdit.photo_url || studentToEdit.photoUrl || null,
+      });
+    }
+  }, [studentToEdit]);
 
   useEffect(() => {
     const loadFleetData = async () => {
@@ -41,18 +67,20 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
         ]);
         setAvailableDrivers(driversData);
         setAvailableVehicles(vehiclesData);
-        if (driversData.length > 0) {
-          setFormData((prev) => ({ ...prev, driver: prev.driver || driversData[0].name }));
-        }
-        if (vehiclesData.length > 0) {
-          setFormData((prev) => ({ ...prev, vehicle: prev.vehicle || vehiclesData[0].name }));
+        if (!studentToEdit) {
+          if (driversData.length > 0) {
+            setFormData((prev) => ({ ...prev, driver: prev.driver || driversData[0].name }));
+          }
+          if (vehiclesData.length > 0) {
+            setFormData((prev) => ({ ...prev, vehicle: prev.vehicle || vehiclesData[0].name }));
+          }
         }
       } catch (err) {
         console.error('Error loading fleet data for student enrollment:', err);
       }
     };
     loadFleetData();
-  }, []);
+  }, [studentToEdit]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -79,26 +107,39 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
     if (!formData.name) return;
 
     const names = formData.name.trim().split(' ');
-    const calculatedInitials = names.length >= 2
-      ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
-      : formData.name.slice(0, 2).toUpperCase();
-    
-    const formattedId = formData.id.startsWith('#') ? formData.id : `#${formData.id}`;
+    const calculatedInitials =
+      names.length >= 2
+        ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+        : formData.name.slice(0, 2).toUpperCase();
 
-    const newStudent = {
+    const formattedId = formData.id
+      ? formData.id.startsWith('#')
+        ? formData.id
+        : `#${formData.id}`
+      : studentToEdit?.id || `#ST-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const studentPayload = {
+      ...(studentToEdit || {}),
       ...formData,
       name: formData.name,
       id: formattedId,
       class: formData.class,
-      route: formData.driver ? `Driver: ${formData.driver}` : 'Route 1',
+      class_grade: formData.class,
+      route: formData.driver ? `Driver: ${formData.driver}` : studentToEdit?.route || 'Route 1',
       vehicle: formData.vehicle || 'Bus 12',
       status: formData.status || 'Waiting',
       initials: calculatedInitials,
-      avatarBg: 'bg-rose-100 text-rose-500',
+      avatarBg: studentToEdit?.avatarBg || 'bg-rose-100 text-rose-500',
     };
 
-    if (onAddStudent) {
-      onAddStudent(newStudent);
+    if (isEditMode) {
+      if (onUpdateStudent) {
+        onUpdateStudent(studentPayload);
+      }
+    } else {
+      if (onAddStudent) {
+        onAddStudent(studentPayload);
+      }
     }
 
     if (onNavigate) {
@@ -110,11 +151,14 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
     if (e) e.preventDefault();
 
     const names = (formData.name || 'New Student').trim().split(' ');
-    const calculatedInitials = names.length >= 2
-      ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
-      : formData.name.slice(0, 2).toUpperCase();
+    const calculatedInitials =
+      names.length >= 2
+        ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+        : formData.name.slice(0, 2).toUpperCase();
 
-    const formattedId = (formData.id || 'ST-9000').startsWith('#') ? formData.id : `#${formData.id}`;
+    const formattedId = (formData.id || 'ST-9000').startsWith('#')
+      ? formData.id
+      : `#${formData.id}`;
 
     if (onAddStudent) {
       onAddStudent({
@@ -161,7 +205,11 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
         <main className="px-8 pt-6 pb-8 max-w-[1440px] w-full mx-auto flex-1">
           <form onSubmit={handleSubmit}>
             {/* Breadcrumb & Header Title */}
-            <AddStudentHeader onCancel={handleCancel} onSubmit={handleSubmit} />
+            <AddStudentHeader
+              onCancel={handleCancel}
+              onSubmit={handleSubmit}
+              isEditMode={isEditMode}
+            />
 
             {/* Main 2-Column Grid */}
             <div className="grid grid-cols-12 gap-6 items-start">
@@ -188,7 +236,6 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
                   drivers={availableDrivers}
                   vehicles={availableVehicles}
                 />
-
               </div>
             </div>
           </form>
@@ -199,6 +246,7 @@ const Addstudent = ({ onLogout, onNavigate, currentPage = 'Students', onAddStude
           onBack={handleCancel}
           onSaveAndAddAnother={handleSaveAndAddAnother}
           onSubmit={handleSubmit}
+          isEditMode={isEditMode}
         />
       </div>
     </div>

@@ -18,11 +18,11 @@ const DriversManagment = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDriver, setSelectedDriver] = useState(null);
+  const [editingDriver, setEditingDriver] = useState(null);
   const [selectedDriverForCreds, setSelectedDriverForCreds] = useState(null);
   const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('view'); // 'view' or 'edit'
 
   const fetchDriversList = useCallback(async () => {
     try {
@@ -43,51 +43,63 @@ const DriversManagment = ({
   }, [fetchDriversList]);
 
   const handleAddDriver = async (newDriver) => {
+    setIsAddModalOpen(false);
+    setLoading(true);
     try {
       await addDriver(newDriver);
       await fetchDriversList();
-      setIsAddModalOpen(false);
     } catch (err) {
       console.error('Failed to create driver:', err);
       alert('Failed to save driver to database: ' + (err.message || 'Unknown error'));
+      await fetchDriversList();
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdateDriver = async (updatedDriver) => {
+    setEditingDriver(null);
+    setLoading(true);
     try {
       if (updatedDriver.id) {
         await updateDriver(updatedDriver.id, updatedDriver);
         await fetchDriversList();
       }
-      setIsDetailsModalOpen(false);
     } catch (err) {
       console.error('Failed to update driver:', err);
       alert('Failed to update driver in database: ' + (err.message || 'Unknown error'));
+      await fetchDriversList();
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleViewDriver = (driver) => {
     setSelectedDriver(driver);
-    setModalMode('view');
     setIsDetailsModalOpen(true);
   };
 
   const handleEditDriver = (driver) => {
-    setSelectedDriver(driver);
-    setModalMode('edit');
-    setIsDetailsModalOpen(true);
+    setEditingDriver(driver);
   };
 
   const handleDeleteDriver = async (driverId) => {
     if (!window.confirm('Are you sure you want to delete this driver? This action cannot be undone.')) {
       return;
     }
+    setLoading(true);
+    // Optimistic removal for instant UI feedback
+    setDrivers((prev) => prev.filter((d) => d.id !== driverId));
+
     try {
       await deleteDriver(driverId);
       await fetchDriversList();
     } catch (err) {
       console.error('Failed to delete driver:', err);
       alert('Failed to delete driver from database: ' + (err.message || 'Unknown error'));
+      await fetchDriversList();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -137,18 +149,30 @@ const DriversManagment = ({
         <DriverManagementFooter />
       </div>
 
+      {/* Add Driver Modal */}
       <AddDriverModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddDriver={handleAddDriver}
       />
 
+      {/* Edit Driver Modal (Uses the exact same modal as adding) */}
+      <AddDriverModal
+        isOpen={Boolean(editingDriver)}
+        onClose={() => setEditingDriver(null)}
+        driver={editingDriver}
+        onUpdateDriver={handleUpdateDriver}
+      />
+
+      {/* Details View Modal */}
       <DriverDetailsModal
         driver={selectedDriver}
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        onSave={handleUpdateDriver}
-        mode={modalMode}
+        onEdit={(driver) => {
+          setIsDetailsModalOpen(false);
+          setEditingDriver(driver);
+        }}
       />
 
       <AppCredentialsModal

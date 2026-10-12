@@ -38,45 +38,85 @@ export const generateUnique4DigitCode = (existingCodes = new Set()) => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
+let credentialsCache = {
+  data: null,
+  timestamp: 0,
+  schoolId: null,
+};
+let credentialsInFlight = null;
+const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+
+export const clearCredentialsCache = () => {
+  credentialsCache = { data: null, timestamp: 0, schoolId: null };
+  credentialsInFlight = null;
+};
+
 /**
  * Fetches all app credentials for the active school session.
  * Returns a lookup map keyed by userId: { [userId]: { loginId, password, ... } }
  */
-export const getSchoolCredentialsMap = async () => {
+export const getSchoolCredentialsMap = async (forceRefresh = false) => {
   const schoolId = getCurrentSchoolId();
   if (!schoolId) return {};
 
-  try {
-    const { data, error } = await supabase
-      .from('app_credentials')
-      .select('*')
-      .eq('school_id', schoolId);
+  const isCacheValid =
+    !forceRefresh &&
+    credentialsCache.data &&
+    credentialsCache.schoolId === schoolId &&
+    Date.now() - credentialsCache.timestamp < CACHE_TTL_MS;
 
-    if (error) {
-      // Table might not be created yet in user's Supabase instance
-      console.warn('Could not query app_credentials:', error.message);
-      return {};
-    }
-
-    const map = {};
-    (data || []).forEach((cred) => {
-      map[cred.user_id] = {
-        id: cred.id,
-        loginId: cred.login_id,
-        password: cred.password,
-        userType: cred.user_type,
-        userId: cred.user_id,
-        name: cred.name,
-        phone: cred.phone,
-        isActive: cred.is_active,
-        createdAt: cred.created_at,
-      };
-    });
-    return map;
-  } catch (err) {
-    console.warn('app_credentials fetch error:', err);
-    return {};
+  if (isCacheValid) {
+    return credentialsCache.data;
   }
+
+  if (!forceRefresh && credentialsInFlight) {
+    return credentialsInFlight;
+  }
+
+  credentialsInFlight = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('app_credentials')
+        .select('*')
+        .eq('school_id', schoolId);
+
+      if (error) {
+        // Table might not be created yet in user's Supabase instance
+        console.warn('Could not query app_credentials:', error.message);
+        return credentialsCache.data || {};
+      }
+
+      const map = {};
+      (data || []).forEach((cred) => {
+        map[cred.user_id] = {
+          id: cred.id,
+          loginId: cred.login_id,
+          password: cred.password,
+          userType: cred.user_type,
+          userId: cred.user_id,
+          name: cred.name,
+          phone: cred.phone,
+          isActive: cred.is_active,
+          createdAt: cred.created_at,
+        };
+      });
+
+      credentialsCache = {
+        data: map,
+        timestamp: Date.now(),
+        schoolId,
+      };
+
+      return map;
+    } catch (err) {
+      console.warn('app_credentials fetch error:', err);
+      return credentialsCache.data || {};
+    } finally {
+      credentialsInFlight = null;
+    }
+  })();
+
+  return credentialsInFlight;
 };
 
 /**
@@ -146,6 +186,8 @@ export const createAppCredential = async ({
       };
     }
 
+    clearCredentialsCache();
+
     return {
       id: data.id,
       loginId: data.login_id,
@@ -190,5 +232,6 @@ export const updateAppCredential = async (credentialId, updates = {}) => {
     .single();
 
   if (error) throw error;
+  clearCredentialsCache();
   return data;
 };

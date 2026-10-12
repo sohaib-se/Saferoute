@@ -8,9 +8,12 @@ const AddVehicleModal = ({
   isOpen,
   onClose,
   onAddVehicle,
+  onUpdateVehicle,
+  vehicle = null,
   drivers: initialDrivers,
   routes: initialRoutes,
 }) => {
+  const isEditMode = Boolean(vehicle);
   const [driversList, setDriversList] = useState(initialDrivers || []);
   const [routesList, setRoutesList] = useState(initialRoutes || []);
   const [formData, setFormData] = useState({
@@ -42,6 +45,30 @@ const AddVehicleModal = ({
         .catch((err) => console.error('Failed to load routes for vehicle modal:', err));
     }
   }, [initialRoutes, isOpen]);
+
+  useEffect(() => {
+    if (vehicle) {
+      setFormData({
+        name: vehicle.name || '',
+        regNo: vehicle.regNo || '',
+        model: vehicle.model || '',
+        capacitySeats: vehicle.capacitySeats || '',
+        driverName: vehicle.driverName || '',
+        route: vehicle.route || '',
+        status: vehicle.status || 'Running',
+      });
+    } else {
+      setFormData({
+        name: '',
+        regNo: '',
+        model: '',
+        capacitySeats: '',
+        driverName: '',
+        route: '',
+        status: 'Running',
+      });
+    }
+  }, [vehicle, isOpen]);
 
   if (!isOpen) return null;
 
@@ -85,26 +112,32 @@ const AddVehicleModal = ({
     e.preventDefault();
     if (!formData.name || !formData.regNo) return;
 
-    const styles = getStatusStyles('Running');
+    const styles = getStatusStyles(formData.status);
     const busCode = formData.name.replace(/[^0-9]/g, '') || '01';
 
-    const newVehicle = {
+    const vehiclePayload = {
+      ...(vehicle || {}),
       ...formData,
       route: formData.route || 'Unassigned',
-      status: 'Running',
       code: busCode,
       badgeStyle: 'bg-blue-50 border-blue-100 text-blue-600',
-      capacitySub: '0 Filled (Ready)',
+      capacitySub: vehicle?.capacitySub || '0 Filled (Ready)',
       driverInitials: getInitials(formData.driverName),
-      speed: '30 km/h',
+      speed: vehicle?.speed || '30 km/h',
       speedDot: styles.dot,
-      signalSub: 'Signal: Strong 5G',
+      signalSub: vehicle?.signalSub || 'Signal: Strong 5G',
       statusBadgeStyle: styles.badge,
       statusDotStyle: styles.dot,
     };
 
-    if (onAddVehicle) {
-      onAddVehicle(newVehicle);
+    if (isEditMode) {
+      if (onUpdateVehicle) {
+        onUpdateVehicle(vehiclePayload);
+      }
+    } else {
+      if (onAddVehicle) {
+        onAddVehicle(vehiclePayload);
+      }
     }
 
     setFormData({
@@ -124,8 +157,12 @@ const AddVehicleModal = ({
       isOpen={isOpen}
       onClose={onClose}
       icon={<MdDirectionsBus size={20} />}
-      title="Add New Vehicle"
-      subtitle="Register school bus into the active transport fleet"
+      title={isEditMode ? 'Edit Vehicle Information' : 'Add New Vehicle'}
+      subtitle={
+        isEditMode
+          ? 'Update school bus specifications, driver link, or status'
+          : 'Register school bus into the active transport fleet'
+      }
       maxWidth="max-w-lg"
     >
       <form onSubmit={handleSubmit}>
@@ -213,6 +250,10 @@ const AddVehicleModal = ({
                     {driver.name} {driver.phone ? `(${driver.phone})` : ''}
                   </option>
                 ))}
+                {formData.driverName &&
+                  !driversList.some((d) => d.name === formData.driverName) && (
+                    <option value={formData.driverName}>{formData.driverName}</option>
+                  )}
               </select>
             </div>
             <div>
@@ -230,8 +271,28 @@ const AddVehicleModal = ({
                     {route.name}
                   </option>
                 ))}
+                {formData.route &&
+                  !routesList.some((r) => r.name === formData.route) && (
+                    <option value={formData.route}>{formData.route}</option>
+                  )}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Operating Status
+            </label>
+            <select
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans cursor-pointer"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            >
+              <option value="Running">Running</option>
+              <option value="On Route">On Route</option>
+              <option value="Idle">Idle</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
           </div>
         </div>
 
@@ -248,7 +309,7 @@ const AddVehicleModal = ({
             type="submit"
             className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition cursor-pointer"
           >
-            Save Vehicle
+            {isEditMode ? 'Save Changes' : 'Save Vehicle'}
           </button>
         </div>
       </form>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { getStudents, addStudent, updateStudent, deleteStudent } from './services/studentsService'
+import { clearAllCaches } from './services/cacheUtils'
 import DashboardPage from './pages/DashboardPage'
 import ParentManagment from './pages/ParentManagment'
 import StudentManagment from './pages/StudentManagment'
@@ -23,6 +24,7 @@ const App = () => {
   })
   const [currentPage, setCurrentPage] = useState('Dashboard')
   const [students, setStudents] = useState([])
+  const [editingStudent, setEditingStudent] = useState(null)
   const [studentsLoading, setStudentsLoading] = useState(true)
   
   const navigate = useNavigate()
@@ -64,6 +66,7 @@ const App = () => {
   }
 
   const handleLogout = () => {
+    clearAllCaches()
     localStorage.removeItem('isLoggedIn')
     localStorage.removeItem('user')
     setIsLoggedIn(false)
@@ -71,28 +74,42 @@ const App = () => {
   }
 
   const handleAddStudent = async (newStudent) => {
+    setStudentsLoading(true);
     try {
       await addStudent(newStudent);
       await fetchStudentsList();
     } catch (err) {
       console.error('Failed to create student:', err);
       alert('Failed to save student: ' + (err.message || 'Unknown error'));
+      await fetchStudentsList();
+    } finally {
+      setStudentsLoading(false);
     }
   };
 
   const handleUpdateStudent = async (updatedStudent) => {
+    setStudentsLoading(true);
+    setEditingStudent(null);
     try {
-      if (updatedStudent.dbId) {
-        await updateStudent(updatedStudent.dbId, updatedStudent);
+      const studentId = updatedStudent.dbId || updatedStudent.id;
+      if (studentId) {
+        await updateStudent(studentId, updatedStudent);
         await fetchStudentsList();
       }
     } catch (err) {
       console.error('Failed to update student:', err);
       alert('Failed to update student: ' + (err.message || 'Unknown error'));
+      await fetchStudentsList();
+    } finally {
+      setStudentsLoading(false);
     }
   };
 
   const handleDeleteStudent = async (studentDbId) => {
+    setStudentsLoading(true);
+    // Optimistic removal for instant UI feedback
+    setStudents((prev) => prev.filter((s) => s.dbId !== studentDbId && s.id !== studentDbId));
+
     try {
       if (studentDbId) {
         await deleteStudent(studentDbId);
@@ -101,6 +118,9 @@ const App = () => {
     } catch (err) {
       console.error('Failed to delete student:', err);
       alert('Failed to delete student: ' + (err.message || 'Unknown error'));
+      await fetchStudentsList();
+    } finally {
+      setStudentsLoading(false);
     }
   };
 
@@ -121,9 +141,16 @@ const App = () => {
       return (
         <Addstudent
           onLogout={handleLogout}
-          onNavigate={setCurrentPage}
+          onNavigate={(targetPage) => {
+            if (targetPage !== 'AddStudent') {
+              setEditingStudent(null);
+            }
+            setCurrentPage(targetPage);
+          }}
           currentPage="Students"
           onAddStudent={handleAddStudent}
+          onUpdateStudent={handleUpdateStudent}
+          studentToEdit={editingStudent}
         />
       )
     }
@@ -132,13 +159,24 @@ const App = () => {
       return (
         <StudentManagment
           onLogout={handleLogout}
-          onNavigate={setCurrentPage}
+          onNavigate={(targetPage, studentToEdit = null) => {
+            if (studentToEdit) {
+              setEditingStudent(studentToEdit);
+            } else if (targetPage === 'AddStudent') {
+              setEditingStudent(null);
+            }
+            setCurrentPage(targetPage);
+          }}
           currentPage={currentPage}
           students={students}
           isLoading={studentsLoading}
           onAddStudent={handleAddStudent}
           onUpdateStudent={handleUpdateStudent}
           onDeleteStudent={handleDeleteStudent}
+          onEditStudent={(student) => {
+            setEditingStudent(student);
+            setCurrentPage('AddStudent');
+          }}
         />
       )
     }
