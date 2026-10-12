@@ -178,7 +178,6 @@ const StudentManagment = ({
               totalStudents: studentsList.length,
               onRoute: studentsList.filter((s) => s.status === 'On Route').length,
               pickedUp: studentsList.filter((s) => s.status === 'Picked Up').length,
-              waitingPickup: studentsList.filter((s) => s.status === 'Waiting').length,
               droppedSafely: studentsList.filter((s) => s.status === 'Dropped').length,
             }}
           />

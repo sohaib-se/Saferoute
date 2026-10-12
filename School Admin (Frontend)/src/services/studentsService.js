@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabaseClient';
 import { getCurrentSchoolId } from '../lib/session';
 import { clearParentsCache } from './parentsService';
+import { deleteStudentPhoto } from './storageService';
 
 let studentsCache = {
   data: null,
@@ -82,6 +83,7 @@ export const getStudents = async (forceRefresh = false) => {
           relationship: s.relationship || '',
           address: s.address || '',
           photoUrl: s.photo_url || null,
+          photo_url: s.photo_url || null,
           initials,
           avatarBg: avatarColors[index % avatarColors.length],
         };
@@ -114,6 +116,8 @@ export const addStudent = async (studentData) => {
       : `#${studentData.id}`
     : `#ST-${Math.floor(1000 + Math.random() * 9000)}`;
 
+  const finalPhoto = studentData.photoUrl || studentData.photo_url || null;
+
   const { data, error } = await supabase
     .from('students')
     .insert([
@@ -133,7 +137,7 @@ export const addStudent = async (studentData) => {
         route: studentData.route || 'Route 1',
         status: studentData.status || 'Waiting',
         address: studentData.address || '',
-        photo_url: studentData.photoUrl || null,
+        photo_url: finalPhoto,
       },
     ])
     .select()
@@ -158,26 +162,48 @@ export const updateStudent = async (studentDbId, studentData) => {
     throw new Error('No active school session found. Please sign in again.');
   }
 
-  const { data, error } = await supabase
-    .from('students')
-    .update({
-      name: studentData.name,
-      class_grade: studentData.class || studentData.class_grade,
-      section: studentData.section,
-      roll_no: studentData.rollNo || studentData.roll_no,
-      gender: studentData.gender,
-      parent_name: studentData.parentName || studentData.parent_name,
-      relationship: studentData.relationship,
-      vehicle: studentData.vehicle,
-      driver: studentData.driver,
-      route: studentData.route,
-      status: studentData.status,
-      address: studentData.address,
-    })
-    .eq('id', studentDbId)
+  const updatePayload = {
+    name: studentData.name,
+    class_grade: studentData.class || studentData.class_grade,
+    section: studentData.section,
+    roll_no: studentData.rollNo || studentData.roll_no,
+    gender: studentData.gender,
+    parent_name: studentData.parentName || studentData.parent_name,
+    relationship: studentData.relationship,
+    vehicle: studentData.vehicle,
+    driver: studentData.driver,
+    route: studentData.route,
+    status: studentData.status,
+    address: studentData.address,
+  };
+
+  if ('photoUrl' in studentData) {
+    updatePayload.photo_url = studentData.photoUrl;
+  } else if ('photo_url' in studentData) {
+    updatePayload.photo_url = studentData.photo_url;
+  }
+
+  const isUuid = (val) =>
+    typeof val === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+  const targetUuid = isUuid(studentDbId)
+    ? studentDbId
+    : isUuid(studentData?.dbId)
+    ? studentData.dbId
+    : null;
+
+  let query = supabase.from('students').update(updatePayload);
+  if (targetUuid) {
+    query = query.eq('id', targetUuid);
+  } else {
+    query = query.eq('student_code', studentDbId);
+  }
+
+  const { data, error } = await query
     .eq('school_id', schoolId)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error updating student:', error);
@@ -198,11 +224,34 @@ export const deleteStudent = async (studentDbId) => {
     throw new Error('No active school session found. Please sign in again.');
   }
 
-  const { error } = await supabase
-    .from('students')
-    .delete()
-    .eq('id', studentDbId)
-    .eq('school_id', schoolId);
+  const isUuid = (val) =>
+    typeof val === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+  // Before deleting from database, clean up the student's photo from storage
+  try {
+    let selectQuery = supabase.from('students').select('photo_url').eq('school_id', schoolId);
+    if (isUuid(studentDbId)) {
+      selectQuery = selectQuery.eq('id', studentDbId);
+    } else {
+      selectQuery = selectQuery.eq('student_code', studentDbId);
+    }
+    const { data: record } = await selectQuery.maybeSingle();
+    if (record?.photo_url) {
+      await deleteStudentPhoto(record.photo_url);
+    }
+  } catch (cleanErr) {
+    console.warn('Could not clean up student photo during deletion:', cleanErr);
+  }
+
+  let delQuery = supabase.from('students').delete().eq('school_id', schoolId);
+  if (isUuid(studentDbId)) {
+    delQuery = delQuery.eq('id', studentDbId);
+  } else {
+    delQuery = delQuery.eq('student_code', studentDbId);
+  }
+
+  const { error } = await delQuery;
 
   if (error) {
     console.error('Error deleting student:', error);

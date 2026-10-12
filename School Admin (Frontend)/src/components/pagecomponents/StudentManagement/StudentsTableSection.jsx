@@ -354,9 +354,20 @@ const StudentsTableSection = ({
                     {student.num || idx + 1}
                   </td>
                   <td className="py-3.5 px-4">
-                    <div className={`w-8 h-8 rounded-full ${student.avatarBg} font-bold flex items-center justify-center text-xs`}>
-                      {student.initials}
-                    </div>
+                    {student.photoUrl ? (
+                      <img
+                        src={student.photoUrl}
+                        alt={student.name}
+                        className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className={`w-8 h-8 rounded-full ${student.avatarBg} font-bold flex items-center justify-center text-xs`}>
+                        {student.initials}
+                      </div>
+                    )}
                   </td>
                   <td className="py-3.5 px-6">
                     <div className="font-bold text-slate-900 text-xs leading-tight">{student.name}</div>

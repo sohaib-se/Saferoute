@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MdPersonAdd, MdCameraAlt, MdEdit } from 'react-icons/md';
 import Modal from '../../common/Modal';
+import { uploadStudentPhoto, deleteStudentPhoto, cleanupStudentPhotos } from '../../../services/storageService';
 
 const AddStudentModal = ({
   isOpen,
@@ -10,6 +11,7 @@ const AddStudentModal = ({
   student = null,
 }) => {
   const isEditMode = Boolean(student);
+  const [photoFile, setPhotoFile] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -43,6 +45,7 @@ const AddStudentModal = ({
   });
 
   useEffect(() => {
+    setPhotoFile(null);
     if (student) {
       setFormData({
         name: student.name || '',
@@ -99,20 +102,44 @@ const AddStudentModal = ({
   };
 
   const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files && e.target.files[0];
     if (file) {
+      setPhotoFile(file);
       const url = URL.createObjectURL(file);
       setFormData((prev) => ({ ...prev, photoUrl: url }));
     }
   };
 
   const handleRemovePhoto = () => {
+    setPhotoFile(null);
     setFormData((prev) => ({ ...prev, photoUrl: null }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     if (!formData.name) return;
+
+    const previousPhotoUrl = student?.photo_url || student?.photoUrl;
+    let finalPhotoUrl = formData.photoUrl;
+
+    if (photoFile) {
+      try {
+        const uploadedUrl = await uploadStudentPhoto(photoFile, formData.id || formData.name);
+        if (uploadedUrl) {
+          finalPhotoUrl = uploadedUrl;
+          if (previousPhotoUrl && previousPhotoUrl !== uploadedUrl) {
+            await deleteStudentPhoto(previousPhotoUrl);
+          }
+          await cleanupStudentPhotos(formData.id || formData.name, uploadedUrl);
+        }
+      } catch (err) {
+        console.error('Failed to upload student photo:', err);
+      }
+    } else if (!formData.photoUrl && previousPhotoUrl) {
+      await deleteStudentPhoto(previousPhotoUrl);
+      await cleanupStudentPhotos(formData.id || formData.name);
+      finalPhotoUrl = null;
+    }
 
     const names = formData.name.trim().split(' ');
     const calculatedInitials =
@@ -129,6 +156,8 @@ const AddStudentModal = ({
     const studentPayload = {
       ...(student || {}),
       ...formData,
+      photoUrl: finalPhotoUrl,
+      photo_url: finalPhotoUrl,
       name: formData.name,
       id: formattedId,
       class: formData.class,
@@ -142,11 +171,11 @@ const AddStudentModal = ({
 
     if (isEditMode) {
       if (onUpdateStudent) {
-        onUpdateStudent(studentPayload);
+        await onUpdateStudent(studentPayload);
       }
     } else {
       if (onAddStudent) {
-        onAddStudent(studentPayload);
+        await onAddStudent(studentPayload);
       }
     }
     onClose();

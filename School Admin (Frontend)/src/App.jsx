@@ -33,7 +33,7 @@ const App = () => {
     if (!isLoggedIn) return;
     try {
       setStudentsLoading(true);
-      const data = await getStudents();
+      const data = await getStudents(true);
       setStudents(data);
     } catch (err) {
       console.error('Failed to fetch students in App:', err);

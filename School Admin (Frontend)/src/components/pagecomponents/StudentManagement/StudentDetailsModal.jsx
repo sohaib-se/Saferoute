@@ -16,6 +16,27 @@ const StudentDetailsModal = ({ student, isOpen, onClose, onEdit }) => {
     >
       <div>
         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          {student.photoUrl && (
+            <div className="flex items-center gap-3.5 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+              <img
+                src={student.photoUrl}
+                alt={student.name}
+                className="w-14 h-14 rounded-xl object-cover border border-slate-200 shadow-2xs"
+              />
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Student Portrait
+                </span>
+                <span className="text-xs font-semibold text-slate-800">
+                  {student.name}
+                </span>
+                <span className="text-[11px] text-emerald-600 font-medium block">
+                  Digital bus pass photo active
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="bg-slate-50/70 rounded-xl border border-slate-200/80 p-4 grid grid-cols-2 gap-4">
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
