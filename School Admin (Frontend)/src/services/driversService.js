@@ -1,5 +1,10 @@
 import { supabase } from '../lib/supabaseClient';
 import { getCurrentSchoolId } from '../lib/session';
+import {
+  createAppCredential,
+  getSchoolCredentialsMap,
+  getDeterministicFallbackCode,
+} from './appCredentialsService';
 
 export const getDrivers = async () => {
   const schoolId = getCurrentSchoolId();
@@ -18,6 +23,9 @@ export const getDrivers = async () => {
     throw error;
   }
 
+  // Fetch app credentials for drivers
+  const credentialsMap = await getSchoolCredentialsMap().catch(() => ({}));
+
   // Format into the structure expected by the frontend components
   return (data || []).map((d, index) => {
     const initials = d.name
@@ -29,6 +37,11 @@ export const getDrivers = async () => {
           .join('')
           .toUpperCase()
       : 'DR';
+
+    const cred = credentialsMap[d.id] || {
+      loginId: getDeterministicFallbackCode(d),
+      password: getDeterministicFallbackCode(d),
+    };
 
     return {
       id: d.id,
@@ -42,6 +55,7 @@ export const getDrivers = async () => {
       status: d.status || 'Online',
       initials,
       initialsStyle: 'bg-blue-100 text-blue-700',
+      credentials: cred,
       statusBadgeStyle:
         d.status === 'Online'
           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -86,7 +100,19 @@ export const addDriver = async (driverData) => {
     throw error;
   }
 
-  return data;
+  // Generate and store unique 4-digit ID and password in app_credentials
+  let credentials = null;
+  if (data?.id) {
+    credentials = await createAppCredential({
+      schoolId,
+      userType: 'driver',
+      userId: data.id,
+      name: data.name,
+      phone: data.phone,
+    });
+  }
+
+  return { ...data, credentials };
 };
 
 export const updateDriver = async (driverId, driverData) => {

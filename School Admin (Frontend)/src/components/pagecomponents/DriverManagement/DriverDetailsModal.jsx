@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MdBadge, MdEdit } from 'react-icons/md';
+import { MdBadge, MdEdit, MdVpnKey } from 'react-icons/md';
 import Modal from '../../common/Modal';
 
 const DriverDetailsModal = ({ driver, isOpen, onClose, onSave, mode = 'view' }) => {
@@ -169,6 +169,40 @@ const DriverDetailsModal = ({ driver, isOpen, onClose, onSave, mode = 'view' }) 
                   {driver.status}
                 </span>
               </div>
+            </div>
+
+            {/* App Credentials Card */}
+            <div className="bg-amber-50/70 rounded-xl border border-amber-200/80 p-4 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                  <MdVpnKey size={15} className="text-amber-600" />
+                  <span>Driver Mobile App Credentials</span>
+                </span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                  Active
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white p-2.5 rounded-xl border border-amber-200/70 shadow-2xs">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider mb-0.5">
+                    4-Digit Login ID
+                  </span>
+                  <span className="text-lg font-mono font-bold text-slate-900 tracking-wider">
+                    {driver.credentials?.loginId || '1000'}
+                  </span>
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-amber-200/70 shadow-2xs">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider mb-0.5">
+                    4-Digit Password
+                  </span>
+                  <span className="text-lg font-mono font-bold text-slate-900 tracking-wider">
+                    {driver.credentials?.password || driver.credentials?.loginId || '1000'}
+                  </span>
+                </div>
+              </div>
+              <p className="text-[11px] text-amber-800/80 leading-relaxed">
+                Use these 4 digits to sign in to the SafeRoute Driver Mobile App.
+              </p>
             </div>
           </div>
 

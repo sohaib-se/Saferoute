@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { getStudents, addStudent, updateStudent } from './services/studentsService'
+import { getStudents, addStudent, updateStudent, deleteStudent } from './services/studentsService'
 import DashboardPage from './pages/DashboardPage'
 import ParentManagment from './pages/ParentManagment'
 import StudentManagment from './pages/StudentManagment'
@@ -92,6 +92,18 @@ const App = () => {
     }
   };
 
+  const handleDeleteStudent = async (studentDbId) => {
+    try {
+      if (studentDbId) {
+        await deleteStudent(studentDbId);
+        await fetchStudentsList();
+      }
+    } catch (err) {
+      console.error('Failed to delete student:', err);
+      alert('Failed to delete student: ' + (err.message || 'Unknown error'));
+    }
+  };
+
   const renderDashboardContent = () => {
     if (currentPage === 'Parents') {
       return (
@@ -126,6 +138,7 @@ const App = () => {
           isLoading={studentsLoading}
           onAddStudent={handleAddStudent}
           onUpdateStudent={handleUpdateStudent}
+          onDeleteStudent={handleDeleteStudent}
         />
       )
     }

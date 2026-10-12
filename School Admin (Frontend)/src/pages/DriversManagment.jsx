@@ -6,6 +6,7 @@ import DriversTableSection from '../components/pagecomponents/DriverManagement/D
 import DriverManagementFooter from '../components/pagecomponents/DriverManagement/DriverManagementFooter';
 import AddDriverModal from '../components/pagecomponents/DriverManagement/AddDriverModal';
 import DriverDetailsModal from '../components/pagecomponents/DriverManagement/DriverDetailsModal';
+import AppCredentialsModal from '../components/common/AppCredentialsModal';
 import { getDrivers, addDriver, updateDriver, deleteDriver } from '../services/driversService';
 
 const DriversManagment = ({
@@ -17,6 +18,8 @@ const DriversManagment = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDriver, setSelectedDriver] = useState(null);
+  const [selectedDriverForCreds, setSelectedDriverForCreds] = useState(null);
+  const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('view'); // 'view' or 'edit'
@@ -122,6 +125,10 @@ const DriversManagment = ({
             onViewDriver={handleViewDriver}
             onEditDriver={handleEditDriver}
             onDeleteDriver={handleDeleteDriver}
+            onViewCredentials={(driver) => {
+              setSelectedDriverForCreds(driver);
+              setIsCredsModalOpen(true);
+            }}
           />
 
           <div className="h-4"></div>
@@ -142,6 +149,13 @@ const DriversManagment = ({
         onClose={() => setIsDetailsModalOpen(false)}
         onSave={handleUpdateDriver}
         mode={modalMode}
+      />
+
+      <AppCredentialsModal
+        isOpen={isCredsModalOpen}
+        onClose={() => setIsCredsModalOpen(false)}
+        entity={selectedDriverForCreds}
+        userType="driver"
       />
     </div>
   );

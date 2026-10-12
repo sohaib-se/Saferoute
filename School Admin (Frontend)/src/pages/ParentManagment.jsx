@@ -5,7 +5,10 @@ import ParentStatCards from '../components/pagecomponents/ParentManagement/Paren
 import ParentsTableSection from '../components/pagecomponents/ParentManagement/ParentsTableSection';
 import ParentManagementFooter from '../components/pagecomponents/ParentManagement/ParentManagementFooter';
 import AddParentModal from '../components/pagecomponents/ParentManagement/AddParentModal';
-import { getParents, addParent } from '../services/parentsService';
+import EditParentModal from '../components/pagecomponents/ParentManagement/EditParentModal';
+import ParentDetailsModal from '../components/pagecomponents/ParentManagement/ParentDetailsModal';
+import AppCredentialsModal from '../components/common/AppCredentialsModal';
+import { getParents, addParent, updateParent, deleteParent } from '../services/parentsService';
 import { getStudents } from '../services/studentsService';
 
 const ParentManagment = ({
@@ -17,6 +20,11 @@ const ParentManagment = ({
   onRefreshStudents,
 }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedParent, setSelectedParent] = useState(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedParentForCreds, setSelectedParentForCreds] = useState(null);
+  const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
   const [parents, setParents] = useState([]);
   const [students, setStudents] = useState(externalStudents || []);
   const [loading, setLoading] = useState(!externalParents);
@@ -87,6 +95,56 @@ const ParentManagment = ({
     }
   };
 
+  const handleViewParent = (parent) => {
+    setSelectedParent(parent);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleEditParent = (parent) => {
+    setSelectedParent(parent);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateParent = async (updatedParent) => {
+    try {
+      if (updatedParent.id) {
+        await updateParent(updatedParent.id, updatedParent);
+        await fetchParentsList();
+        if (onRefreshStudents) {
+          onRefreshStudents();
+        }
+      }
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error('Failed to update parent in database:', err);
+      setParents((prev) =>
+        prev.map((p) => (p.id === updatedParent.id ? { ...p, ...updatedParent } : p))
+      );
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleDeleteParent = async (parent) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete guardian "${parent.name}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      if (parent.id) {
+        await deleteParent(parent.id);
+        await fetchParentsList();
+      }
+    } catch (err) {
+      console.error('Failed to delete parent:', err);
+      // Fallback local deletion
+      setParents((prev) => prev.filter((p) => p.id !== parent.id));
+    }
+  };
+
   return (
     <div className="h-screen flex bg-[#F8FAFC] text-slate-800 font-sans antialiased overflow-hidden">
       <Sidebar
@@ -117,6 +175,13 @@ const ParentManagment = ({
             onAddParentClick={() => setIsAddModalOpen(true)}
             parentsList={parentsList}
             isLoading={loading}
+            onViewCredentials={(parent) => {
+              setSelectedParentForCreds(parent);
+              setIsCredsModalOpen(true);
+            }}
+            onViewParent={handleViewParent}
+            onEditParent={handleEditParent}
+            onDeleteParent={handleDeleteParent}
           />
 
           <div className="h-4"></div>
@@ -130,6 +195,31 @@ const ParentManagment = ({
         onClose={() => setIsAddModalOpen(false)}
         onAddParent={handleAddParent}
         availableStudents={students}
+      />
+
+      <EditParentModal
+        parent={selectedParent}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onUpdateParent={handleUpdateParent}
+        availableStudents={students}
+      />
+
+      <ParentDetailsModal
+        parent={selectedParent}
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        onEditClick={(parent) => {
+          setIsDetailsModalOpen(false);
+          handleEditParent(parent);
+        }}
+      />
+
+      <AppCredentialsModal
+        isOpen={isCredsModalOpen}
+        onClose={() => setIsCredsModalOpen(false)}
+        entity={selectedParentForCreds}
+        userType="parent"
       />
     </div>
   );

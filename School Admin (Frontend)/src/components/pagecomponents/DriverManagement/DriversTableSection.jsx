@@ -10,6 +10,7 @@ import {
   MdDeleteOutline,
   MdChevronLeft,
   MdChevronRight,
+  MdVpnKey,
 } from 'react-icons/md';
 
 export const initialDriversData = [
@@ -142,6 +143,7 @@ const DriversTableSection = ({
   onViewDriver,
   onEditDriver,
   onDeleteDriver,
+  onViewCredentials,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activePage, setActivePage] = useState(1);
@@ -314,7 +316,15 @@ const DriversTableSection = ({
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                    <div className="inline-flex items-center gap-2 text-slate-400">
+                    <div className="inline-flex items-center gap-1.5 text-slate-400">
+                      <button
+                        type="button"
+                        onClick={() => onViewCredentials && onViewCredentials(driver)}
+                        className="p-1 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition cursor-pointer"
+                        title="View App Login Credentials"
+                      >
+                        <MdVpnKey className="w-4 h-4" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => onEditDriver && onEditDriver(driver)}

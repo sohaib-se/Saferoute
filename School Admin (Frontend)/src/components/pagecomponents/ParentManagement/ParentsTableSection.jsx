@@ -10,6 +10,8 @@ import {
   MdChevronLeft,
   MdChevronRight,
   MdSchool,
+  MdVpnKey,
+  MdDeleteOutline,
 } from 'react-icons/md';
 
 const initialParents = [
@@ -124,6 +126,10 @@ const ParentsTableSection = ({
   onAddParentClick,
   parentsList = initialParents,
   isLoading = false,
+  onViewCredentials,
+  onViewParent,
+  onEditParent,
+  onDeleteParent,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activePage, setActivePage] = useState(1);
@@ -264,13 +270,41 @@ const ParentsTableSection = ({
                     </div>
                   </td>
                   <td className="py-3.5 px-4 text-center">
-                    <div className="flex items-center justify-center gap-2 text-slate-400">
-                      <button className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer" title="Edit Parent">
+                    <div className="flex items-center justify-center gap-1.5 text-slate-400">
+                      <button
+                        type="button"
+                        onClick={() => onViewCredentials && onViewCredentials(parent)}
+                        className="p-1 rounded-lg hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
+                        title="View App Login Credentials"
+                      >
+                        <MdVpnKey size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onEditParent && onEditParent(parent)}
+                        className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer"
+                        title="Edit Parent"
+                      >
                         <MdEdit size={16} />
                       </button>
-                      <button className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer" title="View Details">
+                      <button
+                        type="button"
+                        onClick={() => onViewParent && onViewParent(parent)}
+                        className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer"
+                        title="View Details"
+                      >
                         <MdVisibility size={16} />
                       </button>
+                      {onDeleteParent && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteParent(parent)}
+                          className="p-1 rounded-lg hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                          title="Delete Parent"
+                        >
+                          <MdDeleteOutline size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

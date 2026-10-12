@@ -13,6 +13,7 @@ const StudentManagment = ({
   students: externalStudents,
   isLoading = false,
   onUpdateStudent,
+  onDeleteStudent,
 }) => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [modalMode, setModalMode] = useState('view'); // 'view' or 'edit'
@@ -134,6 +135,24 @@ const StudentManagment = ({
     }
   };
 
+  const handleDeleteStudent = (student) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete student "${student.name}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    if (onDeleteStudent) {
+      onDeleteStudent(student.dbId || student.id);
+    } else {
+      setLocalStudents((prev) =>
+        prev.filter((s) => (s.dbId || s.id) !== (student.dbId || student.id))
+      );
+    }
+  };
+
   const handleAddStudentClick = () => {
     if (onNavigate) {
       onNavigate('AddStudent');
@@ -166,6 +185,7 @@ const StudentManagment = ({
             onAddStudentClick={handleAddStudentClick}
             onViewStudent={handleViewStudent}
             onEditStudent={handleEditStudent}
+            onDeleteStudent={handleDeleteStudent}
             studentsList={studentsList}
             isLoading={isLoading}
           />

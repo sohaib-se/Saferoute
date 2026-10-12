@@ -134,6 +134,27 @@ CREATE TABLE IF NOT EXISTS public.students (
 
 CREATE INDEX IF NOT EXISTS idx_students_school_id ON public.students(school_id);
 CREATE INDEX IF NOT EXISTS idx_students_parent_id ON public.students(parent_id);
+
+-- 6. APP CREDENTIALS TABLE (Mobile App Portals for Parents & Drivers)
+CREATE TABLE IF NOT EXISTS public.app_credentials (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    school_id UUID NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
+    user_type VARCHAR(50) NOT NULL CHECK (user_type IN ('parent', 'driver')),
+    user_id UUID NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    login_id VARCHAR(10) NOT NULL, -- 4-digit unique code (e.g. '5821')
+    password VARCHAR(255) NOT NULL, -- 4-digit password (initially identical to login_id)
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT uq_app_credentials_user UNIQUE (school_id, user_type, user_id),
+    CONSTRAINT uq_app_credentials_login_id UNIQUE (login_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_credentials_school_id ON public.app_credentials(school_id);
+CREATE INDEX IF NOT EXISTS idx_app_credentials_user_type_id ON public.app_credentials(user_type, user_id);
+CREATE INDEX IF NOT EXISTS idx_app_credentials_login_id ON public.app_credentials(login_id);
 ```
 
 ---

@@ -8,6 +8,7 @@ import {
   MdChevronRight,
   MdEdit,
   MdVisibility,
+  MdDeleteOutline,
 } from 'react-icons/md';
 
 const initialStudents = [
@@ -145,6 +146,7 @@ const StudentsTableSection = ({
   onAddStudentClick,
   onViewStudent,
   onEditStudent,
+  onDeleteStudent,
   studentsList = initialStudents,
   isLoading = false,
 }) => {
@@ -365,8 +367,9 @@ const StudentsTableSection = ({
                   <td className="py-3.5 px-6 text-slate-600 font-medium">{student.vehicle}</td>
                   <td className="py-3.5 px-6">{renderStatusBadge(student.status)}</td>
                   <td className="py-3.5 px-6 text-center">
-                    <div className="flex items-center justify-center gap-2 text-slate-400">
+                    <div className="flex items-center justify-center gap-1.5 text-slate-400">
                       <button
+                        type="button"
                         onClick={() => onEditStudent && onEditStudent(student)}
                         className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer"
                         title="Edit Student"
@@ -374,12 +377,23 @@ const StudentsTableSection = ({
                         <MdEdit size={16} />
                       </button>
                       <button
+                        type="button"
                         onClick={() => onViewStudent && onViewStudent(student)}
                         className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer"
                         title="View Details"
                       >
                         <MdVisibility size={16} />
                       </button>
+                      {onDeleteStudent && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteStudent(student)}
+                          className="p-1 rounded-lg hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                          title="Delete Student"
+                        >
+                          <MdDeleteOutline size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
