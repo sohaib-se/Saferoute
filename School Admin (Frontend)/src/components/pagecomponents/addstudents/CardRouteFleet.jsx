@@ -1,6 +1,6 @@
 import { MdAltRoute } from 'react-icons/md';
 
-const CardRouteFleet = ({ formData, onChange }) => {
+const CardRouteFleet = ({ formData, onChange, drivers = [], vehicles = [] }) => {
   return (
     <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
       <div className="flex items-center justify-between pb-5 border-b border-slate-100 mb-5">
@@ -22,16 +22,24 @@ const CardRouteFleet = ({ formData, onChange }) => {
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1.5">Driver Selection *</label>
           <select
-            value={formData.driver || 'Muhammad Ali'}
+            value={formData.driver || ''}
             onChange={(e) => onChange('driver', e.target.value)}
             className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none cursor-pointer"
           >
-            <option value="Muhammad Ali">Muhammad Ali</option>
-            <option value="Tariq Mahmood">Tariq Mahmood</option>
-            <option value="Rashid Khan">Rashid Khan</option>
-            <option value="Usman Ghani">Usman Ghani</option>
-            <option value="Bilal Ahmed">Bilal Ahmed</option>
-            <option value="Sajid Mahmood">Sajid Mahmood</option>
+            <option value="">Select a driver...</option>
+            {drivers.length > 0 ? (
+              drivers.map((d) => (
+                <option key={d.id} value={d.name}>
+                  {d.name} {d.status ? `(${d.status})` : ''}
+                </option>
+              ))
+            ) : (
+              <>
+                <option value="Muhammad Ali">Muhammad Ali</option>
+                <option value="Tariq Mahmood">Tariq Mahmood</option>
+                <option value="Rashid Khan">Rashid Khan</option>
+              </>
+            )}
           </select>
         </div>
 
@@ -39,16 +47,24 @@ const CardRouteFleet = ({ formData, onChange }) => {
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1.5">Bus Selection *</label>
           <select
-            value={formData.vehicle || 'Bus 12'}
+            value={formData.vehicle || ''}
             onChange={(e) => onChange('vehicle', e.target.value)}
             className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none cursor-pointer"
           >
-            <option value="Bus 12">Bus 12</option>
-            <option value="Bus 07">Bus 07</option>
-            <option value="Bus 09">Bus 09</option>
-            <option value="Bus 15">Bus 15</option>
-            <option value="Bus 18">Bus 18</option>
-            <option value="Bus 05">Bus 05</option>
+            <option value="">Select a vehicle...</option>
+            {vehicles.length > 0 ? (
+              vehicles.map((v) => (
+                <option key={v.id} value={v.name}>
+                  {v.name} {v.regNo ? `(${v.regNo})` : ''}
+                </option>
+              ))
+            ) : (
+              <>
+                <option value="Bus 01">Bus 01</option>
+                <option value="Bus 12">Bus 12</option>
+                <option value="Bus 07">Bus 07</option>
+              </>
+            )}
           </select>
         </div>
       </div>

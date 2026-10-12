@@ -1,138 +1,160 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import ParentStatCards from '../components/pagecomponents/ParentManagement/ParentStatCards';
 import ParentsTableSection from '../components/pagecomponents/ParentManagement/ParentsTableSection';
 import ParentManagementFooter from '../components/pagecomponents/ParentManagement/ParentManagementFooter';
 import AddParentModal from '../components/pagecomponents/ParentManagement/AddParentModal';
-
-const initialParentsList = [
-  {
-    num: 1,
-    initials: 'SA',
-    avatarBg: 'bg-blue-100 text-blue-600',
-    name: 'Sana Ahmed',
-    email: 'sana.ahmed@example.com',
-    phone: '+92 300 1234567',
-    children: [
-      { name: 'Ayesha Khan', grade: 'Grade 5' },
-      { name: 'Zoya Malik', grade: 'Grade 5' },
-    ],
-    route: 'Route 1 (Green Valley)',
-    bus: 'Bus 12',
-    status: 'Active',
-  },
-  {
-    num: 2,
-    initials: 'AR',
-    avatarBg: 'bg-emerald-100 text-emerald-600',
-    name: 'Ali Raza',
-    email: 'ali.raza@example.com',
-    phone: '+92 312 9876543',
-    children: [{ name: 'Muhammad Ali', grade: 'Grade 6' }],
-    route: 'Route 2 (Model Town)',
-    bus: 'Bus 07',
-    status: 'Active',
-  },
-  {
-    num: 3,
-    initials: 'FK',
-    avatarBg: 'bg-purple-100 text-purple-600',
-    name: 'Fatima Khan',
-    email: 'fatima.k@example.com',
-    phone: '+92 321 7654321',
-    children: [
-      { name: 'Sara Khan', grade: 'Grade 7' },
-      { name: 'Hamza Khan', grade: 'Grade 3' },
-    ],
-    route: 'Route 3 (University)',
-    bus: 'Bus 09',
-    status: 'Active',
-  },
-  {
-    num: 4,
-    initials: 'US',
-    avatarBg: 'bg-amber-100 text-amber-600',
-    name: 'Usman Shah',
-    email: 'usman.shah@example.com',
-    phone: '+92 345 1112233',
-    children: [{ name: 'Hassan Ali', grade: 'Grade 5' }],
-    route: 'Route 1 (Green Valley)',
-    bus: 'Bus 12',
-    status: 'Active',
-  },
-  {
-    num: 5,
-    initials: 'AM',
-    avatarBg: 'bg-rose-100 text-rose-600',
-    name: 'Ayesha Malik',
-    email: 'ayesha.m@example.com',
-    phone: '+92 301 4567890',
-    children: [
-      { name: 'Fatima Noor', grade: 'Grade 6' },
-      { name: 'Bilal Noor', grade: 'Grade 4' },
-    ],
-    route: 'Route 2 (Model Town)',
-    bus: 'Bus 15',
-    status: 'Active',
-  },
-  {
-    num: 6,
-    initials: 'TA',
-    avatarBg: 'bg-teal-100 text-teal-600',
-    name: 'Tariq Ahmed',
-    email: 'tariq.a@example.com',
-    phone: '+92 333 5566778',
-    children: [{ name: 'Bilal Ahmed', grade: 'Grade 7' }],
-    route: 'Route 4 (Johar Town)',
-    bus: 'Bus 18',
-    status: 'Active',
-  },
-  {
-    num: 7,
-    initials: 'RN',
-    avatarBg: 'bg-orange-100 text-orange-600',
-    name: 'Rashid Nadeem',
-    email: 'r.nadeem@example.com',
-    phone: '+92 305 8899001',
-    children: [{ name: 'Hamza Tariq', grade: 'Grade 8' }],
-    route: 'Route 5 (Canal Road)',
-    bus: 'Bus 05',
-    status: 'Pending',
-  },
-  {
-    num: 8,
-    initials: 'ZH',
-    avatarBg: 'bg-emerald-100 text-emerald-600',
-    name: 'Zainab Hassan',
-    email: 'zainab.h@example.com',
-    phone: '+92 344 2233445',
-    children: [{ name: 'Omer Hassan', grade: 'Grade 4' }],
-    route: 'Route 1 (Green Valley)',
-    bus: 'Bus 12',
-    status: 'Active',
-  },
-];
+import EditParentModal from '../components/pagecomponents/ParentManagement/EditParentModal';
+import ParentDetailsModal from '../components/pagecomponents/ParentManagement/ParentDetailsModal';
+import AppCredentialsModal from '../components/common/AppCredentialsModal';
+import { getParents, addParent, updateParent, deleteParent } from '../services/parentsService';
+import { getStudents } from '../services/studentsService';
 
 const ParentManagment = ({
   onLogout,
   onNavigate,
   currentPage = 'Parents',
   parents: externalParents,
+  students: externalStudents,
+  onRefreshStudents,
 }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [parents, setParents] = useState(initialParentsList);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedParent, setSelectedParent] = useState(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedParentForCreds, setSelectedParentForCreds] = useState(null);
+  const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
+  const [parents, setParents] = useState([]);
+  const [students, setStudents] = useState(externalStudents || []);
+  const [loading, setLoading] = useState(!externalParents);
+  const [error, setError] = useState(null);
+
+  const fetchParentsList = useCallback(async () => {
+    if (externalParents) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getParents();
+      setParents(data);
+    } catch (err) {
+      console.error('Error fetching parents:', err);
+      setError(err.message || 'Failed to fetch parents from database');
+    } finally {
+      setLoading(false);
+    }
+  }, [externalParents]);
+
+  useEffect(() => {
+    fetchParentsList();
+  }, [fetchParentsList]);
+
+  // Sync or fetch students for child-linking
+  useEffect(() => {
+    if (externalStudents && externalStudents.length > 0) {
+      setStudents(externalStudents);
+      return;
+    }
+
+    const loadStudents = async () => {
+      try {
+        const studentData = await getStudents();
+        if (studentData && studentData.length > 0) {
+          setStudents(studentData);
+        }
+      } catch (err) {
+        console.warn('Could not load students for linking:', err);
+      }
+    };
+
+    loadStudents();
+  }, [externalStudents]);
 
   const parentsList = externalParents || parents;
 
-  const handleAddParent = (newParent) => {
-    setParents((prev) => [
-      ...prev,
-      {
-        ...newParent,
-        num: prev.length + 1,
-      },
-    ]);
+  const handleAddParent = async (newParent) => {
+    setIsAddModalOpen(false);
+    setLoading(true);
+    try {
+      await addParent(newParent);
+      await fetchParentsList();
+      if (onRefreshStudents) {
+        onRefreshStudents();
+      }
+    } catch (err) {
+      console.error('Failed to create parent in database:', err);
+      // Fallback local addition for offline / demo mode
+      setParents((prev) => [
+        {
+          ...newParent,
+          id: `parent-${Date.now()}`,
+          num: prev.length + 1,
+        },
+        ...prev,
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewParent = (parent) => {
+    setSelectedParent(parent);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleEditParent = (parent) => {
+    setSelectedParent(parent);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateParent = async (updatedParent) => {
+    setIsEditModalOpen(false);
+    setLoading(true);
+    try {
+      if (updatedParent.id) {
+        await updateParent(updatedParent.id, updatedParent);
+        await fetchParentsList();
+        if (onRefreshStudents) {
+          onRefreshStudents();
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update parent in database:', err);
+      setParents((prev) =>
+        prev.map((p) => (p.id === updatedParent.id ? { ...p, ...updatedParent } : p))
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteParent = async (parent) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete guardian "${parent.name}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    // Optimistic removal for instant UI feedback
+    setParents((prev) => prev.filter((p) => p.id !== parent.id));
+
+    try {
+      if (parent.id) {
+        await deleteParent(parent.id);
+        await fetchParentsList();
+        if (onRefreshStudents) {
+          onRefreshStudents();
+        }
+      }
+    } catch (err) {
+      console.error('Failed to delete parent:', err);
+      await fetchParentsList();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -147,11 +169,31 @@ const ParentManagment = ({
         <Header onNavigate={onNavigate} />
 
         <main className="p-8 space-y-6 flex-1 max-w-[1440px] w-full mx-auto">
-          <ParentStatCards />
+          <ParentStatCards
+            stats={
+              parentsList.length > 0
+                ? {
+                    totalParents: parentsList.length,
+                    activePupils: parentsList.reduce(
+                      (acc, p) => acc + (p.children?.length || 0),
+                      0
+                    ),
+                  }
+                : undefined
+            }
+          />
 
           <ParentsTableSection
             onAddParentClick={() => setIsAddModalOpen(true)}
             parentsList={parentsList}
+            isLoading={loading}
+            onViewCredentials={(parent) => {
+              setSelectedParentForCreds(parent);
+              setIsCredsModalOpen(true);
+            }}
+            onViewParent={handleViewParent}
+            onEditParent={handleEditParent}
+            onDeleteParent={handleDeleteParent}
           />
 
           <div className="h-4"></div>
@@ -164,6 +206,32 @@ const ParentManagment = ({
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddParent={handleAddParent}
+        availableStudents={students}
+      />
+
+      <EditParentModal
+        parent={selectedParent}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onUpdateParent={handleUpdateParent}
+        availableStudents={students}
+      />
+
+      <ParentDetailsModal
+        parent={selectedParent}
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        onEditClick={(parent) => {
+          setIsDetailsModalOpen(false);
+          handleEditParent(parent);
+        }}
+      />
+
+      <AppCredentialsModal
+        isOpen={isCredsModalOpen}
+        onClose={() => setIsCredsModalOpen(false)}
+        entity={selectedParentForCreds}
+        userType="parent"
       />
     </div>
   );

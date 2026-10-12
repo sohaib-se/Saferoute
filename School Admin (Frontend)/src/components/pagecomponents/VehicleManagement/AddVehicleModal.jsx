@@ -1,21 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MdDirectionsBus } from 'react-icons/md';
 import Modal from '../../common/Modal';
+import { getDrivers } from '../../../services/driversService';
+import { getRoutes } from '../../../services/routesService';
 
-const AddVehicleModal = ({ isOpen, onClose, onAddVehicle }) => {
+const AddVehicleModal = ({
+  isOpen,
+  onClose,
+  onAddVehicle,
+  onUpdateVehicle,
+  vehicle = null,
+  drivers: initialDrivers,
+  routes: initialRoutes,
+}) => {
+  const isEditMode = Boolean(vehicle);
+  const [driversList, setDriversList] = useState(initialDrivers || []);
+  const [routesList, setRoutesList] = useState(initialRoutes || []);
   const [formData, setFormData] = useState({
     name: '',
-    code: '',
     regNo: '',
     model: '',
-    capacitySeats: '30 Seats',
+    capacitySeats: '',
     driverName: '',
-    driverPhone: '',
-    driverInitials: '',
-    route: 'Route 1',
-    routeSub: '',
+    route: '',
     status: 'Running',
   });
+
+  useEffect(() => {
+    if (initialDrivers && initialDrivers.length > 0) {
+      setDriversList(initialDrivers);
+    } else if (isOpen) {
+      getDrivers()
+        .then((data) => setDriversList(data || []))
+        .catch((err) => console.error('Failed to load drivers for vehicle modal:', err));
+    }
+  }, [initialDrivers, isOpen]);
+
+  useEffect(() => {
+    if (initialRoutes && initialRoutes.length > 0) {
+      setRoutesList(initialRoutes);
+    } else if (isOpen) {
+      getRoutes()
+        .then((data) => setRoutesList(data || []))
+        .catch((err) => console.error('Failed to load routes for vehicle modal:', err));
+    }
+  }, [initialRoutes, isOpen]);
+
+  useEffect(() => {
+    if (vehicle) {
+      setFormData({
+        name: vehicle.name || '',
+        regNo: vehicle.regNo || '',
+        model: vehicle.model || '',
+        capacitySeats: vehicle.capacitySeats || '',
+        driverName: vehicle.driverName || '',
+        route: vehicle.route || '',
+        status: vehicle.status || 'Running',
+      });
+    } else {
+      setFormData({
+        name: '',
+        regNo: '',
+        model: '',
+        capacitySeats: '',
+        driverName: '',
+        route: '',
+        status: 'Running',
+      });
+    }
+  }, [vehicle, isOpen]);
 
   if (!isOpen) return null;
 
@@ -60,36 +113,40 @@ const AddVehicleModal = ({ isOpen, onClose, onAddVehicle }) => {
     if (!formData.name || !formData.regNo) return;
 
     const styles = getStatusStyles(formData.status);
-    const busCode = formData.code || formData.name.replace(/[^0-9]/g, '') || '01';
+    const busCode = formData.name.replace(/[^0-9]/g, '') || '01';
 
-    const newVehicle = {
+    const vehiclePayload = {
+      ...(vehicle || {}),
       ...formData,
+      route: formData.route || 'Unassigned',
       code: busCode,
       badgeStyle: 'bg-blue-50 border-blue-100 text-blue-600',
-      capacitySub: '0 Filled (Ready)',
+      capacitySub: vehicle?.capacitySub || '0 Filled (Ready)',
       driverInitials: getInitials(formData.driverName),
-      speed: formData.status === 'Running' || formData.status === 'On Route' ? '30 km/h' : '0 km/h',
+      speed: vehicle?.speed || '30 km/h',
       speedDot: styles.dot,
-      signalSub: formData.status === 'Maintenance' ? 'Telemetry Disconnected' : 'Signal: Strong 5G',
+      signalSub: vehicle?.signalSub || 'Signal: Strong 5G',
       statusBadgeStyle: styles.badge,
       statusDotStyle: styles.dot,
     };
 
-    if (onAddVehicle) {
-      onAddVehicle(newVehicle);
+    if (isEditMode) {
+      if (onUpdateVehicle) {
+        onUpdateVehicle(vehiclePayload);
+      }
+    } else {
+      if (onAddVehicle) {
+        onAddVehicle(vehiclePayload);
+      }
     }
 
     setFormData({
       name: '',
-      code: '',
       regNo: '',
       model: '',
-      capacitySeats: '30 Seats',
+      capacitySeats: '',
       driverName: '',
-      driverPhone: '',
-      driverInitials: '',
-      route: 'Route 1',
-      routeSub: '',
+      route: '',
       status: 'Running',
     });
     onClose();
@@ -100,8 +157,12 @@ const AddVehicleModal = ({ isOpen, onClose, onAddVehicle }) => {
       isOpen={isOpen}
       onClose={onClose}
       icon={<MdDirectionsBus size={20} />}
-      title="Add New Vehicle"
-      subtitle="Register school bus into the active transport fleet"
+      title={isEditMode ? 'Edit Vehicle Information' : 'Add New Vehicle'}
+      subtitle={
+        isEditMode
+          ? 'Update school bus specifications, driver link, or status'
+          : 'Register school bus into the active transport fleet'
+      }
       maxWidth="max-w-lg"
     >
       <form onSubmit={handleSubmit}>
@@ -167,60 +228,75 @@ const AddVehicleModal = ({ isOpen, onClose, onAddVehicle }) => {
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Assigned Driver
               </label>
-              <input
-                type="text"
-                placeholder="e.g. Ali Raza"
-                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
+              <select
+                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans cursor-pointer"
                 value={formData.driverName}
-                onChange={(e) => setFormData({ ...formData, driverName: e.target.value })}
-              />
+                onChange={(e) => {
+                  const selectedName = e.target.value;
+                  const matchedDriver = driversList.find((d) => d.name === selectedName);
+                  setFormData((prev) => ({
+                    ...prev,
+                    driverName: selectedName,
+                    route:
+                      matchedDriver?.route && matchedDriver.route !== 'Unassigned'
+                        ? matchedDriver.route
+                        : prev.route,
+                  }));
+                }}
+              >
+                <option value="">Unassigned (No Driver Assigned)</option>
+                {driversList.map((driver) => (
+                  <option key={driver.id || driver.name} value={driver.name}>
+                    {driver.name} {driver.phone ? `(${driver.phone})` : ''}
+                  </option>
+                ))}
+                {formData.driverName &&
+                  !driversList.some((d) => d.name === formData.driverName) && (
+                    <option value={formData.driverName}>{formData.driverName}</option>
+                  )}
+              </select>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Driver Phone
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. 0300 1234567"
-                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
-                value={formData.driverPhone}
-                onChange={(e) => setFormData({ ...formData, driverPhone: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Assigned Route
               </label>
-              <input
-                type="text"
-                placeholder="e.g. Route 1"
-                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
-                value={formData.route}
-                onChange={(e) => setFormData({ ...formData, route: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Status
-              </label>
               <select
                 className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans cursor-pointer"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                value={formData.route}
+                onChange={(e) => setFormData({ ...formData, route: e.target.value })}
               >
-                <option value="Running">Running</option>
-                <option value="On Route">On Route</option>
-                <option value="Idle">Idle</option>
-                <option value="Maintenance">Maintenance</option>
+                <option value="">Unassigned (No Route Assigned)</option>
+                {routesList.map((route) => (
+                  <option key={route.id || route.name} value={route.name}>
+                    {route.name}
+                  </option>
+                ))}
+                {formData.route &&
+                  !routesList.some((r) => r.name === formData.route) && (
+                    <option value={formData.route}>{formData.route}</option>
+                  )}
               </select>
             </div>
           </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Operating Status
+            </label>
+            <select
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-sans cursor-pointer"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            >
+              <option value="Running">Running</option>
+              <option value="On Route">On Route</option>
+              <option value="Idle">Idle</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
         </div>
 
-        {/* Unified Modal Footer */}
+        {/* Modal Footer */}
         <div className="px-6 py-4 bg-slate-50/60 border-t border-slate-100 flex items-center justify-end gap-2.5">
           <button
             type="button"
@@ -233,7 +309,7 @@ const AddVehicleModal = ({ isOpen, onClose, onAddVehicle }) => {
             type="submit"
             className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition cursor-pointer"
           >
-            Save Vehicle
+            {isEditMode ? 'Save Changes' : 'Save Vehicle'}
           </button>
         </div>
       </form>

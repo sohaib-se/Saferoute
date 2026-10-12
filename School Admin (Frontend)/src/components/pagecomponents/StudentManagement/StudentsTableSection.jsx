@@ -8,6 +8,7 @@ import {
   MdChevronRight,
   MdEdit,
   MdVisibility,
+  MdDeleteOutline,
 } from 'react-icons/md';
 
 const initialStudents = [
@@ -145,7 +146,9 @@ const StudentsTableSection = ({
   onAddStudentClick,
   onViewStudent,
   onEditStudent,
+  onDeleteStudent,
   studentsList = initialStudents,
+  isLoading = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('All Classes');
@@ -171,10 +174,12 @@ const StudentsTableSection = ({
   }, []);
 
   const filteredStudents = studentsList.filter((student) => {
+    const term = searchTerm.toLowerCase().trim();
     const matchesSearch =
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.vehicle.toLowerCase().includes(searchTerm.toLowerCase());
+      !term ||
+      (student.name || '').toLowerCase().includes(term) ||
+      (student.id || '').toLowerCase().includes(term) ||
+      (student.vehicle || '').toLowerCase().includes(term);
 
     const matchesClass =
       selectedClass === 'All Classes' || student.class === selectedClass;
@@ -333,16 +338,36 @@ const StudentsTableSection = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs">
-            {filteredStudents.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={8} className="py-12 text-center text-slate-400 text-xs font-normal">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-slate-500 font-medium">Fetching students roster from database...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredStudents.length > 0 ? (
               filteredStudents.map((student, idx) => (
                 <tr key={student.id + idx} className="hover:bg-slate-50/60 transition-colors">
                   <td className="py-3.5 px-6 text-center text-slate-400 font-medium">
                     {student.num || idx + 1}
                   </td>
                   <td className="py-3.5 px-4">
-                    <div className={`w-8 h-8 rounded-full ${student.avatarBg} font-bold flex items-center justify-center text-xs`}>
-                      {student.initials}
-                    </div>
+                    {student.photoUrl ? (
+                      <img
+                        src={student.photoUrl}
+                        alt={student.name}
+                        className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className={`w-8 h-8 rounded-full ${student.avatarBg} font-bold flex items-center justify-center text-xs`}>
+                        {student.initials}
+                      </div>
+                    )}
                   </td>
                   <td className="py-3.5 px-6">
                     <div className="font-bold text-slate-900 text-xs leading-tight">{student.name}</div>
@@ -353,8 +378,9 @@ const StudentsTableSection = ({
                   <td className="py-3.5 px-6 text-slate-600 font-medium">{student.vehicle}</td>
                   <td className="py-3.5 px-6">{renderStatusBadge(student.status)}</td>
                   <td className="py-3.5 px-6 text-center">
-                    <div className="flex items-center justify-center gap-2 text-slate-400">
+                    <div className="flex items-center justify-center gap-1.5 text-slate-400">
                       <button
+                        type="button"
                         onClick={() => onEditStudent && onEditStudent(student)}
                         className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer"
                         title="Edit Student"
@@ -362,12 +388,23 @@ const StudentsTableSection = ({
                         <MdEdit size={16} />
                       </button>
                       <button
+                        type="button"
                         onClick={() => onViewStudent && onViewStudent(student)}
                         className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer"
                         title="View Details"
                       >
                         <MdVisibility size={16} />
                       </button>
+                      {onDeleteStudent && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteStudent(student)}
+                          className="p-1 rounded-lg hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                          title="Delete Student"
+                        >
+                          <MdDeleteOutline size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

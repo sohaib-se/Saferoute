@@ -6,8 +6,10 @@ import {
   MdKeyboardArrowDown,
   MdEdit,
   MdVisibility,
+  MdDeleteOutline,
   MdChevronLeft,
   MdChevronRight,
+  MdDirectionsBus,
 } from 'react-icons/md';
 
 export const initialVehiclesData = [
@@ -183,9 +185,11 @@ export const initialVehiclesData = [
 
 const VehiclesTableSection = ({
   vehiclesList = initialVehiclesData,
+  isLoading = false,
   onAddVehicleClick,
   onViewVehicle,
   onEditVehicle,
+  onDeleteVehicle,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
@@ -196,19 +200,19 @@ const VehiclesTableSection = ({
     const term = searchTerm.toLowerCase().trim();
     const matchesSearch =
       !term ||
-      vehicle.name.toLowerCase().includes(term) ||
-      vehicle.regNo.toLowerCase().includes(term) ||
-      vehicle.model.toLowerCase().includes(term) ||
-      vehicle.driverName.toLowerCase().includes(term) ||
-      vehicle.route.toLowerCase().includes(term);
+      (vehicle.name || '').toLowerCase().includes(term) ||
+      (vehicle.regNo || '').toLowerCase().includes(term) ||
+      (vehicle.model || '').toLowerCase().includes(term) ||
+      (vehicle.driverName || '').toLowerCase().includes(term) ||
+      (vehicle.route || '').toLowerCase().includes(term);
 
     const matchesStatus =
       statusFilter === 'All Statuses' ||
-      vehicle.status.toLowerCase() === statusFilter.toLowerCase();
+      (vehicle.status || '').toLowerCase() === statusFilter.toLowerCase();
 
     const matchesRoute =
       routeFilter === 'All Routes' ||
-      vehicle.route.toLowerCase().includes(routeFilter.toLowerCase());
+      (vehicle.route || '').toLowerCase().includes(routeFilter.toLowerCase());
 
     return matchesSearch && matchesStatus && matchesRoute;
   });
@@ -327,14 +331,23 @@ const VehiclesTableSection = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-            {filteredVehicles.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} className="py-12 text-center text-slate-400 text-xs font-normal">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-slate-500 font-medium">Fetching fleet vehicles from database...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredVehicles.length > 0 ? (
               filteredVehicles.map((vehicle, idx) => (
                 <tr key={vehicle.num || idx} className="hover:bg-slate-50/60 transition-colors">
                   <td className="py-3.5 px-4 text-center text-slate-400 font-medium">{vehicle.num || idx + 1}</td>
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl ${vehicle.badgeStyle} font-bold flex items-center justify-center text-xs shrink-0`}>
-                        {vehicle.code}
+                      <div className={`w-9 h-9 rounded-xl ${vehicle.badgeStyle || 'bg-blue-50 border border-blue-200/60 text-blue-600'} font-bold flex items-center justify-center text-xs shrink-0`}>
+                        {vehicle.code || <MdDirectionsBus className="w-4 h-4 text-blue-600" />}
                       </div>
                       <div>
                         <p className="font-bold text-slate-900 leading-snug">
@@ -345,35 +358,35 @@ const VehiclesTableSection = ({
                     </div>
                   </td>
                   <td className="py-3.5 px-4">
-                    <p className="font-semibold text-slate-900 leading-snug">{vehicle.capacitySeats}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.capacitySub}</p>
+                    <p className="font-semibold text-slate-900 leading-snug">{vehicle.capacitySeats || '30 Seats'}</p>
+                    {vehicle.capacitySub && <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.capacitySub}</p>}
                   </td>
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold flex items-center justify-center text-[10px] shrink-0">
-                        {vehicle.driverInitials}
+                        {vehicle.driverInitials || 'DR'}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900 leading-snug">{vehicle.driverName}</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.driverPhone}</p>
+                        <p className="font-semibold text-slate-900 leading-snug">{vehicle.driverName || 'Unassigned'}</p>
+                        {vehicle.driverPhone && <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.driverPhone}</p>}
                       </div>
                     </div>
                   </td>
                   <td className="py-3.5 px-4">
-                    <p className="font-semibold text-slate-900 leading-snug">{vehicle.route}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.routeSub}</p>
+                    <p className="font-semibold text-slate-900 leading-snug">{vehicle.route || 'Route 1'}</p>
+                    {vehicle.routeSub && <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.routeSub}</p>}
                   </td>
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-1.5 leading-snug font-semibold text-slate-900">
-                      <span className={`w-1.5 h-1.5 rounded-full ${vehicle.speedDot}`}></span>
-                      <span>{vehicle.speed}</span>
+                      <span className={`w-1.5 h-1.5 rounded-full ${vehicle.speedDot || (vehicle.status === 'Running' || vehicle.status === 'On Route' ? 'bg-emerald-500' : 'bg-slate-400')}`}></span>
+                      <span>{vehicle.speed || (vehicle.status === 'Running' || vehicle.status === 'On Route' ? '30 km/h' : '0 km/h')}</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.signalSub}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{vehicle.signalSub || (vehicle.status === 'Maintenance' ? 'Telemetry Disconnected' : 'Signal: Strong 5G')}</p>
                   </td>
                   <td className="py-3.5 px-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${vehicle.statusBadgeStyle}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${vehicle.statusDotStyle} mr-1.5`}></span>
-                      {vehicle.status}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${vehicle.statusBadgeStyle || 'bg-emerald-50 text-emerald-600 border border-emerald-200/70'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${vehicle.statusDotStyle || 'bg-emerald-500'} mr-1.5`}></span>
+                      {vehicle.status || 'Running'}
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-center">
@@ -394,6 +407,16 @@ const VehiclesTableSection = ({
                       >
                         <MdVisibility size={16} />
                       </button>
+                      {onDeleteVehicle && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteVehicle(vehicle.id)}
+                          className="p-1 rounded-lg hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                          title="Delete Vehicle"
+                        >
+                          <MdDeleteOutline size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

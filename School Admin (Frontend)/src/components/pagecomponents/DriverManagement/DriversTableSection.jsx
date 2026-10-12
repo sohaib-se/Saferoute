@@ -7,8 +7,10 @@ import {
   MdDirectionsBus,
   MdEdit,
   MdVisibility,
+  MdDeleteOutline,
   MdChevronLeft,
   MdChevronRight,
+  MdVpnKey,
 } from 'react-icons/md';
 
 export const initialDriversData = [
@@ -136,9 +138,12 @@ export const initialDriversData = [
 
 const DriversTableSection = ({
   driversList = initialDriversData,
+  isLoading = false,
   onAddDriverClick,
   onViewDriver,
   onEditDriver,
+  onDeleteDriver,
+  onViewCredentials,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activePage, setActivePage] = useState(1);
@@ -151,8 +156,8 @@ const DriversTableSection = ({
       driver.phone.toLowerCase().includes(term) ||
       driver.license.toLowerCase().includes(term) ||
       driver.vehicle.toLowerCase().includes(term) ||
-      driver.route.toLowerCase().includes(term) ||
-      driver.routeSub.toLowerCase().includes(term)
+      (driver.route || '').toLowerCase().includes(term) ||
+      (driver.routeSub || '').toLowerCase().includes(term)
     );
   });
 
@@ -237,7 +242,16 @@ const DriversTableSection = ({
             id="driver-roster-body"
             className="divide-y divide-slate-100 text-slate-800"
           >
-            {filteredDrivers.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} className="py-12 text-center text-slate-400 text-xs font-normal">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-slate-500 font-medium">Fetching drivers from database...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredDrivers.length > 0 ? (
               filteredDrivers.map((driver, index) => (
                 <tr
                   key={driver.num || index}
@@ -280,9 +294,11 @@ const DriversTableSection = ({
                       <span className="font-semibold text-slate-900">
                         {driver.route}
                       </span>
-                      <span className="text-[11px] text-slate-400">
-                        {driver.routeSub}
-                      </span>
+                      {driver.routeSub && (
+                        <span className="text-[11px] text-slate-400">
+                          {driver.routeSub}
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="py-3.5 px-4 whitespace-nowrap">
@@ -300,7 +316,15 @@ const DriversTableSection = ({
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                    <div className="inline-flex items-center gap-2 text-slate-400">
+                    <div className="inline-flex items-center gap-1.5 text-slate-400">
+                      <button
+                        type="button"
+                        onClick={() => onViewCredentials && onViewCredentials(driver)}
+                        className="p-1 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition cursor-pointer"
+                        title="View App Login Credentials"
+                      >
+                        <MdVpnKey className="w-4 h-4" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => onEditDriver && onEditDriver(driver)}
@@ -317,6 +341,16 @@ const DriversTableSection = ({
                       >
                         <MdVisibility className="w-4 h-4" />
                       </button>
+                      {onDeleteDriver && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteDriver(driver.id)}
+                          className="p-1 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition cursor-pointer"
+                          title="Delete Driver"
+                        >
+                          <MdDeleteOutline className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

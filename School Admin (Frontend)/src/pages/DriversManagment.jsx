@@ -1,51 +1,106 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import DriverKPICards from '../components/pagecomponents/DriverManagement/DriverKPICards';
-import DriversTableSection, {
-  initialDriversData,
-} from '../components/pagecomponents/DriverManagement/DriversTableSection';
+import DriversTableSection from '../components/pagecomponents/DriverManagement/DriversTableSection';
 import DriverManagementFooter from '../components/pagecomponents/DriverManagement/DriverManagementFooter';
 import AddDriverModal from '../components/pagecomponents/DriverManagement/AddDriverModal';
 import DriverDetailsModal from '../components/pagecomponents/DriverManagement/DriverDetailsModal';
+import AppCredentialsModal from '../components/common/AppCredentialsModal';
+import { getDrivers, addDriver, updateDriver, deleteDriver } from '../services/driversService';
 
 const DriversManagment = ({
   onLogout,
   onNavigate,
   currentPage = 'Drivers',
 }) => {
-  const [drivers, setDrivers] = useState(initialDriversData);
+  const [drivers, setDrivers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedDriver, setSelectedDriver] = useState(null);
+  const [editingDriver, setEditingDriver] = useState(null);
+  const [selectedDriverForCreds, setSelectedDriverForCreds] = useState(null);
+  const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('view'); // 'view' or 'edit'
 
-  const handleAddDriver = (newDriver) => {
-    setDrivers((prev) => [
-      ...prev,
-      {
-        ...newDriver,
-        num: prev.length + 1,
-      },
-    ]);
+  const fetchDriversList = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getDrivers();
+      setDrivers(data);
+    } catch (err) {
+      console.error('Error fetching drivers:', err);
+      setError(err.message || 'Failed to fetch drivers from database');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDriversList();
+  }, [fetchDriversList]);
+
+  const handleAddDriver = async (newDriver) => {
+    setIsAddModalOpen(false);
+    setLoading(true);
+    try {
+      await addDriver(newDriver);
+      await fetchDriversList();
+    } catch (err) {
+      console.error('Failed to create driver:', err);
+      alert('Failed to save driver to database: ' + (err.message || 'Unknown error'));
+      await fetchDriversList();
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpdateDriver = (updatedDriver) => {
-    setDrivers((prev) =>
-      prev.map((d) => (d.num === updatedDriver.num ? updatedDriver : d))
-    );
+  const handleUpdateDriver = async (updatedDriver) => {
+    setEditingDriver(null);
+    setLoading(true);
+    try {
+      if (updatedDriver.id) {
+        await updateDriver(updatedDriver.id, updatedDriver);
+        await fetchDriversList();
+      }
+    } catch (err) {
+      console.error('Failed to update driver:', err);
+      alert('Failed to update driver in database: ' + (err.message || 'Unknown error'));
+      await fetchDriversList();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleViewDriver = (driver) => {
     setSelectedDriver(driver);
-    setModalMode('view');
     setIsDetailsModalOpen(true);
   };
 
   const handleEditDriver = (driver) => {
-    setSelectedDriver(driver);
-    setModalMode('edit');
-    setIsDetailsModalOpen(true);
+    setEditingDriver(driver);
+  };
+
+  const handleDeleteDriver = async (driverId) => {
+    if (!window.confirm('Are you sure you want to delete this driver? This action cannot be undone.')) {
+      return;
+    }
+    setLoading(true);
+    // Optimistic removal for instant UI feedback
+    setDrivers((prev) => prev.filter((d) => d.id !== driverId));
+
+    try {
+      await deleteDriver(driverId);
+      await fetchDriversList();
+    } catch (err) {
+      console.error('Failed to delete driver:', err);
+      alert('Failed to delete driver from database: ' + (err.message || 'Unknown error'));
+      await fetchDriversList();
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Compute stats dynamically
@@ -77,9 +132,15 @@ const DriversManagment = ({
 
           <DriversTableSection
             driversList={drivers}
+            isLoading={loading}
             onAddDriverClick={() => setIsAddModalOpen(true)}
             onViewDriver={handleViewDriver}
             onEditDriver={handleEditDriver}
+            onDeleteDriver={handleDeleteDriver}
+            onViewCredentials={(driver) => {
+              setSelectedDriverForCreds(driver);
+              setIsCredsModalOpen(true);
+            }}
           />
 
           <div className="h-4"></div>
@@ -88,18 +149,37 @@ const DriversManagment = ({
         <DriverManagementFooter />
       </div>
 
+      {/* Add Driver Modal */}
       <AddDriverModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddDriver={handleAddDriver}
       />
 
+      {/* Edit Driver Modal (Uses the exact same modal as adding) */}
+      <AddDriverModal
+        isOpen={Boolean(editingDriver)}
+        onClose={() => setEditingDriver(null)}
+        driver={editingDriver}
+        onUpdateDriver={handleUpdateDriver}
+      />
+
+      {/* Details View Modal */}
       <DriverDetailsModal
         driver={selectedDriver}
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        onSave={handleUpdateDriver}
-        mode={modalMode}
+        onEdit={(driver) => {
+          setIsDetailsModalOpen(false);
+          setEditingDriver(driver);
+        }}
+      />
+
+      <AppCredentialsModal
+        isOpen={isCredsModalOpen}
+        onClose={() => setIsCredsModalOpen(false)}
+        entity={selectedDriverForCreds}
+        userType="driver"
       />
     </div>
   );

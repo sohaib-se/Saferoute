@@ -10,6 +10,8 @@ import {
   MdChevronLeft,
   MdChevronRight,
   MdSchool,
+  MdVpnKey,
+  MdDeleteOutline,
 } from 'react-icons/md';
 
 const initialParents = [
@@ -120,16 +122,26 @@ const initialParents = [
   },
 ];
 
-const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents }) => {
+const ParentsTableSection = ({
+  onAddParentClick,
+  parentsList = initialParents,
+  isLoading = false,
+  onViewCredentials,
+  onViewParent,
+  onEditParent,
+  onDeleteParent,
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activePage, setActivePage] = useState(1);
 
   const filteredParents = parentsList.filter((parent) => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return true;
     return (
-      parent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      parent.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      parent.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      parent.children.some((c) => c.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      (parent.name || '').toLowerCase().includes(term) ||
+      (parent.email || '').toLowerCase().includes(term) ||
+      (parent.phone || '').toLowerCase().includes(term) ||
+      (parent.children || []).some((c) => (c.name || '').toLowerCase().includes(term))
     );
   });
 
@@ -206,15 +218,24 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-            {filteredParents.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} className="py-12 text-center text-slate-400 text-xs font-normal">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-slate-500 font-medium">Fetching parents & guardians from database...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredParents.length > 0 ? (
               filteredParents.map((parent, idx) => (
-                <tr key={parent.phone + idx} className="hover:bg-slate-50/60 transition-colors">
+                <tr key={parent.id || parent.phone + idx} className="hover:bg-slate-50/60 transition-colors">
                   <td className="py-3.5 px-4 text-center text-slate-400 font-medium">
                     {parent.num || idx + 1}
                   </td>
                   <td className="py-3.5 px-4">
-                    <div className={`w-8 h-8 rounded-full ${parent.avatarBg} font-bold flex items-center justify-center text-xs`}>
-                      {parent.initials}
+                    <div className={`w-8 h-8 rounded-full ${parent.avatarBg || 'bg-blue-100 text-blue-600'} font-bold flex items-center justify-center text-xs`}>
+                      {parent.initials || 'PA'}
                     </div>
                   </td>
                   <td className="py-3.5 px-4">
@@ -229,12 +250,16 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
                   </td>
                   <td className="py-3.5 px-4">
                     <div className="flex flex-col gap-1">
-                      {parent.children.map((child, cIdx) => (
-                        <span key={cIdx} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] bg-slate-100/80 text-slate-700 max-w-fit font-medium">
-                          <MdSchool className="text-blue-600" size={13} />
-                          {child.name} <span className="text-slate-400 font-normal">({child.grade})</span>
-                        </span>
-                      ))}
+                      {(parent.children || []).length > 0 ? (
+                        parent.children.map((child, cIdx) => (
+                          <span key={cIdx} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] bg-slate-100/80 text-slate-700 max-w-fit font-medium">
+                            <MdSchool className="text-blue-600" size={13} />
+                            {child.name} <span className="text-slate-400 font-normal">({child.grade})</span>
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-slate-400 text-[11px] italic">No linked students</span>
+                      )}
                     </div>
                   </td>
                   <td className="py-3.5 px-4">
@@ -245,13 +270,41 @@ const ParentsTableSection = ({ onAddParentClick, parentsList = initialParents })
                     </div>
                   </td>
                   <td className="py-3.5 px-4 text-center">
-                    <div className="flex items-center justify-center gap-2 text-slate-400">
-                      <button className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer" title="Edit Parent">
+                    <div className="flex items-center justify-center gap-1.5 text-slate-400">
+                      <button
+                        type="button"
+                        onClick={() => onViewCredentials && onViewCredentials(parent)}
+                        className="p-1 rounded-lg hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
+                        title="View App Login Credentials"
+                      >
+                        <MdVpnKey size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onEditParent && onEditParent(parent)}
+                        className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer"
+                        title="Edit Parent"
+                      >
                         <MdEdit size={16} />
                       </button>
-                      <button className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer" title="View Details">
+                      <button
+                        type="button"
+                        onClick={() => onViewParent && onViewParent(parent)}
+                        className="p-1 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer"
+                        title="View Details"
+                      >
                         <MdVisibility size={16} />
                       </button>
+                      {onDeleteParent && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteParent(parent)}
+                          className="p-1 rounded-lg hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                          title="Delete Parent"
+                        >
+                          <MdDeleteOutline size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

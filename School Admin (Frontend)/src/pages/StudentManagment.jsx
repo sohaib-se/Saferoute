@@ -11,10 +11,13 @@ const StudentManagment = ({
   onNavigate,
   currentPage = 'Students',
   students: externalStudents,
+  isLoading = false,
+  onAddStudent,
   onUpdateStudent,
+  onDeleteStudent,
+  onEditStudent,
 }) => {
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [modalMode, setModalMode] = useState('view'); // 'view' or 'edit'
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   // Fallback initial state if external props aren't provided
@@ -113,14 +116,15 @@ const StudentManagment = ({
 
   const handleViewStudent = (student) => {
     setSelectedStudent(student);
-    setModalMode('view');
     setIsDetailsModalOpen(true);
   };
 
   const handleEditStudent = (student) => {
-    setSelectedStudent(student);
-    setModalMode('edit');
-    setIsDetailsModalOpen(true);
+    if (onEditStudent) {
+      onEditStudent(student);
+    } else if (onNavigate) {
+      onNavigate('AddStudent', student);
+    }
   };
 
   const handleSaveStudent = (updatedStudent) => {
@@ -129,6 +133,24 @@ const StudentManagment = ({
     } else {
       setLocalStudents(
         localStudents.map((s) => (s.id === updatedStudent.id ? updatedStudent : s))
+      );
+    }
+  };
+
+  const handleDeleteStudent = (student) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete student "${student.name}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    if (onDeleteStudent) {
+      onDeleteStudent(student.dbId || student.id);
+    } else {
+      setLocalStudents((prev) =>
+        prev.filter((s) => (s.dbId || s.id) !== (student.dbId || student.id))
       );
     }
   };
@@ -151,13 +173,22 @@ const StudentManagment = ({
         <Header onNavigate={onNavigate} />
 
         <main className="flex-1 p-8 space-y-6 max-w-[1440px] w-full mx-auto">
-          <KPIStatsCards />
+          <KPIStatsCards
+            stats={{
+              totalStudents: studentsList.length,
+              onRoute: studentsList.filter((s) => s.status === 'On Route').length,
+              pickedUp: studentsList.filter((s) => s.status === 'Picked Up').length,
+              droppedSafely: studentsList.filter((s) => s.status === 'Dropped').length,
+            }}
+          />
 
           <StudentsTableSection
             onAddStudentClick={handleAddStudentClick}
             onViewStudent={handleViewStudent}
             onEditStudent={handleEditStudent}
+            onDeleteStudent={handleDeleteStudent}
             studentsList={studentsList}
+            isLoading={isLoading}
           />
 
           <div className="h-4"></div>
@@ -170,8 +201,10 @@ const StudentManagment = ({
         student={selectedStudent}
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        onSave={handleSaveStudent}
-        mode={modalMode}
+        onEdit={(student) => {
+          setIsDetailsModalOpen(false);
+          handleEditStudent(student);
+        }}
       />
     </div>
   );

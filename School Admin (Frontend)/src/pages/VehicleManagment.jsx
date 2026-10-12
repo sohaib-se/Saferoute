@@ -1,51 +1,119 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import VehicleStatCards from '../components/pagecomponents/VehicleManagement/VehicleStatCards';
-import VehiclesTableSection, {
-  initialVehiclesData,
-} from '../components/pagecomponents/VehicleManagement/VehiclesTableSection';
+import VehiclesTableSection from '../components/pagecomponents/VehicleManagement/VehiclesTableSection';
 import VehicleManagementFooter from '../components/pagecomponents/VehicleManagement/VehicleManagementFooter';
 import AddVehicleModal from '../components/pagecomponents/VehicleManagement/AddVehicleModal';
 import VehicleDetailsModal from '../components/pagecomponents/VehicleManagement/VehicleDetailsModal';
+import { getVehicles, addVehicle, updateVehicle, deleteVehicle } from '../services/vehiclesService';
+import { getDrivers } from '../services/driversService';
+import { getRoutes } from '../services/routesService';
 
 const VehicleManagment = ({
   onLogout,
   onNavigate,
   currentPage = 'Vehicles',
 }) => {
-  const [vehicles, setVehicles] = useState(initialVehiclesData);
+  const [vehicles, setVehicles] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [routes, setRoutes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [editingVehicle, setEditingVehicle] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('view'); // 'view' or 'edit'
 
-  const handleAddVehicle = (newVehicle) => {
-    setVehicles((prev) => [
-      ...prev,
-      {
-        ...newVehicle,
-        num: prev.length + 1,
-      },
-    ]);
+  const fetchVehiclesList = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [vehiclesData, driversData, routesData] = await Promise.all([
+        getVehicles(),
+        getDrivers().catch((err) => {
+          console.warn('Could not fetch drivers:', err);
+          return [];
+        }),
+        getRoutes().catch((err) => {
+          console.warn('Could not fetch routes:', err);
+          return [];
+        }),
+      ]);
+      setVehicles(vehiclesData);
+      setDrivers(driversData);
+      setRoutes(routesData);
+    } catch (err) {
+      console.error('Error fetching vehicles:', err);
+      setError(err.message || 'Failed to fetch vehicles from database');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchVehiclesList();
+  }, [fetchVehiclesList]);
+
+  const handleAddVehicle = async (newVehicle) => {
+    setIsAddModalOpen(false);
+    setLoading(true);
+    try {
+      await addVehicle(newVehicle);
+      await fetchVehiclesList();
+    } catch (err) {
+      console.error('Failed to create vehicle:', err);
+      alert('Failed to save vehicle to database: ' + (err.message || 'Unknown error'));
+      await fetchVehiclesList();
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpdateVehicle = (updatedVehicle) => {
-    setVehicles((prev) =>
-      prev.map((v) => (v.num === updatedVehicle.num ? updatedVehicle : v))
-    );
+  const handleUpdateVehicle = async (updatedVehicle) => {
+    setEditingVehicle(null);
+    setLoading(true);
+    try {
+      if (updatedVehicle.id) {
+        await updateVehicle(updatedVehicle.id, updatedVehicle);
+        await fetchVehiclesList();
+      }
+    } catch (err) {
+      console.error('Failed to update vehicle:', err);
+      alert('Failed to update vehicle in database: ' + (err.message || 'Unknown error'));
+      await fetchVehiclesList();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteVehicle = async (vehicleId) => {
+    if (!window.confirm('Are you sure you want to delete this vehicle? This action cannot be undone.')) {
+      return;
+    }
+    setLoading(true);
+    // Optimistic removal for instant UI feedback
+    setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
+
+    try {
+      await deleteVehicle(vehicleId);
+      await fetchVehiclesList();
+    } catch (err) {
+      console.error('Failed to delete vehicle:', err);
+      alert('Failed to delete vehicle from database: ' + (err.message || 'Unknown error'));
+      await fetchVehiclesList();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleViewVehicle = (vehicle) => {
     setSelectedVehicle(vehicle);
-    setModalMode('view');
     setIsDetailsModalOpen(true);
   };
 
   const handleEditVehicle = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setModalMode('edit');
-    setIsDetailsModalOpen(true);
+    setEditingVehicle(vehicle);
   };
 
   // Compute metrics dynamically
@@ -81,9 +149,11 @@ const VehicleManagment = ({
 
           <VehiclesTableSection
             vehiclesList={vehicles}
+            isLoading={loading}
             onAddVehicleClick={() => setIsAddModalOpen(true)}
             onViewVehicle={handleViewVehicle}
             onEditVehicle={handleEditVehicle}
+            onDeleteVehicle={handleDeleteVehicle}
           />
 
           <div className="h-4"></div>
@@ -92,18 +162,36 @@ const VehicleManagment = ({
         <VehicleManagementFooter />
       </div>
 
+      {/* Add Vehicle Modal */}
       <AddVehicleModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddVehicle={handleAddVehicle}
+        drivers={drivers}
+        routes={routes}
       />
 
+      {/* Edit Vehicle Modal (Uses the exact same modal as adding) */}
+      <AddVehicleModal
+        isOpen={Boolean(editingVehicle)}
+        onClose={() => setEditingVehicle(null)}
+        vehicle={editingVehicle}
+        onUpdateVehicle={handleUpdateVehicle}
+        drivers={drivers}
+        routes={routes}
+      />
+
+      {/* Vehicle Details Modal (View mode) */}
       <VehicleDetailsModal
         vehicle={selectedVehicle}
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        onSave={handleUpdateVehicle}
-        mode={modalMode}
+        onEdit={(vehicle) => {
+          setIsDetailsModalOpen(false);
+          setEditingVehicle(vehicle);
+        }}
+        drivers={drivers}
+        routes={routes}
       />
     </div>
   );
