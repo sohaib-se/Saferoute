@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { shadows } from '../../../../lib/theme';
 
 interface ParentSOSBeaconProps {
   isTriggered: boolean;
@@ -17,14 +18,14 @@ export const ParentSOSBeacon: React.FC<ParentSOSBeaconProps> = ({
     return (
       <View style={styles.activeAlertBox}>
         <View style={styles.activePulsingCircle}>
-          <Ionicons name="warning" size={42} color="#FFFFFF" />
+          <Ionicons name="warning" size={38} color="#FFFFFF" />
         </View>
-        <Text style={styles.activeTitle}>EMERGENCY ALERT BROADCASTING</Text>
+        <Text style={styles.activeTitle}>EMERGENCY ALERT TRANSMITTING</Text>
         <Text style={styles.activeSub}>
-          Live Location Beacon Sent to School Admin Desk
+          Live GPS Beacon Active with School Admin Control Desk
         </Text>
         <Text style={styles.activeDescription}>
-          School management and campus security have received your urgent distress notification. A response coordinator is reviewing your beacon now.
+          School administration, transport desk, and campus safety have received your distress alert with live device telemetry. Stay on this screen until school authorities respond.
         </Text>
 
         <TouchableOpacity
@@ -32,97 +33,166 @@ export const ParentSOSBeacon: React.FC<ParentSOSBeaconProps> = ({
           onPress={onCancel}
           activeOpacity={0.8}
         >
-          <Text style={styles.cancelAlertText}>Resolve / Cancel Emergency</Text>
+          <Ionicons name="close-circle-outline" size={18} color="#EF4444" />
+          <Text style={styles.cancelAlertText}>Resolve & Cancel Emergency</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.standbyBox}>
-      <TouchableOpacity
-        style={styles.sosHugeBtn}
-        onPress={onTrigger}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="alert-circle" size={60} color="#FFFFFF" />
-        <Text style={styles.hugeBtnText}>SOS</Text>
-        <Text style={styles.hugeBtnSub}>TAP FOR EMERGENCY</Text>
-      </TouchableOpacity>
+    <View style={styles.container}>
+      {/* Concentric Soft Aura Rings */}
+      <View style={styles.ringOuter}>
+        <View style={styles.ringMiddle}>
+          <View style={styles.ringInner}>
+            <TouchableOpacity
+              style={styles.sosMainBtn}
+              onPress={onTrigger}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="notifications" size={34} color="#FFFFFF" />
+              <Text style={styles.sosText}>SOS</Text>
+              <Text style={styles.sosSub}>TAP FOR EMERGENCY</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
 
-      <Text style={styles.warningNote}>
-        One-tap emergency trigger captures your current coordinates and dispatches an immediate safety escalation to the School Admin web panel within 10 seconds.
-      </Text>
+      {/* Instant Safety Escalation Notice Card */}
+      <View style={styles.escalationCard}>
+        <View style={styles.shieldBadge}>
+          <Ionicons name="shield-checkmark" size={20} color="#FFFFFF" />
+        </View>
+        <View style={styles.escalationTextCol}>
+          <Text style={styles.escalationTitle}>Instant Safety Escalation</Text>
+          <Text style={styles.escalationDescription}>
+            One-tap emergency trigger captures your GPS coordinates and dispatches an instant high-priority escalation beacon to School Admin & Security desk within seconds.
+          </Text>
+        </View>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  standbyBox: {
+  container: {
     alignItems: 'center',
-    marginVertical: 24,
+    marginBottom: 20,
+    marginTop: 4,
   },
-  sosHugeBtn: {
+  ringOuter: {
+    width: 290,
+    height: 290,
+    borderRadius: 145,
+    backgroundColor: '#FFF0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringMiddle: {
+    width: 236,
+    height: 236,
+    borderRadius: 118,
+    backgroundColor: '#FFE4E4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringInner: {
     width: 190,
     height: 190,
     borderRadius: 95,
-    backgroundColor: '#DC2626',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 6,
-    borderColor: '#FEE2E2',
-    shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 18,
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
     elevation: 8,
   },
-  hugeBtnText: {
+  sosMainBtn: {
+    width: 164,
+    height: 164,
+    borderRadius: 82,
+    backgroundColor: '#E02D3C',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+  },
+  sosText: {
     color: '#FFFFFF',
     fontSize: 32,
     fontWeight: '900',
-    marginTop: 4,
-    letterSpacing: 2,
-  },
-  hugeBtnSub: {
-    color: '#FEE2E2',
-    fontSize: 10,
-    fontWeight: '800',
+    letterSpacing: 1.5,
     marginTop: 2,
-    letterSpacing: 0.5,
   },
-  warningNote: {
-    textAlign: 'center',
-    fontSize: 12,
+  sosSub: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 9.5,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    marginTop: 2,
+  },
+  escalationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF2F2',
+    borderWidth: 1,
+    borderColor: '#FFE0E0',
+    borderRadius: 20,
+    padding: 16,
+    marginTop: 24,
+    gap: 14,
+    width: '100%',
+  },
+  shieldBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#E02D3C',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  escalationTextCol: {
+    flex: 1,
+  },
+  escalationTitle: {
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: '#E02D3C',
+    marginBottom: 3,
+  },
+  escalationDescription: {
+    fontSize: 11.5,
     color: '#64748B',
-    lineHeight: 18,
-    marginTop: 20,
-    paddingHorizontal: 20,
+    lineHeight: 16.5,
+    fontWeight: '400',
   },
   activeAlertBox: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#FFF2F2',
     borderWidth: 2,
-    borderColor: '#DC2626',
-    borderRadius: 16,
+    borderColor: '#EF4444',
+    borderRadius: 22,
     padding: 24,
     alignItems: 'center',
     marginVertical: 16,
+    ...shadows.dangerGlow,
   },
   activePulsingCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#DC2626',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#EF4444',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   activeTitle: {
     fontSize: 16,
     fontWeight: '900',
     color: '#991B1B',
     textAlign: 'center',
-    letterSpacing: 0.5,
   },
   activeSub: {
     fontSize: 13,
@@ -140,16 +210,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   cancelAlertBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: '#DC2626',
+    borderColor: '#EF4444',
     paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 10,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    gap: 6,
   },
   cancelAlertText: {
-    color: '#DC2626',
-    fontWeight: '700',
+    color: '#EF4444',
+    fontWeight: '800',
     fontSize: 13,
   },
 });
+
+export default ParentSOSBeacon;

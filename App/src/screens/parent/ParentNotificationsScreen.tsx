@@ -19,7 +19,7 @@ export const ParentNotificationsScreen: React.FC<ParentNotificationsScreenProps>
       id: 'n-1',
       title: 'Bus Approaching Home Stop',
       body: 'Bus 1 is within 500 meters of your pickup point (Khatme Nabuwat Chowk). Estimated arrival in ~5 minutes.',
-      time: '07:18 AM',
+      time: '07:18 AM • Today',
       type: 'proximity',
       isRead: false,
     },
@@ -27,7 +27,7 @@ export const ParentNotificationsScreen: React.FC<ParentNotificationsScreenProps>
       id: 'n-2',
       title: 'Morning Trip Started',
       body: 'Driver Hilal has commenced the morning school pickup route for Bus 1.',
-      time: '07:05 AM',
+      time: '07:05 AM • Today',
       type: 'trip_start',
       isRead: false,
     },
@@ -35,7 +35,7 @@ export const ParentNotificationsScreen: React.FC<ParentNotificationsScreenProps>
       id: 'n-3',
       title: 'Safely Dropped Off at School',
       body: 'Ayesha Malik was safely dropped off at City School Main Campus.',
-      time: 'Yesterday, 07:55 AM',
+      time: '07:55 AM • Yesterday',
       type: 'dropped_off',
       isRead: true,
     },
@@ -43,16 +43,24 @@ export const ParentNotificationsScreen: React.FC<ParentNotificationsScreenProps>
       id: 'n-4',
       title: 'Child Boarded Van',
       body: 'Ayesha Malik was marked Picked Up by Driver Hilal.',
-      time: 'Yesterday, 07:22 AM',
+      time: '07:22 AM • Yesterday',
       type: 'picked_up',
       isRead: true,
     },
     {
       id: 'n-5',
       title: 'Driver Notice',
-      body: 'Hilal: Minor traffic delay on Ring Road due to road repair. ETA adjusted +5 mins.',
-      time: 'Oct 10, 07:12 AM',
-      type: 'message',
+      body: 'Hilal: Minor traffic delay on Ring Road due to road work. Expect 5-7 minutes delay.',
+      time: '07:15 AM • Yesterday',
+      type: 'notice',
+      isRead: true,
+    },
+    {
+      id: 'n-6',
+      title: 'Unexpected Stop',
+      body: 'Bus 1 stopped for 2 minutes near Sector G-10 due to heavy traffic.',
+      time: '07:08 AM • Yesterday',
+      type: 'alert',
       isRead: true,
     },
   ]);
@@ -66,17 +74,23 @@ export const ParentNotificationsScreen: React.FC<ParentNotificationsScreenProps>
 
   return (
     <View style={styles.container}>
-      <Header title="Trip Alerts & Logs" subtitle="FCM Realtime Push Timeline" onBack={onBack} />
-
-      <NotificationFilterTabs
-        filter={filter}
-        totalCount={notifications.length}
-        unreadCount={unreadCount}
-        onFilterChange={setFilter}
-        onMarkAllRead={markAllRead}
+      <Header
+        title="Trip Alerts & Logs"
+        subtitle="Real-time updates from the field"
+        onBack={onBack}
+        showNotification={true}
+        notificationBadgeCount={unreadCount}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <NotificationFilterTabs
+          filter={filter}
+          totalCount={notifications.length}
+          unreadCount={unreadCount}
+          onFilterChange={setFilter}
+          onMarkAllRead={markAllRead}
+        />
+
         <NotificationList notifications={displayed} />
       </ScrollView>
     </View>
@@ -86,10 +100,13 @@ export const ParentNotificationsScreen: React.FC<ParentNotificationsScreenProps>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F4F9FD',
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 24,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 110, // Clearance for floating dock
   },
 });
+
+export default ParentNotificationsScreen;

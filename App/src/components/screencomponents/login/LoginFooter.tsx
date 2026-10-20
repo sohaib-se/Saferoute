@@ -1,45 +1,65 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, radii, shadows } from '../../../lib/theme';
 
 export const LoginFooter: React.FC = () => {
   return (
     <View style={styles.container}>
-      <View style={styles.infoRow}>
-        <Ionicons name="information-circle-outline" size={16} color="#64748B" />
-        <Text style={styles.infoText}>
-          Accounts are provisioned by your School Administration.
-        </Text>
+      <View style={styles.cardBox}>
+        <View style={styles.iconCircle}>
+          <Ionicons name="lock-closed" size={14} color={colors.primary} />
+        </View>
+        <View style={styles.textCol}>
+          <Text style={styles.title}>School-Controlled Security</Text>
+          <Text style={styles.subText}>
+            Parent credentials are encrypted & distributed by your School Transport Department. For assistance or passkey resets, please reach out to your institution desk.
+          </Text>
+        </View>
       </View>
-      <Text style={styles.subText}>
-        If you haven't received your 4-digit code or password, please contact the school front desk.
-      </Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 24,
-    alignItems: 'center',
-    paddingHorizontal: 10,
+    marginTop: 20,
+    paddingHorizontal: 4,
   },
-  infoRow: {
+  cardBox: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
+    alignItems: 'flex-start',
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.primaryBorder,
+    borderRadius: radii.md,
+    padding: 14,
+    gap: 12,
+    ...shadows.subtle,
   },
-  infoText: {
+  iconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  textCol: {
+    flex: 1,
+  },
+  title: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#475569',
+    fontWeight: '800',
+    color: colors.textHeading,
+    marginBottom: 3,
   },
   subText: {
     fontSize: 11,
-    color: '#94A3B8',
-    textAlign: 'center',
+    color: colors.textSecondary,
     lineHeight: 16,
+    fontWeight: '500',
   },
 });
 

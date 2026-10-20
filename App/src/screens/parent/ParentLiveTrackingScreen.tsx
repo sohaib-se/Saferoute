@@ -1,63 +1,75 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Header } from '../../components/common/Header';
-import { ChildSelectorPills } from '../../components/screencomponents/parent/livetracking/ChildSelectorPills';
 import { TrackingMapCanvas } from '../../components/screencomponents/parent/livetracking/TrackingMapCanvas';
-import { TransitTimeline } from '../../components/screencomponents/parent/livetracking/TransitTimeline';
-import { DriverCallAction } from '../../components/screencomponents/parent/livetracking/DriverCallAction';
+import { CurrentTripStatusCard } from '../../components/screencomponents/parent/livetracking/CurrentTripStatusCard';
+import {
+  ParentInAppCallModal,
+  ParentActiveCall,
+} from '../../components/screencomponents/parent/calldriver/ParentInAppCallModal';
 
 interface ParentLiveTrackingScreenProps {
   onBack?: () => void;
   onCallDriver?: () => void;
+  onOpenNotifications?: () => void;
 }
 
 export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> = ({
   onBack,
   onCallDriver,
+  onOpenNotifications,
 }) => {
-  const [selectedChild, setSelectedChild] = useState('c-1');
+  const [activeCall, setActiveCall] = useState<ParentActiveCall | null>(null);
 
-  const childOptions = [
-    { id: 'c-1', name: 'Ayesha', busLabel: 'Bus 1' },
-    { id: 'c-2', name: 'Zain', busLabel: 'Bus 1' },
-  ];
+  const handleStartDriverCall = () => {
+    setActiveCall({
+      name: 'Hilal',
+      role: 'Assigned Route Driver • Bus 1',
+      phone: '031241242',
+      avatarIcon: 'person',
+    });
+  };
 
   return (
     <View style={styles.container}>
+      {/* 1. Screen Header */}
       <Header
         title="Live Van Tracking"
-        subtitle="Active Supabase WebSocket Channel"
+        subtitle="Bus 1 • Tracking Both Children"
         onBack={onBack}
+        onNotificationPress={onOpenNotifications}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Child selector chips */}
-        <ChildSelectorPills
-          options={childOptions}
-          selectedId={selectedChild}
-          onSelect={setSelectedChild}
-        />
-
-        {/* Live Map Representation */}
+      {/* 2. Full Screen Interactive Map Canvas */}
+      <View style={styles.mapSection}>
         <TrackingMapCanvas
           vehicleName="Bus 1"
           driverName="Hilal"
           speedKmh={38}
-          etaMins={7}
           distanceKm={2.1}
         />
+      </View>
 
-        {/* Live Telemetry Progress Timeline */}
-        <TransitTimeline
+      {/* 3. Current Status of Trip Card */}
+      <View style={styles.statusSection}>
+        <CurrentTripStatusCard
           vehicleName="Bus 1"
+          vehiclePlate="ICT-4921"
           driverName="Hilal"
-          driverPhone="+92 312 4124"
+          driverPhone="031241242"
+          speedKmh={38}
+          distanceKm={2.1}
+          etaMins={7}
+          currentSector="Sector G-10"
+          onCallDriver={handleStartDriverCall}
         />
+      </View>
 
-        {onCallDriver && (
-          <DriverCallAction driverName="Hilal" onPress={onCallDriver} />
-        )}
-      </ScrollView>
+      {/* 4. In-App VoIP Call Modal Popup */}
+      <ParentInAppCallModal
+        call={activeCall}
+        onEndCall={() => setActiveCall(null)}
+      />
     </View>
   );
 };
@@ -65,10 +77,19 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F4F9FD',
   },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 24,
+  mapSection: {
+    flex: 1,
+    width: '100%',
+    overflow: 'hidden',
+  },
+  statusSection: {
+    paddingHorizontal: 14,
+    paddingTop: 8,
+    paddingBottom: 10,
+    backgroundColor: '#F4F9FD',
   },
 });
+
+export default ParentLiveTrackingScreen;

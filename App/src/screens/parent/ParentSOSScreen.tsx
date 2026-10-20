@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Header } from '../../components/common/Header';
 import { ParentSOSBeacon } from '../../components/screencomponents/parent/sos/ParentSOSBeacon';
-import { ParentUrgentContacts } from '../../components/screencomponents/parent/sos/ParentUrgentContacts';
 
 interface ParentSOSScreenProps {
   onBack?: () => void;
+  onOpenNotifications?: () => void;
 }
 
-export const ParentSOSScreen: React.FC<ParentSOSScreenProps> = ({ onBack }) => {
+export const ParentSOSScreen: React.FC<ParentSOSScreenProps> = ({
+  onBack,
+  onOpenNotifications,
+}) => {
   const [sosTriggered, setSosTriggered] = useState(false);
 
   const handleTriggerSOS = () => {
@@ -42,7 +45,9 @@ export const ParentSOSScreen: React.FC<ParentSOSScreenProps> = ({ onBack }) => {
       <Header
         title="Parent Emergency SOS"
         subtitle="Immediate Safety Escalation"
+        showBack={!!onBack}
         onBack={onBack}
+        onNotificationPress={onOpenNotifications}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -51,7 +56,6 @@ export const ParentSOSScreen: React.FC<ParentSOSScreenProps> = ({ onBack }) => {
           onTrigger={handleTriggerSOS}
           onCancel={handleClearSOS}
         />
-        <ParentUrgentContacts />
       </ScrollView>
     </View>
   );
@@ -60,10 +64,13 @@ export const ParentSOSScreen: React.FC<ParentSOSScreenProps> = ({ onBack }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F4F9FD',
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 28,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 110, // Dock clearance
   },
 });
+
+export default ParentSOSScreen;

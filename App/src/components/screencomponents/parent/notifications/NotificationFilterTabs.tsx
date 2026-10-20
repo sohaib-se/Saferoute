@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface NotificationFilterTabsProps {
   filter: 'all' | 'unread';
@@ -17,27 +18,35 @@ export const NotificationFilterTabs: React.FC<NotificationFilterTabsProps> = ({
   onMarkAllRead,
 }) => {
   return (
-    <View style={styles.filterRow}>
-      <View style={styles.filterTabs}>
+    <View style={styles.container}>
+      <View style={styles.leftPills}>
         <TouchableOpacity
-          style={[styles.tab, filter === 'all' && styles.activeTab]}
+          style={[styles.pill, filter === 'all' ? styles.activePill : styles.inactivePill]}
           onPress={() => onFilterChange('all')}
+          activeOpacity={0.8}
         >
-          <Text style={[styles.tabText, filter === 'all' && styles.activeTabText]}>
+          <Text
+            style={[styles.pillText, filter === 'all' ? styles.activeText : styles.inactiveText]}
+          >
             All ({totalCount})
           </Text>
         </TouchableOpacity>
+
         <TouchableOpacity
-          style={[styles.tab, filter === 'unread' && styles.activeTab]}
+          style={[styles.pill, filter === 'unread' ? styles.activePill : styles.inactivePill]}
           onPress={() => onFilterChange('unread')}
+          activeOpacity={0.8}
         >
-          <Text style={[styles.tabText, filter === 'unread' && styles.activeTabText]}>
+          <Text
+            style={[styles.pillText, filter === 'unread' ? styles.activeText : styles.inactiveText]}
+          >
             Unread ({unreadCount})
           </Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity onPress={onMarkAllRead}>
+      <TouchableOpacity onPress={onMarkAllRead} style={styles.markReadPill} activeOpacity={0.75}>
+        <Ionicons name="checkmark" size={15} color="#007AFF" />
         <Text style={styles.markReadText}>Mark all read</Text>
       </TouchableOpacity>
     </View>
@@ -45,48 +54,61 @@ export const NotificationFilterTabs: React.FC<NotificationFilterTabsProps> = ({
 };
 
 const styles = StyleSheet.create({
-  filterRow: {
+  container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    marginBottom: 16,
   },
-  filterTabs: {
+  leftPills: {
     flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
-    padding: 3,
-    gap: 2,
+    gap: 8,
   },
-  tab: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
+  pill: {
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  activeTab: {
+  activePill: {
+    backgroundColor: '#007AFF',
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  inactivePill: {
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: '#E6EFF7',
   },
-  tabText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
+  pillText: {
+    fontSize: 12.5,
   },
-  activeTabText: {
-    color: '#0F172A',
+  activeText: {
+    color: '#FFFFFF',
     fontWeight: '700',
   },
-  markReadText: {
-    fontSize: 12,
+  inactiveText: {
+    color: '#64748B',
     fontWeight: '600',
-    color: '#2563EB',
+  },
+  markReadPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EBF4FF',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+  },
+  markReadText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#007AFF',
   },
 });
+
+export default NotificationFilterTabs;
