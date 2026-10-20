@@ -1,13 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { shadows } from '../../../../lib/theme';
 
 export interface NotificationItemData {
   id: string;
   title: string;
   body: string;
   time: string;
-  type: 'proximity' | 'trip_start' | 'picked_up' | 'dropped_off' | 'emergency' | 'message';
+  type: 'proximity' | 'trip_start' | 'dropped_off' | 'picked_up' | 'notice' | 'alert';
   isRead: boolean;
 }
 
@@ -19,58 +20,101 @@ export const NotificationList: React.FC<NotificationListProps> = ({ notification
   const getIconConfig = (type: NotificationItemData['type']) => {
     switch (type) {
       case 'proximity':
-        return { name: 'location', bg: '#EFF6FF', color: '#2563EB' };
+        return {
+          icon: 'location' as const,
+          bgColor: '#EBF4FF',
+          iconColor: '#007AFF',
+          lineColor: '#60A5FA',
+        };
       case 'trip_start':
-        return { name: 'bus', bg: '#F0FDF4', color: '#059669' };
-      case 'picked_up':
-        return { name: 'checkmark-circle', bg: '#ECFDF5', color: '#047857' };
+        return {
+          icon: 'bus' as const,
+          bgColor: '#E6F8EE',
+          iconColor: '#12B76A',
+          lineColor: '#34D399',
+        };
       case 'dropped_off':
-        return { name: 'school', bg: '#F5F3FF', color: '#7C3AED' };
-      case 'emergency':
-        return { name: 'alert-circle', bg: '#FEF2F2', color: '#DC2626' };
-      case 'message':
-        return { name: 'chatbubble-ellipses', bg: '#FFFBEB', color: '#D97706' };
+        return {
+          icon: 'school' as const,
+          bgColor: '#F3E8FF',
+          iconColor: '#8B5CF6',
+          lineColor: '#C084FC',
+        };
+      case 'picked_up':
+        return {
+          icon: 'checkmark' as const,
+          bgColor: '#E6F8EE',
+          iconColor: '#12B76A',
+          lineColor: '#34D399',
+        };
+      case 'notice':
+        return {
+          icon: 'chatbubble' as const,
+          bgColor: '#FEF3C7',
+          iconColor: '#F59E0B',
+          lineColor: '#FBBF24',
+        };
+      case 'alert':
+        return {
+          icon: 'warning' as const,
+          bgColor: '#FEE2E2',
+          iconColor: '#EF4444',
+          lineColor: '#F87171',
+        };
       default:
-        return { name: 'notifications', bg: '#F8FAFC', color: '#64748B' };
+        return {
+          icon: 'notifications' as const,
+          bgColor: '#EBF4FF',
+          iconColor: '#007AFF',
+          lineColor: '#93C5FD',
+        };
     }
   };
 
-  if (notifications.length === 0) {
-    return (
-      <View style={styles.emptyBox}>
-        <Ionicons name="notifications-off-outline" size={36} color="#CBD5E1" />
-        <Text style={styles.emptyText}>No notifications in this filter</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      {notifications.map((item) => {
-        const iconConfig = getIconConfig(item.type);
-        return (
-          <View
-            key={item.id}
-            style={[styles.card, !item.isRead && styles.unreadCard]}
-          >
-            <View style={[styles.iconBox, { backgroundColor: iconConfig.bg }]}>
-              <Ionicons
-                name={iconConfig.name as any}
-                size={20}
-                color={iconConfig.color}
-              />
-            </View>
+      {notifications.map((item, index) => {
+        const config = getIconConfig(item.type);
+        const isFirst = index === 0;
 
-            <View style={styles.contentCol}>
-              <View style={styles.titleRow}>
-                <Text style={styles.title} numberOfLines={1}>
-                  {item.title}
-                </Text>
-                {!item.isRead && <View style={styles.unreadDot} />}
+        return (
+          <View key={item.id} style={styles.itemWrapper}>
+            <TouchableOpacity
+              style={[styles.card, isFirst && styles.firstCardAccent]}
+              activeOpacity={0.8}
+            >
+              {/* Left Circular Icon Badge */}
+              <View style={[styles.iconCircle, { backgroundColor: config.bgColor }]}>
+                <Ionicons name={config.icon} size={20} color={config.iconColor} />
               </View>
-              <Text style={styles.body}>{item.body}</Text>
-              <Text style={styles.time}>{item.time}</Text>
-            </View>
+
+              {/* Main Content */}
+              <View style={styles.contentCol}>
+                <View style={styles.titleRow}>
+                  <Text style={styles.itemTitle} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  {!item.isRead && <View style={styles.unreadDot} />}
+                </View>
+
+                <Text style={styles.itemBody}>{item.body}</Text>
+
+                <View style={styles.timeRow}>
+                  <Ionicons name="time-outline" size={13} color="#64748B" />
+                  <Text style={styles.timeText}>{item.time}</Text>
+                </View>
+              </View>
+
+              {/* Right Chevron Button */}
+              <View style={styles.chevronButton}>
+                <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+              </View>
+            </TouchableOpacity>
+
+            {/* Connecting Timeline Line underneath icon to next item */}
+            {index < notifications.length - 1 && (
+              <View style={[styles.connectorLine, { backgroundColor: config.lineColor }]} />
+            )}
           </View>
         );
       })}
@@ -80,47 +124,47 @@ export const NotificationList: React.FC<NotificationListProps> = ({ notification
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 12,
+    paddingBottom: 20,
+  },
+  itemWrapper: {
+    position: 'relative',
+    marginBottom: 12,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  unreadCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#2563EB',
-    backgroundColor: '#FAFCFF',
-  },
-  iconBox: {
-    width: 40,
-    height: 40,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E6EFF7',
+    ...shadows.card,
+    zIndex: 2,
+  },
+  firstCardAccent: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#007AFF',
+  },
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   contentCol: {
     flex: 1,
+    marginRight: 10,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 3,
   },
-  title: {
-    fontSize: 14,
+  itemTitle: {
+    fontSize: 14.5,
     fontWeight: '700',
     color: '#0F172A',
     flex: 1,
@@ -129,28 +173,42 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#2563EB',
-    marginLeft: 8,
+    backgroundColor: '#007AFF',
+    marginLeft: 6,
   },
-  body: {
+  itemBody: {
     fontSize: 12,
-    color: '#475569',
-    lineHeight: 18,
+    color: '#64748B',
+    lineHeight: 17,
     marginBottom: 6,
   },
-  time: {
-    fontSize: 10,
-    color: '#94A3B8',
-    fontWeight: '600',
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  emptyBox: {
+  timeText: {
+    fontSize: 11.5,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  chevronButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 48,
   },
-  emptyText: {
-    color: '#94A3B8',
-    fontSize: 13,
-    marginTop: 8,
+  connectorLine: {
+    position: 'absolute',
+    left: 37,
+    bottom: -13,
+    width: 2,
+    height: 14,
+    zIndex: 1,
+    opacity: 0.6,
   },
 });
+
+export default NotificationList;

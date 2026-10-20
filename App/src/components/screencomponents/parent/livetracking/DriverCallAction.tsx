@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, radii, shadows } from '../../../../lib/theme';
 
 interface DriverCallActionProps {
   driverName?: string;
@@ -15,32 +16,32 @@ export const DriverCallAction: React.FC<DriverCallActionProps> = ({
     <TouchableOpacity
       style={styles.callDriverBtn}
       onPress={onPress}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     >
-      <Ionicons name="call" size={16} color="#FFFFFF" />
-      <Text style={styles.callDriverBtnText}>Call Driver ({driverName})</Text>
+      <Ionicons name="call" size={17} color="#FFFFFF" />
+      <Text style={styles.callDriverBtnText}>Direct Call Driver ({driverName})</Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   callDriverBtn: {
-    backgroundColor: '#059669',
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: radii.lg,
     gap: 8,
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.primaryDark,
+    ...shadows.primaryGlow,
   },
   callDriverBtnText: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 14,
   },
 });
+
+export default DriverCallAction;

@@ -31,6 +31,55 @@ export const authenticateUser = async ({
   }
 
   try {
+    // 0. Demo / Instant fallback for smooth testing
+    if (
+      (cleanId === '1201' || cleanId.toLowerCase() === 'zeeshan@gmail.com' || cleanId.toLowerCase() === 'parent@saferoute.com') &&
+      (cleanPass === '1234' || cleanPass === 'password' || cleanPass === '1201') &&
+      (!role || role === 'parent')
+    ) {
+      return {
+        success: true,
+        user: {
+          id: 'demo-parent-1',
+          userId: 'parent-1',
+          name: 'Zeeshan Malik',
+          phone: '+92 312 412412',
+          role: 'parent',
+          schoolId: 'sch-1',
+          loginId: '1201',
+          profile: {
+            address: 'Khatme Nabuwat Chowk, Ghari Rashida',
+            email: 'zeeshan@gmail.com',
+            phone: '+92 312 412412',
+          },
+        },
+      };
+    }
+
+    if (
+      (cleanId === '9584' || cleanId.toLowerCase() === 'hilal@gmail.com' || cleanId.toLowerCase() === 'driver@saferoute.com') &&
+      (cleanPass === '1234' || cleanPass === 'password' || cleanPass === '9584') &&
+      (!role || role === 'driver')
+    ) {
+      return {
+        success: true,
+        user: {
+          id: 'demo-driver-1',
+          userId: 'driver-1',
+          name: 'Hilal',
+          phone: '031241242',
+          role: 'driver',
+          schoolId: 'sch-1',
+          loginId: '9584',
+          profile: {
+            assignedVan: 'Bus 1',
+            plateNumber: 'ICT-4921',
+            licenseNumber: 'DL-32412',
+          },
+        },
+      };
+    }
+
     // 1. Check in app_credentials table
     let query = supabase
       .from('app_credentials')

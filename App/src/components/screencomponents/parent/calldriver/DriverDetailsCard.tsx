@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { shadows } from '../../../../lib/theme';
 
 interface DriverDetailsCardProps {
   driverName?: string;
@@ -8,62 +9,83 @@ interface DriverDetailsCardProps {
   vehicleName?: string;
   plateNumber?: string;
   licenseNumber?: string;
-  onOpenChat?: () => void;
+  onCallDriver?: () => void;
 }
 
 export const DriverDetailsCard: React.FC<DriverDetailsCardProps> = ({
   driverName = 'Hilal',
-  phone = '03124124',
+  phone = '031241242',
   vehicleName = 'Bus 1',
   plateNumber = 'ICT-4921',
   licenseNumber = 'DL-32412',
-  onOpenChat,
+  onCallDriver,
 }) => {
   const handleCall = () => {
-    Linking.openURL(`tel:${phone}`);
+    if (onCallDriver) {
+      onCallDriver();
+    } else {
+      Linking.openURL(`tel:${phone}`);
+    }
   };
 
   return (
     <View style={styles.card}>
+      {/* Top Driver Profile Header */}
       <View style={styles.headerRow}>
-        <View style={styles.avatarCircle}>
-          <Ionicons name="person" size={26} color="#2563EB" />
+        <View style={styles.avatarWrapper}>
+          {/* Driver Portrait Avatar */}
+          <View style={styles.avatarCircle}>
+            <Ionicons name="person" size={38} color="#94A3B8" />
+          </View>
+          {/* Green Online Dot */}
+          <View style={styles.onlineStatusBadge} />
         </View>
+
         <View style={styles.driverInfo}>
           <Text style={styles.name}>{driverName}</Text>
-          <Text style={styles.role}>Assigned Route Driver</Text>
-          <Text style={styles.phone}>{phone}</Text>
+          <View style={styles.assignedBadge}>
+            <Ionicons name="checkmark-circle" size={13} color="#12B76A" />
+            <Text style={styles.assignedText}>Assigned Route Driver</Text>
+          </View>
+          <View style={styles.phoneRow}>
+            <Ionicons name="call" size={13} color="#64748B" />
+            <Text style={styles.phoneLabel}>Phone: </Text>
+            <Text style={styles.phoneNumber}>{phone}</Text>
+          </View>
         </View>
       </View>
 
-      <View style={styles.vehicleInfoBox}>
-        <View style={styles.vCol}>
-          <Text style={styles.vLabel}>Assigned Van</Text>
-          <Text style={styles.vVal}>{vehicleName}</Text>
+      {/* 3 Mini Stat Cards */}
+      <View style={styles.statsRow}>
+        <View style={styles.statMiniCard}>
+          <Ionicons name="bus" size={18} color="#007AFF" style={styles.miniIcon} />
+          <Text style={styles.miniLabel}>Assigned Van</Text>
+          <Text style={styles.miniValue}>{vehicleName}</Text>
         </View>
-        <View style={styles.vCol}>
-          <Text style={styles.vLabel}>License Plate</Text>
-          <Text style={styles.vVal}>{plateNumber}</Text>
+
+        <View style={styles.statMiniCard}>
+          <Ionicons name="document-text" size={18} color="#007AFF" style={styles.miniIcon} />
+          <Text style={styles.miniLabel}>Plate Number</Text>
+          <Text style={styles.miniValue}>{plateNumber}</Text>
         </View>
-        <View style={styles.vCol}>
-          <Text style={styles.vLabel}>License #</Text>
-          <Text style={styles.vVal}>{licenseNumber}</Text>
+
+        <View style={styles.statMiniCard}>
+          <Ionicons name="shield-checkmark" size={18} color="#007AFF" style={styles.miniIcon} />
+          <Text style={styles.miniLabel}>License #</Text>
+          <Text style={styles.miniValue}>{licenseNumber}</Text>
         </View>
       </View>
 
-      <View style={styles.btnRow}>
-        <TouchableOpacity style={styles.callBtn} onPress={handleCall} activeOpacity={0.8}>
-          <Ionicons name="call" size={16} color="#FFFFFF" />
-          <Text style={styles.callBtnText}>Call Driver</Text>
-        </TouchableOpacity>
-
-        {onOpenChat && (
-          <TouchableOpacity style={styles.chatBtn} onPress={onOpenChat} activeOpacity={0.8}>
-            <Ionicons name="chatbubbles" size={16} color="#2563EB" />
-            <Text style={styles.chatBtnText}>Chat</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      {/* Primary Action Call Button */}
+      <TouchableOpacity style={styles.callButton} onPress={handleCall} activeOpacity={0.85}>
+        <View style={styles.callContent}>
+          <Ionicons name="call" size={18} color="#FFFFFF" />
+          <Text style={styles.callButtonText}>Call Driver ({driverName})</Text>
+        </View>
+        <View style={styles.callChevronCircle}>
+          <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -71,107 +93,144 @@ export const DriverDetailsCard: React.FC<DriverDetailsCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 22,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E6EFF7',
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
+  avatarWrapper: {
+    position: 'relative',
+    marginRight: 14,
+  },
   avatarCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#EFF6FF',
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
+    borderWidth: 2,
+    borderColor: '#F1F5F9',
+  },
+  onlineStatusBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 15,
+    height: 15,
+    borderRadius: 7.5,
+    backgroundColor: '#12B76A',
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
   },
   driverInfo: {
     flex: 1,
   },
   name: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     color: '#0F172A',
+    letterSpacing: -0.3,
   },
-  role: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  phone: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#2563EB',
-    marginTop: 2,
-  },
-  vehicleInfoBox: {
+  assignedBadge: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    backgroundColor: '#E6F8EE',
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
     borderRadius: 12,
-    padding: 12,
+    gap: 4,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  assignedText: {
+    fontSize: 11,
+    color: '#12B76A',
+    fontWeight: '700',
+  },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  phoneLabel: {
+    fontSize: 12.5,
+    color: '#64748B',
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  phoneNumber: {
+    fontSize: 13,
+    color: '#007AFF',
+    fontWeight: '700',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 8,
     marginBottom: 16,
   },
-  vCol: {
+  statMiniCard: {
     flex: 1,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  vLabel: {
+  miniIcon: {
+    marginBottom: 6,
+  },
+  miniLabel: {
     fontSize: 10,
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    fontWeight: '600',
+    color: '#64748B',
+    fontWeight: '500',
   },
-  vVal: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#1E293B',
+  miniValue: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0F172A',
     marginTop: 2,
   },
-  btnRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  callBtn: {
-    flex: 1,
+  callButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#059669',
-    paddingVertical: 12,
-    borderRadius: 10,
+    justifyContent: 'space-between',
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  callContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
-  callBtnText: {
+  callButtonText: {
     color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '800',
   },
-  chatBtn: {
-    flex: 1,
-    flexDirection: 'row',
+  callChevronCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-    paddingVertical: 12,
-    borderRadius: 10,
-    gap: 8,
-  },
-  chatBtnText: {
-    color: '#2563EB',
-    fontWeight: '700',
-    fontSize: 14,
   },
 });
+
+export default DriverDetailsCard;

@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Header } from '../../components/common/Header';
-import { DriverSOSBanner } from '../../components/screencomponents/driver/dashboard/DriverSOSBanner';
 import { TripStatusCard } from '../../components/screencomponents/driver/dashboard/TripStatusCard';
+import { AdminRosterNoticeCard } from '../../components/screencomponents/driver/dashboard/AdminRosterNoticeCard';
 import { DriverMetrics } from '../../components/screencomponents/driver/dashboard/DriverMetrics';
-import { DriverQuickMapCard } from '../../components/screencomponents/driver/dashboard/DriverQuickMapCard';
-import {
-  DriverRosterPreview,
-  StudentRosterItemData,
-} from '../../components/screencomponents/driver/dashboard/DriverRosterPreview';
+import { DriverTransitRadarCard } from '../../components/screencomponents/driver/dashboard/DriverTransitRadarCard';
+import { DriverRosterPreview } from '../../components/screencomponents/driver/dashboard/DriverRosterPreview';
 import { AttendanceModal } from '../../components/screencomponents/driver/roster/AttendanceModal';
+import { InAppCallModal } from '../../components/screencomponents/driver/call/InAppCallModal';
 import { useAuth } from '../../context/AuthContext';
+import { useDriverTrip, StudentRosterItem } from '../../context/DriverTripContext';
+import { colors } from '../../lib/theme';
 
 interface DriverDashboardScreenProps {
   onNavigateTab: (tabId: string) => void;
-  onOpenSOS: () => void;
+  onOpenSOS?: () => void;
 }
 
 export const DriverDashboardScreen: React.FC<DriverDashboardScreenProps> = ({
@@ -22,101 +22,108 @@ export const DriverDashboardScreen: React.FC<DriverDashboardScreenProps> = ({
   onOpenSOS,
 }) => {
   const { user } = useAuth();
+  const {
+    vehicleName,
+    isTripActive,
+    gpsState,
+    students,
+    markAttendance,
+    startInAppCall,
+    adminNoticeCount,
+    tripNotifications,
+    toggleConnectivitySimulation,
+  } = useDriverTrip();
 
-  const [students, setStudents] = useState<StudentRosterItemData[]>([
-    {
-      id: 'st-1',
-      stopNumber: 1,
-      name: 'Sohaib Khan',
-      grade: 'Grade 5 - Sec A',
-      stopAddress: 'Khatme Nabuwat Chowk, Ghari Rashida',
-      status: 'Waiting',
-      parentPhone: '03001234567',
-      parentName: 'Muhammad Khan',
-    },
-    {
-      id: 'st-2',
-      stopNumber: 2,
-      name: 'Hamza Ali',
-      grade: 'Grade 7 - Sec B',
-      stopAddress: 'Main Ring Road, Gate 2',
-      status: 'Picked up',
-      parentPhone: '0312412412',
-      parentName: 'Ali Raza',
-    },
-    {
-      id: 'st-3',
-      stopNumber: 3,
-      name: 'Ayesha Malik',
-      grade: 'Grade 4 - Sec C',
-      stopAddress: 'Street 4, Sector G-10',
-      status: 'Waiting',
-      parentPhone: '03339876543',
-      parentName: 'Zeeshan Malik',
-    },
-  ]);
-
-  const [selectedStudentForModal, setSelectedStudentForModal] = useState<StudentRosterItemData | null>(null);
+  const [selectedStudentForModal, setSelectedStudentForModal] = useState<StudentRosterItem | null>(null);
 
   const handleStatusChange = (studentId: string, newStatus: 'Picked up' | 'Dropped off' | 'Absent') => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === studentId ? { ...s, status: newStatus } : s))
-    );
+    const res = markAttendance(studentId, newStatus);
     setSelectedStudentForModal(null);
+    if (res.success) {
+      Alert.alert(
+        'Attendance Updated',
+        `${res.message}\n(Notification delivered only to ${res.parentName})`
+      );
+    } else {
+      Alert.alert('Notice', res.message);
+    }
   };
 
-  const pickedCount = students.filter((s) => s.status === 'Picked up').length;
-  const droppedCount = students.filter((s) => s.status === 'Dropped off').length;
-  const waitingCount = students.filter((s) => s.status === 'Waiting').length;
+  const handleCallParent = (student: StudentRosterItem) => {
+    startInAppCall(student.parentName, student.name, student.parentPhone);
+  };
+
+  const pickedCount = students.filter(
+    (s) => s.milestone === 'picked_home' || s.milestone === 'picked_school'
+  ).length;
+  const droppedCount = students.filter(
+    (s) => s.milestone === 'dropped_school' || s.milestone === 'dropped_home'
+  ).length;
+  const waitingCount = students.filter((s) => s.milestone === 'waiting_home').length;
+  const absentCount = students.filter((s) => s.milestone === 'absent').length;
+  const unreadCount = tripNotifications.filter((n) => !n.isRead).length;
 
   return (
     <View style={styles.container}>
+      {/* Floating Header matching Parent Portal */}
       <Header
         title="Driver Portal"
         subtitle={`Welcome, ${user?.name || 'Driver'}`}
+        onNotificationPress={() => onNavigateTab('notifications')}
+        notificationBadgeCount={unreadCount}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Prominent Emergency SOS button */}
-        <DriverSOSBanner onPress={onOpenSOS} />
+        {/* REQ-D3 & REQ-D6: Start / End Active Trip Card */}
+        <TripStatusCard onNavigateRoster={() => onNavigateTab('roster')} />
 
-        {/* Start / Complete Trip Card */}
-        <TripStatusCard
-          vehicleName="Bus 1 (ICT-4921)"
-          routeTitle="Morning Shift (Route #3)"
-          totalStudents={students.length}
-        />
+        {/* REQ-D2.3: Admin Roster Notice Banner (Reflects admin absence changes before departure) */}
+        {adminNoticeCount > 0 && (
+          <AdminRosterNoticeCard
+            absentCount={adminNoticeCount}
+            onPressDetails={() => onNavigateTab('roster')}
+          />
+        )}
 
-        {/* Live Trip Metrics Counter */}
+        {/* Live Trip Metrics Counter Pills */}
         <DriverMetrics
           total={students.length}
           picked={pickedCount}
           dropped={droppedCount}
           waiting={waitingCount}
+          absent={absentCount}
         />
 
-        {/* Live Navigation Quick Card */}
-        <DriverQuickMapCard
-          onPress={() => onNavigateTab('livemap')}
+        {/* REQ-D4: Live Transit Radar Map Card (Matching Parent Portal RadarMapCard) */}
+        <DriverTransitRadarCard
+          vehicleName={vehicleName}
+          isTripActive={isTripActive}
+          gpsState={gpsState}
+          onPressViewRoute={() => onNavigateTab('roster')}
+          onToggleConnectivity={toggleConnectivitySimulation}
         />
 
-        {/* Quick Student Roster Preview */}
+        {/* REQ-D2 & REQ-D5: Quick Student Roster Preview */}
         <DriverRosterPreview
           students={students}
           onViewFullRoster={() => onNavigateTab('roster')}
           onMarkAttendance={(student) => setSelectedStudentForModal(student)}
+          onCallParent={handleCallParent}
         />
       </ScrollView>
 
-      {/* Attendance Modal */}
+      {/* Attendance Modal with Milestone Protection (REQ-D5) */}
       {selectedStudentForModal && (
         <AttendanceModal
           visible={!!selectedStudentForModal}
           student={selectedStudentForModal}
-          onSelectStatus={(studentId, status) => handleStatusChange(studentId, status)}
+          onSelectStatus={handleStatusChange}
           onClose={() => setSelectedStudentForModal(null)}
         />
       )}
+
+      {/* In-App Calling Function Modal (REQ-D7.2) */}
+      <InAppCallModal />
     </View>
   );
 };
@@ -124,10 +131,13 @@ export const DriverDashboardScreen: React.FC<DriverDashboardScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F4F9FD', // Identical clean background to Parent Portal
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 28,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 110, // Full clearance for floating bottom dock
   },
 });
+
+export default DriverDashboardScreen;

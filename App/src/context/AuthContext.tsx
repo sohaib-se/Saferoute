@@ -19,19 +19,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const restoreSession = async () => {
+    const initAuth = async () => {
       try {
-        const saved = await getUserSession();
-        if (saved) {
-          setUser(saved);
-        }
+        // Always start fresh from the login screen when app is opened or scanned via QR code
+        await clearUserSession();
+        setUser(null);
       } catch (e) {
-        console.error('Session restoration failed:', e);
+        console.error('Session initialization failed:', e);
       } finally {
         setIsLoading(false);
       }
     };
-    restoreSession();
+    initAuth();
   }, []);
 
   const login = async (params: LoginParams): Promise<AuthResult> => {

@@ -1,65 +1,80 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { shadows } from '../../../../lib/theme';
 
-interface UrgentContact {
+interface HelplineItem {
   title: string;
+  sub: string;
   phone: string;
   icon: keyof typeof Ionicons.glyphMap;
-  color: string;
-  bg: string;
+  themeColor: string;
+  lightBg: string;
 }
 
 export const ParentUrgentContacts: React.FC = () => {
-  const contacts: UrgentContact[] = [
+  const helplines: HelplineItem[] = [
     {
-      title: 'School Principal / Transport Admin',
+      title: 'School Transport Admin Desk',
+      sub: 'General inquiries & transport coordination',
       phone: '+92 51 111-222-333',
       icon: 'business',
-      color: '#2563EB',
-      bg: '#EFF6FF',
+      themeColor: '#007AFF',
+      lightBg: '#EBF4FF',
     },
     {
       title: 'Transport Control Room (Emergency)',
+      sub: '24/7 Emergency Support',
       phone: '+92 51 444-555-666',
       icon: 'bus',
-      color: '#2563EB',
-      bg: '#EFF6FF',
+      themeColor: '#12B76A',
+      lightBg: '#E6F8EE',
     },
     {
       title: 'Police Emergency Helpline (15)',
+      sub: 'For immediate law enforcement support',
       phone: '15',
       icon: 'shield',
-      color: '#DC2626',
-      bg: '#FEF2F2',
-    },
-    {
-      title: 'Rescue & Ambulance (1122)',
-      phone: '1122',
-      icon: 'medkit',
-      color: '#EA580C',
-      bg: '#FFF7ED',
+      themeColor: '#EF4444',
+      lightBg: '#FEE2E2',
     },
   ];
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Direct Urgent Helplines</Text>
-      {contacts.map((contact, index) => (
+      {/* Section Header */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Direct Urgent Helplines</Text>
+        <Text style={styles.sectionSubtitle}>Quick access to important contacts</Text>
+      </View>
+
+      {/* Helplines List */}
+      {helplines.map((item, index) => (
         <TouchableOpacity
           key={index}
           style={styles.card}
-          onPress={() => Linking.openURL(`tel:${contact.phone}`)}
-          activeOpacity={0.7}
+          onPress={() => Linking.openURL(`tel:${item.phone}`)}
+          activeOpacity={0.8}
         >
-          <View style={[styles.iconBox, { backgroundColor: contact.bg }]}>
-            <Ionicons name={contact.icon} size={20} color={contact.color} />
+          {/* Left Square Icon */}
+          <View style={[styles.iconBox, { backgroundColor: item.lightBg }]}>
+            <Ionicons name={item.icon} size={22} color={item.themeColor} />
           </View>
+
+          {/* Details */}
           <View style={styles.infoCol}>
-            <Text style={styles.title}>{contact.title}</Text>
-            <Text style={styles.phone}>{contact.phone}</Text>
+            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.sub}>{item.sub}</Text>
+            <View style={styles.phoneRow}>
+              <Ionicons name="call" size={13} color="#007AFF" />
+              <Text style={styles.phone}>{item.phone}</Text>
+            </View>
           </View>
-          <Ionicons name="call" size={20} color={contact.color} />
+
+          {/* Call Circle */}
+          <View style={[styles.callBtnCircle, { backgroundColor: item.lightBg }]}>
+            <Ionicons name="call" size={18} color={item.themeColor} />
+          </View>
         </TouchableOpacity>
       ))}
     </View>
@@ -68,44 +83,76 @@ export const ParentUrgentContacts: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 8,
+    marginBottom: 20,
+  },
+  sectionHeader: {
+    marginBottom: 12,
+    marginLeft: 2,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '800',
     color: '#0F172A',
-    marginBottom: 12,
+    letterSpacing: -0.2,
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    gap: 12,
-  },
-  iconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  infoCol: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  phone: {
+  sectionSubtitle: {
     fontSize: 12,
     color: '#64748B',
     marginTop: 2,
-    fontWeight: '600',
+    fontWeight: '500',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E6EFF7',
+    ...shadows.card,
+  },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  infoCol: {
+    flex: 1,
+    marginRight: 8,
+  },
+  title: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  sub: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+    fontWeight: '400',
+  },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 3,
+  },
+  phone: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#007AFF',
+  },
+  callBtnCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
+
+export default ParentUrgentContacts;

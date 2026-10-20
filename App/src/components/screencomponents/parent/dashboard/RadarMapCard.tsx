@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, radii, shadows } from '../../../../lib/theme';
 
 interface RadarMapCardProps {
   vehicleName?: string;
@@ -25,54 +26,58 @@ export const RadarMapCard: React.FC<RadarMapCardProps> = ({
         <View style={styles.titleRow}>
           <View style={styles.liveIndicator}>
             <View style={styles.liveDot} />
-            <Text style={styles.liveText}>GPS RADAR</Text>
+            <Text style={styles.liveText}>GPS TELEMETRY</Text>
           </View>
           <Text style={styles.vehicleTitle}>{vehicleName}</Text>
         </View>
 
         {onPressFullMap && (
-          <TouchableOpacity onPress={onPressFullMap} style={styles.fullScreenButton}>
-            <Text style={styles.fullScreenText}>Full Map</Text>
-            <Ionicons name="expand-outline" size={14} color="#2563EB" />
+          <TouchableOpacity onPress={onPressFullMap} style={styles.fullScreenButton} activeOpacity={0.75}>
+            <Text style={styles.fullScreenText}>Open Live Map</Text>
+            <Ionicons name="expand" size={13} color={colors.primary} />
           </TouchableOpacity>
         )}
       </View>
 
       {/* Simulated Map Graphic Container */}
       <View style={styles.mapGraphic}>
-        <View style={styles.gridLineHorizontal} />
-        <View style={styles.gridLineVertical} />
+        <View style={styles.gridLineH1} />
+        <View style={styles.gridLineH2} />
+        <View style={styles.gridLineV1} />
+        <View style={styles.gridLineV2} />
 
-        {/* Route Line Simulation */}
+        {/* Dynamic Route Track */}
         <View style={styles.routeTrace} />
 
         {/* Bus Marker */}
         <View style={styles.busMarker}>
-          <Ionicons name="bus" size={16} color="#FFFFFF" />
+          <Ionicons name="bus" size={17} color="#FFFFFF" />
         </View>
 
-        {/* Home Destination Marker */}
+        {/* Destination Home Marker */}
         <View style={styles.homeMarker}>
           <Ionicons name="home" size={14} color="#FFFFFF" />
         </View>
 
         <View style={styles.etaOverlay}>
-          <Ionicons name="time-outline" size={13} color="#FFFFFF" />
-          <Text style={styles.etaOverlayText}>ETA {etaMins} mins</Text>
+          <View style={styles.pingDot} />
+          <Text style={styles.etaOverlayText}>Live Van Position ({distanceKm} km away)</Text>
         </View>
       </View>
 
       <View style={styles.telemetryRow}>
         <View style={styles.metric}>
-          <Text style={styles.metricLabel}>Speed</Text>
+          <Text style={styles.metricLabel}>SPEED</Text>
           <Text style={styles.metricVal}>{speedKmh} km/h</Text>
         </View>
+        <View style={styles.vDivider} />
         <View style={styles.metric}>
-          <Text style={styles.metricLabel}>Distance</Text>
+          <Text style={styles.metricLabel}>DISTANCE</Text>
           <Text style={styles.metricVal}>{distanceKm} km</Text>
         </View>
+        <View style={styles.vDivider} />
         <View style={styles.metric}>
-          <Text style={styles.metricLabel}>Driver</Text>
+          <Text style={styles.metricLabel}>ASSIGNED DRIVER</Text>
           <Text style={styles.metricVal}>{driverName}</Text>
         </View>
       </View>
@@ -82,16 +87,12 @@ export const RadarMapCard: React.FC<RadarMapCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
     padding: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 1.5,
+    borderColor: colors.primaryBorder,
+    ...shadows.card,
     marginBottom: 16,
   },
   header: {
@@ -108,95 +109,120 @@ const styles = StyleSheet.create({
   liveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#DCFCE7',
+    backgroundColor: colors.emeraldLight,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
-    gap: 4,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: colors.emeraldBorder,
+    gap: 5,
   },
   liveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#16A34A',
+    backgroundColor: colors.emerald,
   },
   liveText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#15803D',
+    fontSize: 9,
+    fontWeight: '900',
+    color: colors.emeraldDark,
+    letterSpacing: 0.5,
   },
   vehicleTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontWeight: '800',
+    color: colors.textHeading,
   },
   fullScreenButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.primaryLight,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radii.sm,
     gap: 4,
   },
   fullScreenText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#2563EB',
+    fontWeight: '800',
+    color: colors.primary,
   },
   mapGraphic: {
-    height: 140,
-    backgroundColor: '#E0F2FE',
-    borderRadius: 12,
+    height: 148,
+    backgroundColor: colors.primaryLight,
+    borderRadius: radii.md,
     overflow: 'hidden',
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
+    borderWidth: 1.5,
+    borderColor: colors.primaryBorder,
   },
-  gridLineHorizontal: {
+  gridLineH1: {
     position: 'absolute',
-    top: '50%',
+    top: '33%',
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: '#BAE6FD',
+    backgroundColor: 'rgba(186, 230, 253, 0.7)',
   },
-  gridLineVertical: {
+  gridLineH2: {
     position: 'absolute',
-    left: '50%',
+    top: '66%',
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(186, 230, 253, 0.7)',
+  },
+  gridLineV1: {
+    position: 'absolute',
+    left: '33%',
     top: 0,
     bottom: 0,
     width: 1,
-    backgroundColor: '#BAE6FD',
+    backgroundColor: 'rgba(186, 230, 253, 0.7)',
+  },
+  gridLineV2: {
+    position: 'absolute',
+    left: '66%',
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: 'rgba(186, 230, 253, 0.7)',
   },
   routeTrace: {
     position: 'absolute',
-    width: '60%',
-    height: 4,
-    backgroundColor: '#2563EB',
-    borderRadius: 2,
-    transform: [{ rotate: '-25deg' }],
+    width: '65%',
+    height: 5,
+    backgroundColor: colors.primary,
+    borderRadius: 3,
+    transform: [{ rotate: '-22deg' }],
   },
   busMarker: {
     position: 'absolute',
-    left: '35%',
-    top: '45%',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#2563EB',
+    left: '34%',
+    top: '44%',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 2.5,
     borderColor: '#FFFFFF',
-    elevation: 4,
+    ...shadows.primaryGlow,
   },
   homeMarker: {
     position: 'absolute',
     right: '25%',
     top: '25%',
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#16A34A',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.emerald,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -207,39 +233,58 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 8,
     left: 8,
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    backgroundColor: 'rgba(2, 132, 199, 0.92)',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: radii.sm,
+    gap: 6,
+  },
+  pingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
   },
   etaOverlayText: {
     color: '#FFFFFF',
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   telemetryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 12,
-    backgroundColor: '#F8FAFC',
-    padding: 10,
-    borderRadius: 10,
+    backgroundColor: colors.primarySubtle,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: radii.sm,
   },
   metric: {
     alignItems: 'center',
+    flex: 1,
   },
   metricLabel: {
-    fontSize: 10,
-    color: '#64748B',
-    textTransform: 'uppercase',
+    fontSize: 9,
+    color: colors.textSecondary,
+    fontWeight: '800',
+    letterSpacing: 0.4,
   },
   metricVal: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontWeight: '800',
+    color: colors.textHeading,
     marginTop: 2,
   },
+  vDivider: {
+    width: 1,
+    height: 22,
+    backgroundColor: colors.primaryBorder,
+  },
 });
+
+export default RadarMapCard;

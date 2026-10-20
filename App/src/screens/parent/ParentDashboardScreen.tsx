@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/common/Header';
-import { ParentSOSBanner } from '../../components/screencomponents/parent/dashboard/ParentSOSBanner';
 import { JourneyNoticeCard } from '../../components/screencomponents/parent/dashboard/JourneyNoticeCard';
 import {
   ChildStatusCard,
@@ -10,10 +9,11 @@ import {
 } from '../../components/screencomponents/parent/dashboard/ChildStatusCard';
 import { RadarMapCard } from '../../components/screencomponents/parent/dashboard/RadarMapCard';
 import { useAuth } from '../../context/AuthContext';
+import { colors, radii } from '../../lib/theme';
 
 interface ParentDashboardScreenProps {
   onNavigateTab: (tabId: string) => void;
-  onOpenSOS: () => void;
+  onOpenSOS?: () => void;
 }
 
 export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
@@ -63,21 +63,23 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
       <Header
         title="Parent Portal"
         subtitle={`Welcome, ${user?.name || 'Parent'}`}
+        onNotificationPress={() => onNavigateTab('notifications')}
+        notificationBadgeCount={2}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Prominent Emergency SOS button */}
-        <ParentSOSBanner onPress={onOpenSOS} />
-
-        {/* Live Journey Quick Alert Banner */}
-        <JourneyNoticeCard vehicleName="Bus 1" sectorName="G-10" etaMins={7} />
+        {/* Live Journey Active Transit Card */}
+        <JourneyNoticeCard vehicleName="Bus 1" sectorName="Sector G-10" driverName="Hilal" />
 
         {/* Children Status Cards Section */}
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Registered Children ({children.length})</Text>
-          <TouchableOpacity onPress={() => onNavigateTab('notifications')}>
+          <View style={styles.sectionTitleCol}>
+            <Text style={styles.sectionTitle}>Registered Children</Text>
+            <Text style={styles.sectionSubTitle}>Live tracking & transit cards</Text>
+          </View>
+          <TouchableOpacity onPress={() => onNavigateTab('notifications')} activeOpacity={0.75}>
             <View style={styles.alertsBadge}>
-              <Ionicons name="notifications" size={13} color="#2563EB" />
+              <Ionicons name="notifications" size={13} color={colors.primary} />
               <Text style={styles.alertsBadgeText}>View Alerts</Text>
             </View>
           </TouchableOpacity>
@@ -94,9 +96,12 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
 
         {/* Live Map Preview Snapshot */}
         <View style={styles.mapSectionHeader}>
-          <Text style={styles.sectionTitle}>Live Transit Radar</Text>
-          <TouchableOpacity onPress={() => onNavigateTab('tracking')}>
-            <Text style={styles.fullScreenText}>Full Map</Text>
+          <View style={styles.sectionTitleCol}>
+            <Text style={styles.sectionTitle}>Live Transit Radar</Text>
+            <Text style={styles.sectionSubTitle}>Realtime WebSocket GPS channel</Text>
+          </View>
+          <TouchableOpacity onPress={() => onNavigateTab('tracking')} activeOpacity={0.75}>
+            <Text style={styles.fullScreenText}>Full Map View →</Text>
           </TouchableOpacity>
         </View>
 
@@ -104,7 +109,6 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
           vehicleName="Bus 1"
           driverName="Hilal"
           speedKmh={36}
-          etaMins={7}
           distanceKm={2.1}
           onPressFullMap={() => onNavigateTab('tracking')}
         />
@@ -116,47 +120,62 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 24,
+    paddingBottom: 110, // Generous padding to clear floating dock
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 6,
     marginBottom: 12,
   },
+  sectionTitleCol: {
+    flex: 1,
+  },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontSize: 16,
+    fontWeight: '900',
+    color: colors.textHeading,
+    letterSpacing: -0.3,
+  },
+  sectionSubTitle: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontWeight: '500',
+    marginTop: 1,
   },
   alertsBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 4,
+    backgroundColor: colors.primaryLight,
+    borderWidth: 1.5,
+    borderColor: colors.primaryBorder,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radii.sm,
+    gap: 5,
   },
   alertsBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#2563EB',
+    fontWeight: '800',
+    color: colors.primary,
   },
   mapSectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 10,
     marginBottom: 12,
   },
   fullScreenText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#2563EB',
+    fontWeight: '800',
+    color: colors.primary,
   },
 });
+
+export default ParentDashboardScreen;

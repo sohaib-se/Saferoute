@@ -1,51 +1,75 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Header } from '../../components/common/Header';
-import { ParentProfileHeader } from '../../components/screencomponents/parent/profile/ParentProfileHeader';
-import { TransportBillingCard } from '../../components/screencomponents/parent/profile/TransportBillingCard';
-import { RegisteredChildrenCard } from '../../components/screencomponents/parent/profile/RegisteredChildrenCard';
-import { ParentResidenceCard } from '../../components/screencomponents/parent/profile/ParentResidenceCard';
-import { ParentSecurityActions } from '../../components/screencomponents/parent/profile/ParentSecurityActions';
+import { ParentProfileHero } from '../../components/screencomponents/parent/profile/ParentProfileHero';
+import { ParentPersonalInfoCard } from '../../components/screencomponents/parent/profile/ParentPersonalInfoCard';
+import { RegisteredChildrenList } from '../../components/screencomponents/parent/profile/RegisteredChildrenList';
+import { ProfileSettingsSection } from '../../components/screencomponents/parent/profile/ProfileSettingsSection';
 import { useAuth } from '../../context/AuthContext';
 
-export const ParentProfileScreen: React.FC = () => {
+interface ParentProfileScreenProps {
+  onOpenNotifications?: () => void;
+}
+
+export const ParentProfileScreen: React.FC<ParentProfileScreenProps> = ({
+  onOpenNotifications,
+}) => {
   const { user, logout } = useAuth();
 
-  const handlePasswordChange = () => {
+  const handleLogout = () => {
     Alert.alert(
-      'Password Reset',
-      'A secure password reset link has been dispatched to your registered email address.'
+      'Sign Out',
+      'Are you sure you want to sign out from SafeRoute Parent Portal?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: () => logout(),
+        },
+      ]
+    );
+  };
+
+  const handleEditProfile = () => {
+    Alert.alert(
+      'Edit Profile',
+      'To update student or guardian profile details, please contact school administration.'
     );
   };
 
   return (
     <View style={styles.container}>
-      <Header title="Guardian Profile" subtitle="Account & Transport Billing" />
+      {/* Modern Floating Header matching bottom dock */}
+      <Header
+        title="Guardian Profile"
+        subtitle="Account & Profile Details"
+        showLogout={true}
+        onNotificationPress={onOpenNotifications}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <ParentProfileHeader
+        {/* 1. Hero with Banner, Avatar & Name (profile tags removed) */}
+        <ParentProfileHero
           name={user?.name || 'Zeeshan Malik'}
-          phone={user?.phone || '312412412'}
+          phone="+92 312 412412"
+          onEdit={handleEditProfile}
         />
 
-        <TransportBillingCard
-          amount="Rs. 5,000"
-          month="October 2026"
-          status="PAID"
+        {/* 2. Personal Info Grid Card (alternate phone removed) */}
+        <ParentPersonalInfoCard
+          address="Ghari Rashida"
+          email="zeeshan@gmail.com"
+          phone="+92 312 412412"
+          joinedDate="15 Sep 2024"
+          role="Primary Guardian"
         />
 
-        <RegisteredChildrenCard />
+        {/* 3. Registered Children List (fixed layout, status tags removed) */}
+        <RegisteredChildrenList />
 
-        <ParentResidenceCard
-          address={user?.profile?.address || 'Khatme Nabuwat Chowk, Ghari Rashida'}
-          email={user?.profile?.email || 'zeeshan@gmail.com'}
-          loginId={user?.loginId || '1201'}
-        />
-
-        <ParentSecurityActions
-          onChangePassword={handlePasswordChange}
-          onLogout={logout}
-        />
+        {/* 4. Settings Section (clean Log out action) */}
+        <ProfileSettingsSection onLogout={handleLogout} />
       </ScrollView>
     </View>
   );
@@ -54,10 +78,13 @@ export const ParentProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F4F9FD',
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 24,
+    paddingHorizontal: 14,
+    paddingTop: 4,
+    paddingBottom: 110, // Clearance for floating bottom dock
   },
 });
+
+export default ParentProfileScreen;
