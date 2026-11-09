@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Header } from '../../components/common/Header';
 import { DriverDetailsCard } from '../../components/screencomponents/parent/calldriver/DriverDetailsCard';
@@ -7,6 +7,8 @@ import {
   ParentInAppCallModal,
   ParentActiveCall,
 } from '../../components/screencomponents/parent/calldriver/ParentInAppCallModal';
+import { useAuth } from '../../context/AuthContext';
+import { getAssignedDriverDetails, AssignedDriverDetails } from '../../services/parentService';
 
 interface ParentCallDriverScreenProps {
   onBack?: () => void;
@@ -17,22 +19,49 @@ export const ParentCallDriverScreen: React.FC<ParentCallDriverScreenProps> = ({
   onBack,
   onOpenNotifications,
 }) => {
+  const { user } = useAuth();
   const [activeCall, setActiveCall] = useState<ParentActiveCall | null>(null);
+
+  const [driverInfo, setDriverInfo] = useState<AssignedDriverDetails>({
+    driverName: 'Hilal',
+    phone: '03124124',
+    vehicleName: 'Bus 1',
+    plateNumber: 'ICT-4921',
+    licenseNumber: 'DL-32412',
+    route: 'Morning Route - Sector G-10',
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadDetails = async () => {
+      const res = await getAssignedDriverDetails('Hilal', 'Bus 1');
+      if (isMounted) {
+        setDriverInfo(res);
+      }
+    };
+    loadDetails();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const schoolName = user?.profile?.schoolName || 'School Transport Desk';
+  const schoolPhone = user?.profile?.schoolPhone || '03001234567';
 
   const handleCallDriver = () => {
     setActiveCall({
-      name: 'Hilal',
-      role: 'Assigned Route Driver • Bus 1',
-      phone: '031241242',
+      name: driverInfo.driverName,
+      role: `Assigned Route Driver • ${driverInfo.vehicleName}`,
+      phone: driverInfo.phone,
       avatarIcon: 'person',
     });
   };
 
   const handleCallAdmin = () => {
     setActiveCall({
-      name: 'School Transport Administration',
+      name: schoolName,
       role: 'Official Transport Desk • Head Office',
-      phone: '+92 51 111-222-33',
+      phone: schoolPhone,
       avatarIcon: 'business',
     });
   };
@@ -49,11 +78,11 @@ export const ParentCallDriverScreen: React.FC<ParentCallDriverScreenProps> = ({
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Card 1: Call Driver */}
         <DriverDetailsCard
-          driverName="Hilal"
-          phone="031241242"
-          vehicleName="Bus 1"
-          plateNumber="ICT-4921"
-          licenseNumber="DL-32412"
+          driverName={driverInfo.driverName}
+          phone={driverInfo.phone}
+          vehicleName={driverInfo.vehicleName}
+          plateNumber={driverInfo.plateNumber}
+          licenseNumber={driverInfo.licenseNumber}
           onCallDriver={handleCallDriver}
         />
 
@@ -85,4 +114,3 @@ const styles = StyleSheet.create({
 });
 
 export default ParentCallDriverScreen;
-

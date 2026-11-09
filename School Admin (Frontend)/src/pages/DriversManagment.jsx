@@ -16,7 +16,7 @@ const DriversManagment = ({
 }) => {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [editingDriver, setEditingDriver] = useState(null);
   const [selectedDriverForCreds, setSelectedDriverForCreds] = useState(null);
@@ -28,7 +28,7 @@ const DriversManagment = ({
     try {
       setLoading(true);
       setError(null);
-      const data = await getDrivers();
+      const data = await getDrivers(true);
       setDrivers(data);
     } catch (err) {
       console.error('Error fetching drivers:', err);

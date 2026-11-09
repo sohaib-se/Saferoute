@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Header } from '../../components/common/Header';
 import { DriverSOSBeacon } from '../../components/screencomponents/driver/sos/DriverSOSBeacon';
+import { useAuth } from '../../context/AuthContext';
 import { useDriverTrip } from '../../context/DriverTripContext';
+import { dispatchSOSAlert } from '../../services/sosService';
 
 interface DriverSOSScreenProps {
   onBack?: () => void;
@@ -13,6 +15,7 @@ export const DriverSOSScreen: React.FC<DriverSOSScreenProps> = ({
   onBack,
   onOpenNotifications,
 }) => {
+  const { user } = useAuth();
   const { gpsState, vehicleName, students } = useDriverTrip();
   const [sosTriggered, setSosTriggered] = useState(false);
 
@@ -26,8 +29,17 @@ export const DriverSOSScreen: React.FC<DriverSOSScreenProps> = ({
         {
           text: 'DISPATCH EMERGENCY SOS',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             setSosTriggered(true);
+            await dispatchSOSAlert({
+              schoolId: user?.schoolId,
+              senderType: 'driver',
+              senderId: user?.userId || 'driver-1',
+              senderName: user?.name || 'Hilal',
+              vehicleName,
+              latitude: gpsState.latitude,
+              longitude: gpsState.longitude,
+            });
             Alert.alert(
               'SOS Beacon Transmitted',
               `Emergency distress signal transmitted! Live telemetry for ${vehicleName} shared with School Admin and all assigned parents.`

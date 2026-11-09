@@ -34,11 +34,9 @@ const CardRouteFleet = ({ formData, onChange, drivers = [], vehicles = [] }) => 
                 </option>
               ))
             ) : (
-              <>
-                <option value="Muhammad Ali">Muhammad Ali</option>
-                <option value="Tariq Mahmood">Tariq Mahmood</option>
-                <option value="Rashid Khan">Rashid Khan</option>
-              </>
+              <option value="" disabled>
+                No registered drivers available
+              </option>
             )}
           </select>
         </div>
@@ -59,11 +57,9 @@ const CardRouteFleet = ({ formData, onChange, drivers = [], vehicles = [] }) => 
                 </option>
               ))
             ) : (
-              <>
-                <option value="Bus 01">Bus 01</option>
-                <option value="Bus 12">Bus 12</option>
-                <option value="Bus 07">Bus 07</option>
-              </>
+              <option value="" disabled>
+                No registered vehicles available
+              </option>
             )}
           </select>
         </div>

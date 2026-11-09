@@ -3,8 +3,8 @@ import { MdPeople, MdSchool, MdTrendingUp } from 'react-icons/md';
 
 const ParentStatCards = ({ stats }) => {
   const defaultStats = {
-    totalParents: 248,
-    activePupils: 312,
+    totalParents: 0,
+    activePupils: 0,
     ...stats,
   };
 
@@ -17,9 +17,13 @@ const ParentStatCards = ({ stats }) => {
             Total Parents
           </span>
           <div className="text-2xl font-bold text-slate-900 mt-1">{defaultStats.totalParents}</div>
-          <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 mt-2">
-            <MdTrendingUp size={14} />
-            <span>+12 this month</span>
+          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mt-2">
+            <MdPeople size={14} className="text-blue-600" />
+            <span>
+              {defaultStats.totalParents > 0
+                ? `${defaultStats.totalParents} registered guardian${defaultStats.totalParents === 1 ? '' : 's'}`
+                : 'No parents registered yet'}
+            </span>
           </div>
         </div>
         <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
@@ -34,9 +38,13 @@ const ParentStatCards = ({ stats }) => {
             Active Linked Pupils
           </span>
           <div className="text-2xl font-bold text-slate-900 mt-1">{defaultStats.activePupils}</div>
-          <div className="flex items-center gap-1.5 text-xs font-medium text-blue-600 mt-2">
-            <MdSchool size={14} />
-            <span>Enrolled across active routes</span>
+          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mt-2">
+            <MdSchool size={14} className="text-indigo-600" />
+            <span>
+              {defaultStats.activePupils > 0
+                ? `${defaultStats.activePupils} student${defaultStats.activePupils === 1 ? '' : 's'} linked to parents`
+                : 'No linked students yet'}
+            </span>
           </div>
         </div>
         <div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 import { getCurrentSchoolId } from '../lib/session';
+import { clearDriversCache } from './driversService';
 
 let vehiclesCache = {
   data: null,
@@ -74,7 +75,7 @@ export const getVehicles = async (forceRefresh = false) => {
           driverName: v.driver_name || 'Unassigned',
           driverInitials,
           driverInitialsStyle: 'bg-blue-100 text-blue-700',
-          route: v.route || 'Route 1',
+          route: v.route || 'Unassigned',
           speed: isMoving ? '32 km/h' : '0 km/h',
           speedDot: isMoving ? 'bg-emerald-500' : isMaintenance ? 'bg-rose-500' : 'bg-amber-500',
           signalSub: isMaintenance ? 'Telemetry Disconnected' : 'Signal: Strong 5G',
@@ -115,17 +116,27 @@ export const addVehicle = async (vehicleData) => {
     throw new Error('No active school session found. Please sign in again.');
   }
 
+  const vehicleName = (vehicleData.name || '').trim();
+  const assignedDriverName =
+    vehicleData.driverName && vehicleData.driverName !== 'Unassigned'
+      ? vehicleData.driverName.trim()
+      : 'Unassigned';
+  const assignedRoute =
+    vehicleData.route && vehicleData.route !== 'Unassigned'
+      ? vehicleData.route.trim()
+      : 'Unassigned';
+
   const { data, error } = await supabase
     .from('vehicles')
     .insert([
       {
         school_id: schoolId,
-        name: vehicleData.name,
-        reg_no: vehicleData.regNo,
+        name: vehicleName,
+        reg_no: (vehicleData.regNo || '').trim(),
         model: vehicleData.model || '',
         capacity_seats: vehicleData.capacitySeats || '30 Seats',
-        driver_name: vehicleData.driverName || 'Unassigned',
-        route: vehicleData.route || 'Route 1',
+        driver_name: assignedDriverName,
+        route: assignedRoute,
         status: vehicleData.status || 'Running',
       },
     ])
@@ -137,7 +148,43 @@ export const addVehicle = async (vehicleData) => {
     throw error;
   }
 
+  // When a driver and route are assigned to the vehicle, assign them to the driver as well
+  if (assignedDriverName !== 'Unassigned') {
+    try {
+      // 1. Unassign this driver from any other vehicle in this school
+      await supabase
+        .from('vehicles')
+        .update({ driver_name: 'Unassigned' })
+        .eq('school_id', schoolId)
+        .neq('id', data.id)
+        .eq('driver_name', assignedDriverName);
+
+      // 2. Assign the vehicle and route to the driver in the drivers table
+      let updateQuery = supabase
+        .from('drivers')
+        .update({
+          vehicle: vehicleName,
+          route: assignedRoute,
+        })
+        .eq('school_id', schoolId);
+
+      if (vehicleData.driverId) {
+        updateQuery = updateQuery.eq('id', vehicleData.driverId);
+      } else {
+        updateQuery = updateQuery.eq('name', assignedDriverName);
+      }
+
+      const { error: driverErr } = await updateQuery;
+      if (driverErr) {
+        console.warn('Could not assign vehicle and route to driver:', driverErr);
+      }
+    } catch (e) {
+      console.warn('Error syncing driver vehicle/route in addVehicle:', e);
+    }
+  }
+
   clearVehiclesCache();
+  clearDriversCache();
 
   return data;
 };
@@ -148,16 +195,35 @@ export const updateVehicle = async (vehicleId, vehicleData) => {
     throw new Error('No active school session found. Please sign in again.');
   }
 
+  // 1. Fetch current vehicle before update to track driver/vehicle changes
+  const { data: currentVehicle } = await supabase
+    .from('vehicles')
+    .select('id, name, driver_name, route')
+    .eq('id', vehicleId)
+    .eq('school_id', schoolId)
+    .maybeSingle();
+
+  const vehicleName = (vehicleData.name || '').trim();
+  const assignedDriverName =
+    vehicleData.driverName && vehicleData.driverName !== 'Unassigned'
+      ? vehicleData.driverName.trim()
+      : 'Unassigned';
+  const assignedRoute =
+    vehicleData.route && vehicleData.route !== 'Unassigned'
+      ? vehicleData.route.trim()
+      : 'Unassigned';
+
+  // 2. Update vehicle record
   const { data, error } = await supabase
     .from('vehicles')
     .update({
-      name: vehicleData.name,
-      reg_no: vehicleData.regNo,
-      model: vehicleData.model,
+      name: vehicleName,
+      reg_no: (vehicleData.regNo || '').trim(),
+      model: vehicleData.model || '',
       capacity_seats: vehicleData.capacitySeats,
-      driver_name: vehicleData.driverName,
-      route: vehicleData.route,
-      status: vehicleData.status,
+      driver_name: assignedDriverName,
+      route: assignedRoute,
+      status: vehicleData.status || 'Running',
     })
     .eq('id', vehicleId)
     .eq('school_id', schoolId)
@@ -169,7 +235,60 @@ export const updateVehicle = async (vehicleId, vehicleData) => {
     throw error;
   }
 
+  const prevDriverName =
+    currentVehicle?.driver_name && currentVehicle.driver_name !== 'Unassigned'
+      ? currentVehicle.driver_name.trim()
+      : null;
+
+  try {
+    // 3. If previous driver was unassigned or changed to someone else, clear their vehicle & route
+    if (prevDriverName && prevDriverName !== assignedDriverName) {
+      await supabase
+        .from('drivers')
+        .update({
+          vehicle: 'Unassigned',
+          route: 'Unassigned',
+        })
+        .eq('school_id', schoolId)
+        .eq('name', prevDriverName);
+    }
+
+    // 4. If a driver is assigned, update their driver record with this vehicle and route
+    if (assignedDriverName !== 'Unassigned') {
+      // Unlink this driver from any other vehicle they were previously assigned to
+      await supabase
+        .from('vehicles')
+        .update({ driver_name: 'Unassigned' })
+        .eq('school_id', schoolId)
+        .neq('id', vehicleId)
+        .eq('driver_name', assignedDriverName);
+
+      // Assign the vehicle name and route to the driver
+      let updateQuery = supabase
+        .from('drivers')
+        .update({
+          vehicle: vehicleName,
+          route: assignedRoute,
+        })
+        .eq('school_id', schoolId);
+
+      if (vehicleData.driverId) {
+        updateQuery = updateQuery.eq('id', vehicleData.driverId);
+      } else {
+        updateQuery = updateQuery.eq('name', assignedDriverName);
+      }
+
+      const { error: driverErr } = await updateQuery;
+      if (driverErr) {
+        console.warn('Could not assign vehicle and route to driver:', driverErr);
+      }
+    }
+  } catch (e) {
+    console.warn('Error syncing driver vehicle/route in updateVehicle:', e);
+  }
+
   clearVehiclesCache();
+  clearDriversCache();
 
   return data;
 };
@@ -179,6 +298,14 @@ export const deleteVehicle = async (vehicleId) => {
   if (!schoolId) {
     throw new Error('No active school session found. Please sign in again.');
   }
+
+  // 1. Fetch current vehicle to see if a driver was assigned
+  const { data: vehicleToDelete } = await supabase
+    .from('vehicles')
+    .select('id, name, driver_name')
+    .eq('id', vehicleId)
+    .eq('school_id', schoolId)
+    .maybeSingle();
 
   const { error } = await supabase
     .from('vehicles')
@@ -191,7 +318,30 @@ export const deleteVehicle = async (vehicleId) => {
     throw error;
   }
 
+  // 2. If the deleted vehicle had a driver, unassign that driver
+  const assignedDriverName =
+    vehicleToDelete?.driver_name && vehicleToDelete.driver_name !== 'Unassigned'
+      ? vehicleToDelete.driver_name.trim()
+      : null;
+
+  if (assignedDriverName) {
+    try {
+      await supabase
+        .from('drivers')
+        .update({
+          vehicle: 'Unassigned',
+          route: 'Unassigned',
+        })
+        .eq('school_id', schoolId)
+        .eq('name', assignedDriverName);
+    } catch (e) {
+      console.warn('Error unassigning driver on vehicle delete:', e);
+    }
+  }
+
   clearVehiclesCache();
+  clearDriversCache();
 
   return true;
 };
+

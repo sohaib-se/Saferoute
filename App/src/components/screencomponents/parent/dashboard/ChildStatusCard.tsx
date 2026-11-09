@@ -14,6 +14,7 @@ export interface ChildData {
   status: 'Waiting' | 'En route' | 'Picked up' | 'Dropped off' | 'Absent';
   etaMinutes: number;
   pickupTime: string;
+  stopAddress?: string;
 }
 
 interface ChildStatusCardProps {

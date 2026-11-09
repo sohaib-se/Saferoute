@@ -2,10 +2,8 @@ import React from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import StatCards from '../components/pagecomponents/Dashboard/StatCards';
-import LiveTrackingMap from '../components/pagecomponents/Dashboard/LiveTrackingMap';
 import TodaysTrips from '../components/pagecomponents/Dashboard/TodaysTrips';
 import RecentActivity from '../components/pagecomponents/Dashboard/RecentActivity';
-import VehicleStatus from '../components/pagecomponents/Dashboard/VehicleStatus';
 import DashboardFooter from '../components/pagecomponents/Dashboard/DashboardFooter';
 
 const DashboardPage = ({ onLogout, onNavigate, currentPage = 'Dashboard' }) => {
@@ -23,20 +21,15 @@ const DashboardPage = ({ onLogout, onNavigate, currentPage = 'Dashboard' }) => {
             </div>
             <div className="inline-flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-slate-200/80 shadow-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-xs font-semibold text-slate-700">Live Telematics System Active</span>
+              <span className="text-xs font-semibold text-slate-700">Fleet Operations Center</span>
             </div>
           </div>
           
           <StatCards />
           
-          <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <LiveTrackingMap />
-            <TodaysTrips />
-          </section>
-          
-          <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <RecentActivity />
-            <VehicleStatus />
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TodaysTrips onNavigate={onNavigate} />
+            <RecentActivity onNavigate={onNavigate} />
           </section>
 
           <div className="h-4"></div>

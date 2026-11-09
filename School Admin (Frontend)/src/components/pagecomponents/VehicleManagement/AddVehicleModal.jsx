@@ -53,8 +53,14 @@ const AddVehicleModal = ({
         regNo: vehicle.regNo || '',
         model: vehicle.model || '',
         capacitySeats: vehicle.capacitySeats || '',
-        driverName: vehicle.driverName || '',
-        route: vehicle.route || '',
+        driverName:
+          vehicle.driverName && vehicle.driverName !== 'Unassigned'
+            ? vehicle.driverName
+            : '',
+        route:
+          vehicle.route && vehicle.route !== 'Unassigned'
+            ? vehicle.route
+            : '',
         status: vehicle.status || 'Running',
       });
     } else {
@@ -114,10 +120,13 @@ const AddVehicleModal = ({
 
     const styles = getStatusStyles(formData.status);
     const busCode = formData.name.replace(/[^0-9]/g, '') || '01';
+    const matchedDriver = driversList.find((d) => d.name === formData.driverName);
 
     const vehiclePayload = {
       ...(vehicle || {}),
       ...formData,
+      driverId: matchedDriver?.id || null,
+      driverName: formData.driverName || 'Unassigned',
       route: formData.route || 'Unassigned',
       code: busCode,
       badgeStyle: 'bg-blue-50 border-blue-100 text-blue-600',
@@ -238,7 +247,9 @@ const AddVehicleModal = ({
                     ...prev,
                     driverName: selectedName,
                     route:
-                      matchedDriver?.route && matchedDriver.route !== 'Unassigned'
+                      prev.route && prev.route !== 'Unassigned'
+                        ? prev.route
+                        : matchedDriver?.route && matchedDriver.route !== 'Unassigned'
                         ? matchedDriver.route
                         : prev.route,
                   }));

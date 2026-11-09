@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Header } from '../../components/common/Header';
 import { ParentSOSBeacon } from '../../components/screencomponents/parent/sos/ParentSOSBeacon';
+import { useAuth } from '../../context/AuthContext';
+import { dispatchSOSAlert } from '../../services/sosService';
 
 interface ParentSOSScreenProps {
   onBack?: () => void;
@@ -12,6 +14,7 @@ export const ParentSOSScreen: React.FC<ParentSOSScreenProps> = ({
   onBack,
   onOpenNotifications,
 }) => {
+  const { user } = useAuth();
   const [sosTriggered, setSosTriggered] = useState(false);
 
   const handleTriggerSOS = () => {
@@ -23,8 +26,16 @@ export const ParentSOSScreen: React.FC<ParentSOSScreenProps> = ({
         {
           text: 'SEND SOS ALERT',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             setSosTriggered(true);
+            await dispatchSOSAlert({
+              schoolId: user?.schoolId,
+              senderType: 'parent',
+              senderId: user?.userId || 'parent-1',
+              senderName: user?.name || 'Zeeshan Malik',
+              latitude: 33.6844,
+              longitude: 73.0479,
+            });
             Alert.alert(
               'Alert Transmitted',
               'School Admin has received your SOS beacon with your GPS coordinates. School security and transport teams are notified.'

@@ -137,7 +137,7 @@ export const initialDriversData = [
 ];
 
 const DriversTableSection = ({
-  driversList = initialDriversData,
+  driversList = [],
   isLoading = false,
   onAddDriverClick,
   onViewDriver,

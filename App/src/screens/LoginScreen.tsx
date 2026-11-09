@@ -6,8 +6,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   View,
-  StatusBar,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoginHeader } from '../components/screencomponents/login/LoginHeader';
 import { LoginForm } from '../components/screencomponents/login/LoginForm';
@@ -17,7 +17,7 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <View style={styles.background}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+      <StatusBar style="dark" />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

@@ -47,19 +47,23 @@ const childrenList: ChildData[] = [
 ];
 
 interface RegisteredChildrenListProps {
+  children?: any[];
   onChildPress?: (childName: string) => void;
 }
 
 export const RegisteredChildrenList: React.FC<RegisteredChildrenListProps> = ({
+  children,
   onChildPress,
 }) => {
+  const displayList = children && children.length > 0 ? children : childrenList;
+
   return (
     <View style={styles.container}>
       {/* Section Title */}
-      <Text style={styles.sectionTitle}>Registered Children</Text>
+      <Text style={styles.sectionTitle}>Registered Children ({displayList.length})</Text>
 
       {/* Children Cards */}
-      {childrenList.map((child) => (
+      {displayList.map((child) => (
         <TouchableOpacity
           key={child.id}
           style={styles.childCard}

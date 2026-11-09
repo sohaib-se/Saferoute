@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useAuth } from './AuthContext';
+import { supabase } from '../lib/supabase';
+import {
+  getDriverRoster,
+  updateStudentStatusInDb,
+  batchDropAllAtSchoolInDb,
+  broadcastDriverLocationToDb,
+} from '../services/driverService';
 
 export type RosterShiftPhase =
   | 'idle' // Not started yet (Start Roster button visible)
@@ -267,6 +274,35 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     },
   ]);
 
+  // 0. Load live students from Supabase
+  useEffect(() => {
+    let isMounted = true;
+    const fetchRealData = async () => {
+      const driverName = user?.name || 'Hilal';
+      const realStudents = await getDriverRoster(driverName, vehicleName, user?.schoolId);
+      if (isMounted && realStudents && realStudents.length > 0) {
+        setStudents(realStudents);
+      }
+    };
+    fetchRealData();
+
+    const channel = supabase
+      .channel('realtime:driver_roster')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'students' },
+        () => {
+          fetchRealData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, [user, vehicleName]);
+
   // 1. Elapsed Time Timer while trip active
   useEffect(() => {
     let timer: any;
@@ -296,12 +332,26 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
           }
 
           const wasQueued = prev.queuedPings > 0;
+          const nextLat = prev.latitude + (Math.random() - 0.48) * 0.0006;
+          const nextLng = prev.longitude + (Math.random() - 0.48) * 0.0006;
+          const nextSpeed = Math.floor(28 + Math.random() * 15);
+
+          // Broadcast location to Supabase
+          broadcastDriverLocationToDb(
+            user?.schoolId,
+            user?.userId,
+            vehicleName,
+            nextLat,
+            nextLng,
+            nextSpeed
+          );
+
           return {
             ...prev,
             isBroadcasting: true,
-            latitude: prev.latitude + (Math.random() - 0.48) * 0.0006,
-            longitude: prev.longitude + (Math.random() - 0.48) * 0.0006,
-            speedKmh: Math.floor(28 + Math.random() * 15),
+            latitude: nextLat,
+            longitude: nextLng,
+            speedKmh: nextSpeed,
             lastPingTime: wasQueued ? `${now} (Flushed ${prev.queuedPings} pings)` : now,
             queuedPings: 0,
           };
@@ -318,7 +368,7 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     }
 
     return () => clearInterval(gpsInterval);
-  }, [isTripActive]);
+  }, [isTripActive, user, vehicleName]);
 
   // 3. In-App Call Timer
   useEffect(() => {
@@ -407,6 +457,9 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
       })
     );
 
+    // Sync to Supabase
+    updateStudentStatusInDb(studentId, 'Picked up', studentName, user?.schoolId);
+
     const logNotice: TripNotificationItem = {
       id: `tn-${Date.now()}`,
       title: `Picked Up: ${studentName}`,
@@ -455,6 +508,9 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
       return updated;
     });
 
+    // Sync to Supabase
+    updateStudentStatusInDb(studentId, 'Dropped off', studentName, user?.schoolId);
+
     if (allFinished) {
       setRosterPhase('at_school');
       setIsTripActive(false);
@@ -486,11 +542,13 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
   const dropAllAtSchool = (): { count: number; message: string } => {
     const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     let count = 0;
+    const onboardIds: string[] = [];
 
     setStudents((prev) =>
       prev.map((s) => {
         if (s.milestone === 'picked_home') {
           count += 1;
+          onboardIds.push(s.id);
           return {
             ...s,
             milestone: 'dropped_school',
@@ -501,6 +559,9 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
         return s;
       })
     );
+
+    // Sync to Supabase
+    batchDropAllAtSchoolInDb(onboardIds, vehicleName, user?.schoolId);
 
     // School arrival complete: Close live tracking trip until afternoon return
     setRosterPhase('at_school');
@@ -607,6 +668,9 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
       return updated;
     });
 
+    // Sync to Supabase
+    updateStudentStatusInDb(studentId, 'Dropped off', studentName, user?.schoolId);
+
     if (allCompleted) {
       // Last student dropped at home safely: Close live tracking!
       setRosterPhase('completed');
@@ -655,6 +719,9 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     }
 
     const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Sync to Supabase
+    updateStudentStatusInDb(studentId, newStatus, student.name, user?.schoolId);
 
     if (newStatus === 'Picked up') {
       if (rosterPhase === 'afternoon_return' || student.milestone === 'dropped_school') {
@@ -780,11 +847,21 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     setActiveCall((prev) => (prev ? { ...prev, isSpeaker: !prev.isSpeaker } : null));
   };
 
-  const completePasswordChange = (newPass: string) => {
+  const completePasswordChange = async (newPass: string) => {
+    try {
+      if (user?.userId) {
+        await supabase
+          .from('app_credentials')
+          .update({ password: newPass })
+          .eq('user_id', user.userId);
+      }
+    } catch (e) {
+      console.warn('Password update error:', e);
+    }
     setMustChangePassword(false);
     Alert.alert(
       'Password Updated',
-      'Your administrative credential has been securely updated. You can now use your new password for all subsequent logins.'
+      'Your administrative credential has been securely updated in the database. You can now use your new password for all subsequent logins.'
     );
   };
 

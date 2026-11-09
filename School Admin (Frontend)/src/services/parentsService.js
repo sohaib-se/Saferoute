@@ -98,8 +98,8 @@ export const getParents = async (forceRefresh = false) => {
           email: p.email || 'N/A',
           phone: p.phone,
           address: p.address || '',
-          route: p.route || 'Route 1',
-          bus: p.bus || 'Bus 01',
+          route: p.route || 'Unassigned',
+          bus: p.bus || 'Unassigned',
           status: p.status || 'Active',
           initials,
           avatarBg: 'bg-blue-100 text-blue-600',
@@ -134,10 +134,10 @@ export const addParent = async (parentData) => {
     .insert([
       {
         school_id: schoolId,
-        name: parentData.name,
-        email: parentData.email || '',
-        phone: parentData.phone,
-        address: parentData.address || '',
+        name: (parentData.name || '').trim(),
+        email: (parentData.email || '').trim(),
+        phone: (parentData.phone || '').trim(),
+        address: (parentData.address || '').trim(),
         route: parentData.route || 'Route 1',
         bus: parentData.bus || 'Bus 01',
         status: parentData.status || 'Active',
@@ -151,36 +151,46 @@ export const addParent = async (parentData) => {
     throw error;
   }
 
-  // Link selected students and generate credentials concurrently
+  // Extract all student IDs from selectedStudentIds, selectedStudents, or children
   const studentDbIds = (parentData.selectedStudentIds || [])
     .concat((parentData.selectedStudents || []).map((s) => s.dbId || s.id))
+    .concat((parentData.children || []).map((c) => c.dbId || c.id))
     .filter((id) => id && typeof id === 'string' && id.length > 20);
+
+  const uniqueStudentIds = [...new Set(studentDbIds)];
 
   let credentials = null;
   if (data?.id) {
-    const linkPromise =
-      studentDbIds.length > 0
-        ? supabase
-            .from('students')
-            .update({
-              parent_id: data.id,
-              parent_name: data.name,
-            })
-            .in('id', studentDbIds)
-            .eq('school_id', schoolId)
-            .catch((linkError) => console.warn('Could not link students:', linkError))
-        : Promise.resolve();
+    if (uniqueStudentIds.length > 0) {
+      try {
+        const { error: linkErr } = await supabase
+          .from('students')
+          .update({
+            parent_id: data.id,
+            parent_name: (data.name || '').trim(),
+          })
+          .in('id', uniqueStudentIds)
+          .eq('school_id', schoolId);
 
-    const credPromise = createAppCredential({
-      schoolId,
-      userType: 'parent',
-      userId: data.id,
-      name: data.name,
-      phone: data.phone,
-    }).catch((credErr) => console.warn('Could not generate credentials:', credErr));
+        if (linkErr) {
+          console.warn('Could not link students on addParent:', linkErr);
+        }
+      } catch (linkError) {
+        console.warn('Could not link students on addParent:', linkError);
+      }
+    }
 
-    const [, credResult] = await Promise.all([linkPromise, credPromise]);
-    credentials = credResult;
+    try {
+      credentials = await createAppCredential({
+        schoolId,
+        userType: 'parent',
+        userId: data.id,
+        name: data.name,
+        phone: data.phone,
+      });
+    } catch (credErr) {
+      console.warn('Could not generate credentials on addParent:', credErr);
+    }
   }
 
   clearParentsCache();
@@ -200,10 +210,10 @@ export const updateParent = async (parentId, parentData) => {
   const { data, error } = await supabase
     .from('parents')
     .update({
-      name: parentData.name,
-      email: parentData.email,
-      phone: parentData.phone,
-      address: parentData.address,
+      name: (parentData.name || '').trim(),
+      email: (parentData.email || '').trim(),
+      phone: (parentData.phone || '').trim(),
+      address: (parentData.address || '').trim(),
       route: parentData.route || 'Route 1',
       bus: parentData.bus || 'Bus 01',
       status: parentData.status || 'Active',
@@ -218,63 +228,64 @@ export const updateParent = async (parentId, parentData) => {
     throw error;
   }
 
-  // Synchronize student links and app credentials concurrently
-  const updateTasks = [];
-
-  if (parentData.selectedStudentIds !== undefined || parentData.children !== undefined) {
+  // Synchronize student links
+  if (
+    parentData.selectedStudentIds !== undefined ||
+    parentData.children !== undefined ||
+    parentData.selectedStudents !== undefined
+  ) {
     const studentDbIds = (parentData.selectedStudentIds || [])
       .concat((parentData.selectedStudents || []).map((s) => s.dbId || s.id))
-      .concat((parentData.children || []).map((c) => c.id))
+      .concat((parentData.children || []).map((c) => c.dbId || c.id))
       .filter((id) => id && typeof id === 'string' && id.length > 20);
 
-    const studentSyncPromise = (async () => {
-      try {
-        if (studentDbIds.length > 0) {
-          await supabase
-            .from('students')
-            .update({ parent_id: null, parent_name: '' })
-            .eq('parent_id', parentId)
-            .eq('school_id', schoolId)
-            .not('id', 'in', `(${studentDbIds.join(',')})`);
-          await supabase
-            .from('students')
-            .update({
-              parent_id: parentId,
-              parent_name: parentData.name,
-            })
-            .in('id', studentDbIds)
-            .eq('school_id', schoolId);
-        } else {
-          await supabase
-            .from('students')
-            .update({ parent_id: null, parent_name: '' })
-            .eq('parent_id', parentId)
-            .eq('school_id', schoolId);
-        }
-      } catch (linkErr) {
-        console.warn('Could not update student links on parent update:', linkErr);
-      }
-    })();
+    const uniqueStudentIds = [...new Set(studentDbIds)];
 
-    updateTasks.push(studentSyncPromise);
+    try {
+      if (uniqueStudentIds.length > 0) {
+        // Unlink any students previously linked to this parent who are no longer selected
+        await supabase
+          .from('students')
+          .update({ parent_id: null, parent_name: '' })
+          .eq('parent_id', parentId)
+          .eq('school_id', schoolId)
+          .not('id', 'in', `(${uniqueStudentIds.join(',')})`);
+
+        // Link the selected students to this parent
+        await supabase
+          .from('students')
+          .update({
+            parent_id: parentId,
+            parent_name: (parentData.name || '').trim(),
+          })
+          .in('id', uniqueStudentIds)
+          .eq('school_id', schoolId);
+      } else {
+        // If no students selected, unlink all students for this parent
+        await supabase
+          .from('students')
+          .update({ parent_id: null, parent_name: '' })
+          .eq('parent_id', parentId)
+          .eq('school_id', schoolId);
+      }
+    } catch (linkErr) {
+      console.warn('Could not update student links on parent update:', linkErr);
+    }
   }
 
   // Synchronize name & phone in app_credentials
-  updateTasks.push(
-    supabase
+  try {
+    await supabase
       .from('app_credentials')
       .update({
-        name: parentData.name,
-        phone: parentData.phone || '',
+        name: (parentData.name || '').trim(),
+        phone: (parentData.phone || '').trim() || '',
       })
       .eq('user_id', parentId)
-      .eq('school_id', schoolId)
-      .catch((credErr) => {
-        console.warn('Could not update app credentials on parent update:', credErr);
-      })
-  );
-
-  await Promise.all(updateTasks);
+      .eq('school_id', schoolId);
+  } catch (credErr) {
+    console.warn('Could not update app credentials on parent update:', credErr);
+  }
 
   clearParentsCache();
   if (typeof clearStudentsCache === 'function') {
@@ -290,21 +301,26 @@ export const deleteParent = async (parentId) => {
     throw new Error('No active school session found. Please sign in again.');
   }
 
-  // Remove credentials and unlink students concurrently
-  await Promise.all([
-    supabase
+  // Remove credentials and unlink students
+  try {
+    await supabase
       .from('app_credentials')
       .delete()
       .eq('user_id', parentId)
-      .eq('school_id', schoolId)
-      .catch((credErr) => console.warn('Could not remove app credentials for deleted parent:', credErr)),
-    supabase
+      .eq('school_id', schoolId);
+  } catch (credErr) {
+    console.warn('Could not remove app credentials for deleted parent:', credErr);
+  }
+
+  try {
+    await supabase
       .from('students')
       .update({ parent_id: null, parent_name: '' })
       .eq('parent_id', parentId)
-      .eq('school_id', schoolId)
-      .catch((unlinkErr) => console.warn('Could not unlink students for deleted parent:', unlinkErr)),
-  ]);
+      .eq('school_id', schoolId);
+  } catch (unlinkErr) {
+    console.warn('Could not unlink students for deleted parent:', unlinkErr);
+  }
 
   const { error } = await supabase
     .from('parents')

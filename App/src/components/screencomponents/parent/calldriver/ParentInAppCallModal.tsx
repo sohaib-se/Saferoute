@@ -42,7 +42,7 @@ export const ParentInAppCallModal: React.FC<ParentInAppCallModalProps> = ({
   }, [call?.phone]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
+    let interval: any = null;
     if (call && callStatus === 'Connected') {
       interval = setInterval(() => {
         setDurationSeconds(prev => prev + 1);

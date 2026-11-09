@@ -19,7 +19,7 @@ const VehicleManagment = ({
   const [drivers, setDrivers] = useState([]);
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -30,12 +30,12 @@ const VehicleManagment = ({
       setLoading(true);
       setError(null);
       const [vehiclesData, driversData, routesData] = await Promise.all([
-        getVehicles(),
-        getDrivers().catch((err) => {
+        getVehicles(true),
+        getDrivers(true).catch((err) => {
           console.warn('Could not fetch drivers:', err);
           return [];
         }),
-        getRoutes().catch((err) => {
+        getRoutes(true).catch((err) => {
           console.warn('Could not fetch routes:', err);
           return [];
         }),

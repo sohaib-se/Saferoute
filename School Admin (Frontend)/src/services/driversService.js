@@ -5,6 +5,7 @@ import {
   getSchoolCredentialsMap,
   getDeterministicFallbackCode,
 } from './appCredentialsService';
+import { clearVehiclesCache } from './vehiclesService';
 
 let driversCache = {
   data: null,
@@ -166,6 +167,14 @@ export const updateDriver = async (driverId, driverData) => {
     throw new Error('No active school session found. Please sign in again.');
   }
 
+  // Fetch current driver before updating to track changes
+  const { data: oldDriver } = await supabase
+    .from('drivers')
+    .select('name, vehicle, route')
+    .eq('id', driverId)
+    .eq('school_id', schoolId)
+    .maybeSingle();
+
   const { data, error } = await supabase
     .from('drivers')
     .update({
@@ -173,8 +182,8 @@ export const updateDriver = async (driverId, driverData) => {
       license: driverData.license,
       license_type: driverData.licenseType || 'Heavy Transport',
       phone: driverData.phone,
-      vehicle: driverData.vehicle,
-      route: driverData.route,
+      vehicle: driverData.vehicle || 'Unassigned',
+      route: driverData.route || 'Unassigned',
       status: driverData.status,
     })
     .eq('id', driverId)
@@ -185,6 +194,37 @@ export const updateDriver = async (driverId, driverData) => {
   if (error) {
     console.error('Error updating driver:', error);
     throw error;
+  }
+
+  try {
+    // If driver name changed, update vehicles where driver_name was old name
+    if (oldDriver?.name && oldDriver.name !== driverData.name) {
+      await supabase
+        .from('vehicles')
+        .update({ driver_name: driverData.name })
+        .eq('school_id', schoolId)
+        .eq('driver_name', oldDriver.name);
+      clearVehiclesCache();
+    }
+
+    // If vehicle changed directly from driver update
+    if (
+      driverData.vehicle &&
+      driverData.vehicle !== 'Unassigned' &&
+      driverData.vehicle !== oldDriver?.vehicle
+    ) {
+      await supabase
+        .from('vehicles')
+        .update({
+          driver_name: driverData.name,
+          route: driverData.route || 'Unassigned',
+        })
+        .eq('school_id', schoolId)
+        .eq('name', driverData.vehicle);
+      clearVehiclesCache();
+    }
+  } catch (e) {
+    console.warn('Error syncing vehicle on driver update:', e);
   }
 
   clearDriversCache();
@@ -198,6 +238,13 @@ export const deleteDriver = async (driverId) => {
     throw new Error('No active school session found. Please sign in again.');
   }
 
+  const { data: driverToDelete } = await supabase
+    .from('drivers')
+    .select('name')
+    .eq('id', driverId)
+    .eq('school_id', schoolId)
+    .maybeSingle();
+
   const { error } = await supabase
     .from('drivers')
     .delete()
@@ -207,6 +254,19 @@ export const deleteDriver = async (driverId) => {
   if (error) {
     console.error('Error deleting driver:', error);
     throw error;
+  }
+
+  if (driverToDelete?.name) {
+    try {
+      await supabase
+        .from('vehicles')
+        .update({ driver_name: 'Unassigned' })
+        .eq('school_id', schoolId)
+        .eq('driver_name', driverToDelete.name);
+      clearVehiclesCache();
+    } catch (e) {
+      console.warn('Error unassigning vehicle on driver delete:', e);
+    }
   }
 
   clearDriversCache();

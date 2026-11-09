@@ -3,10 +3,10 @@ import { MdSchool, MdDirectionsBus, MdCheckCircle, MdHome } from 'react-icons/md
 
 const KPIStatsCards = ({ stats }) => {
   const defaultStats = {
-    totalStudents: 312,
-    onRoute: 142,
-    pickedUp: 88,
-    droppedSafely: 64,
+    totalStudents: 0,
+    onRoute: 0,
+    pickedUp: 0,
+    droppedSafely: 0,
     ...stats,
   };
 

@@ -184,7 +184,7 @@ export const initialVehiclesData = [
 ];
 
 const VehiclesTableSection = ({
-  vehiclesList = initialVehiclesData,
+  vehiclesList = [],
   isLoading = false,
   onAddVehicleClick,
   onViewVehicle,

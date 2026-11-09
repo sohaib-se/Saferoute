@@ -12,6 +12,7 @@ interface CurrentTripStatusCardProps {
   distanceKm?: number;
   etaMins?: number;
   currentSector?: string;
+  childrenStatusText?: string;
   onCallDriver?: () => void;
 }
 
@@ -24,6 +25,7 @@ export const CurrentTripStatusCard: React.FC<CurrentTripStatusCardProps> = ({
   distanceKm = 2.1,
   etaMins = 7,
   currentSector = 'Sector G-10',
+  childrenStatusText = 'Enrolled: Sohaib Khan (Grade 5 - Sec A)',
   onCallDriver,
 }) => {
   return (
@@ -49,11 +51,11 @@ export const CurrentTripStatusCard: React.FC<CurrentTripStatusCardProps> = ({
         </View>
       </View>
 
-      {/* 2. Unified Dual-Child Status Banner */}
+      {/* 2. Unified Child Status Banner */}
       <View style={styles.bothChildrenBox}>
         <Ionicons name="people" size={15} color="#007AFF" />
         <Text style={styles.bothChildrenText}>
-          Both Children Onboard: Ayesha (Gr 4) & Zain Malik (Gr 2)
+          {childrenStatusText}
         </Text>
       </View>
 

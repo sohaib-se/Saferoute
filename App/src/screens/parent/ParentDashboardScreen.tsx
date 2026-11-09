@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/common/Header';
 import { JourneyNoticeCard } from '../../components/screencomponents/parent/dashboard/JourneyNoticeCard';
@@ -9,6 +9,7 @@ import {
 } from '../../components/screencomponents/parent/dashboard/ChildStatusCard';
 import { RadarMapCard } from '../../components/screencomponents/parent/dashboard/RadarMapCard';
 import { useAuth } from '../../context/AuthContext';
+import { getParentChildren, subscribeToStudentStatusChanges } from '../../services/parentService';
 import { colors, radii } from '../../lib/theme';
 
 interface ParentDashboardScreenProps {
@@ -21,34 +22,34 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
   onOpenSOS,
 }) => {
   const { user } = useAuth();
+  const [children, setChildren] = useState<ChildData[]>([]);
+  const [isLoadingChildren, setIsLoadingChildren] = useState(true);
 
-  // Multi-child support as per SRS REQ-P2.1
-  const [children] = useState<ChildData[]>([
-    {
-      id: 'c-1',
-      name: 'Ayesha Malik',
-      grade: 'Grade 4 - Section C',
-      studentCode: '1482',
-      vehicle: 'Bus 1 (ICT-4921)',
-      driverName: 'Hilal',
-      driverPhone: '03124124',
-      status: 'En route',
-      etaMinutes: 7,
-      pickupTime: '07:25 AM',
-    },
-    {
-      id: 'c-2',
-      name: 'Zain Malik',
-      grade: 'Grade 2 - Section A',
-      studentCode: '1483',
-      vehicle: 'Bus 1 (ICT-4921)',
-      driverName: 'Hilal',
-      driverPhone: '03124124',
-      status: 'Waiting',
-      etaMinutes: 25,
-      pickupTime: '07:45 AM',
-    },
-  ]);
+  useEffect(() => {
+    let isMounted = true;
+    const fetchChildren = async () => {
+      setIsLoadingChildren(true);
+      const data = await getParentChildren(user?.userId, user?.name, user?.schoolId);
+      if (isMounted) {
+        setChildren(data);
+        setIsLoadingChildren(false);
+      }
+    };
+    fetchChildren();
+
+    const unsubscribe = subscribeToStudentStatusChanges(user?.schoolId, () => {
+      fetchChildren();
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [user]);
+
+  const primaryChild = children[0];
+  const vehicleDisplayName = primaryChild?.vehicle ? primaryChild.vehicle.split(' ')[0] : 'Bus 1';
+  const driverDisplayName = primaryChild?.driverName || 'Hilal';
 
   const handleTrackChild = (child: ChildData) => {
     onNavigateTab('tracking');
@@ -69,7 +70,7 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Live Journey Active Transit Card */}
-        <JourneyNoticeCard vehicleName="Bus 1" sectorName="Sector G-10" driverName="Hilal" />
+        <JourneyNoticeCard vehicleName={vehicleDisplayName} sectorName="Sector G-10" driverName={driverDisplayName} />
 
         {/* Children Status Cards Section */}
         <View style={styles.sectionHeaderRow}>

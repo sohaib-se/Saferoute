@@ -5,22 +5,10 @@ import {
   MdClose,
   MdSearch,
   MdCheck,
-  MdSchool,
   MdPersonAdd,
 } from 'react-icons/md';
 import Modal from '../../common/Modal';
 import { getStudents } from '../../../services/studentsService';
-
-const DEFAULT_FALLBACK_STUDENTS = [
-  { dbId: 'm1', id: '#ST-9041', name: 'Ayesha Khan', class: 'Grade 5', initials: 'AK', avatarBg: 'bg-rose-100 text-rose-500', route: 'Route 1', vehicle: 'Bus 12' },
-  { dbId: 'm2', id: '#ST-8822', name: 'Muhammad Ali', class: 'Grade 6', initials: 'MA', avatarBg: 'bg-blue-100 text-blue-600', route: 'Route 2', vehicle: 'Bus 07' },
-  { dbId: 'm3', id: '#ST-7721', name: 'Sara Khan', class: 'Grade 7', initials: 'SK', avatarBg: 'bg-amber-100 text-amber-600', route: 'Route 3', vehicle: 'Bus 09' },
-  { dbId: 'm4', id: '#ST-9055', name: 'Hassan Ali', class: 'Grade 5', initials: 'HA', avatarBg: 'bg-teal-100 text-teal-600', route: 'Route 1', vehicle: 'Bus 12' },
-  { dbId: 'm5', id: '#ST-6643', name: 'Fatima Noor', class: 'Grade 6', initials: 'FN', avatarBg: 'bg-indigo-100 text-indigo-600', route: 'Route 2', vehicle: 'Bus 15' },
-  { dbId: 'm6', id: '#ST-7128', name: 'Bilal Ahmed', class: 'Grade 7', initials: 'BA', avatarBg: 'bg-purple-100 text-purple-600', route: 'Route 4', vehicle: 'Bus 18' },
-  { dbId: 'm7', id: '#ST-9080', name: 'Zoya Malik', class: 'Grade 5', initials: 'ZM', avatarBg: 'bg-pink-100 text-pink-600', route: 'Route 1', vehicle: 'Bus 12' },
-  { dbId: 'm8', id: '#ST-8109', name: 'Hamza Tariq', class: 'Grade 8', initials: 'HT', avatarBg: 'bg-emerald-100 text-emerald-600', route: 'Route 5', vehicle: 'Bus 05' },
-];
 
 const AddParentModal = ({ isOpen, onClose, onAddParent, availableStudents = [] }) => {
   const [formData, setFormData] = useState({
@@ -54,13 +42,13 @@ const AddParentModal = ({ isOpen, onClose, onAddParent, availableStudents = [] }
           if (data && data.length > 0) {
             setRosterStudents(data);
           } else {
-            setRosterStudents(DEFAULT_FALLBACK_STUDENTS);
+            setRosterStudents([]);
           }
         }
       } catch (err) {
         if (isMounted) {
-          console.warn('Using default student fallback in modal:', err);
-          setRosterStudents(DEFAULT_FALLBACK_STUDENTS);
+          console.warn('Could not fetch students in modal:', err);
+          setRosterStudents([]);
         }
       } finally {
         if (isMounted) {
@@ -179,8 +167,8 @@ const AddParentModal = ({ isOpen, onClose, onAddParent, availableStudents = [] }
       children: childrenArray,
       selectedStudentIds,
       selectedStudents,
-      route: selectedStudents[0]?.route || 'Route 1 (Green Valley)',
-      bus: selectedStudents[0]?.vehicle || 'Bus 12',
+      route: selectedStudents[0]?.route || 'Unassigned',
+      bus: selectedStudents[0]?.vehicle || 'Unassigned',
       status: 'Active',
     });
 

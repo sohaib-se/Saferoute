@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, StatusBar } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { DriverTripProvider } from '../context/DriverTripContext';
@@ -44,7 +45,7 @@ export const RootNavigator: React.FC = () => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+        <StatusBar style="dark" />
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Connecting to SafeRoute...</Text>
       </View>
@@ -81,7 +82,7 @@ export const RootNavigator: React.FC = () => {
       return (
         <DriverTripProvider>
           <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
-            <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+            <StatusBar style="dark" />
             <View style={styles.screenBody}>
               <DriverSOSScreen
                 onBack={() => setIsDriverSOSOpen(false)}
@@ -145,7 +146,7 @@ export const RootNavigator: React.FC = () => {
     return (
       <DriverTripProvider>
         <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
-          <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+          <StatusBar style="dark" />
           <View style={styles.screenBody}>{renderDriverScreen()}</View>
           <TabBar
             tabs={driverTabs}
@@ -180,7 +181,7 @@ export const RootNavigator: React.FC = () => {
   if (isParentSOSOpen) {
     return (
       <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
-        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+        <StatusBar style="dark" />
         <View style={styles.screenBody}>
           <ParentSOSScreen
             onBack={() => setIsParentSOSOpen(false)}
@@ -243,7 +244,7 @@ export const RootNavigator: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+      <StatusBar style="dark" />
       <View style={styles.screenBody}>{renderParentScreen()}</View>
       <TabBar tabs={parentTabs} activeTab={parentTab} onTabPress={handleParentTabPress} />
     </SafeAreaView>

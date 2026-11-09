@@ -28,14 +28,14 @@ const ParentManagment = ({
   const [parents, setParents] = useState([]);
   const [students, setStudents] = useState(externalStudents || []);
   const [loading, setLoading] = useState(!externalParents);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
 
   const fetchParentsList = useCallback(async () => {
     if (externalParents) return;
     try {
       setLoading(true);
       setError(null);
-      const data = await getParents();
+      const data = await getParents(true);
       setParents(data);
     } catch (err) {
       console.error('Error fetching parents:', err);
@@ -58,7 +58,7 @@ const ParentManagment = ({
 
     const loadStudents = async () => {
       try {
-        const studentData = await getStudents();
+        const studentData = await getStudents(true);
         if (studentData && studentData.length > 0) {
           setStudents(studentData);
         }
@@ -83,15 +83,8 @@ const ParentManagment = ({
       }
     } catch (err) {
       console.error('Failed to create parent in database:', err);
-      // Fallback local addition for offline / demo mode
-      setParents((prev) => [
-        {
-          ...newParent,
-          id: `parent-${Date.now()}`,
-          num: prev.length + 1,
-        },
-        ...prev,
-      ]);
+      alert('Failed to save parent: ' + (err.message || 'Unknown error'));
+      await fetchParentsList();
     } finally {
       setLoading(false);
     }
@@ -120,9 +113,8 @@ const ParentManagment = ({
       }
     } catch (err) {
       console.error('Failed to update parent in database:', err);
-      setParents((prev) =>
-        prev.map((p) => (p.id === updatedParent.id ? { ...p, ...updatedParent } : p))
-      );
+      alert('Failed to update parent: ' + (err.message || 'Unknown error'));
+      await fetchParentsList();
     } finally {
       setLoading(false);
     }
@@ -170,17 +162,13 @@ const ParentManagment = ({
 
         <main className="p-8 space-y-6 flex-1 max-w-[1440px] w-full mx-auto">
           <ParentStatCards
-            stats={
-              parentsList.length > 0
-                ? {
-                    totalParents: parentsList.length,
-                    activePupils: parentsList.reduce(
-                      (acc, p) => acc + (p.children?.length || 0),
-                      0
-                    ),
-                  }
-                : undefined
-            }
+            stats={{
+              totalParents: parentsList.length,
+              activePupils: parentsList.reduce(
+                (acc, p) => acc + (p.children ? p.children.length : 0),
+                0
+              ),
+            }}
           />
 
           <ParentsTableSection
