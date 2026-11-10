@@ -60,7 +60,8 @@ export const getDriverVehicleInfo = async (
 export const getDriverRoster = async (
   driverName: string,
   vehicleName: string,
-  schoolId?: string
+  schoolId?: string,
+  driverId?: string
 ): Promise<StudentRosterItem[]> => {
   try {
     let query = supabase
@@ -82,6 +83,7 @@ export const getDriverRoster = async (
     // Filter students assigned to this driver or vehicle (or route)
     const assignedStudents = studentsData.filter(
       (s) =>
+        (driverId && s.driver_id === driverId) ||
         (s.driver && s.driver.toLowerCase() === driverName.toLowerCase()) ||
         (s.vehicle && s.vehicle.toLowerCase() === vehicleName.toLowerCase()) ||
         !s.driver // Fallback if unassigned in test environment

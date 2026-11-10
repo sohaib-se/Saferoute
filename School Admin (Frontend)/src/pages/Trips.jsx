@@ -1,62 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import {
   TripStatCards,
   TripsTableSection,
-  ScheduleTripModal,
   TripDetailsModal,
   TripLocateModal,
   TripManagementFooter,
-  initialTripsData,
 } from '../components/pagecomponents/Trips';
+import { getTrips, deleteTrip } from '../services/tripsService';
+import { supabase } from '../lib/supabaseClient';
 
 const Trips = ({
   onLogout,
   onNavigate,
   currentPage = 'Trips',
 }) => {
-  const [trips, setTrips] = useState(initialTripsData);
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedTrip, setSelectedTrip] = useState(null);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [detailsMode, setDetailsMode] = useState('view'); // 'view' or 'edit'
   const [isLocateModalOpen, setIsLocateModalOpen] = useState(false);
 
-  // Compute live metrics dynamically based on current trips state
-  // If the dataset contains the 8 featured trips, we can scale or reflect the actual list
-  const totalScheduled = trips.length >= 8 ? 36 : trips.length;
-  const inTransit = trips.filter(
-    (t) => t.status === 'On Route' || t.status === 'Picked Up'
-  ).length * (trips.length === initialTripsData.length ? 4.5 : 1); // displays 18 or live count
-  const completed = trips.filter((t) => t.status === 'Arrived').length * (trips.length === initialTripsData.length ? 7 : 1); // displays 14 or live count
-  const delayedList = trips.filter((t) => t.status === 'Delayed');
-  const pendingList = trips.filter((t) => t.status === 'Pending');
-  const delayedCount = delayedList.length * (trips.length === initialTripsData.length ? 2 : 1);
-  const delayedPending = (delayedList.length + pendingList.length) * (trips.length === initialTripsData.length ? 1.333 : 1);
+  // Fetch real trips from database
+  const fetchTripsList = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getTrips();
+      setTrips(data);
+    } catch (err) {
+      console.error('Failed to load trips from database:', err);
+      setError(err.message || 'Could not load trips.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  // Fallback to integer numbers
-  const displayTotalScheduled = Math.round(totalScheduled);
-  const displayInTransit = Math.round(inTransit);
-  const displayCompleted = Math.round(completed);
-  const displayDelayedPending = Math.round(delayedPending);
-  const displayDelayedCount = Math.round(delayedCount);
+  useEffect(() => {
+    fetchTripsList();
+
+    // Supabase Realtime subscription: updates admin page whenever a driver starts, picks up, or finishes
+    const channel = supabase
+      .channel('realtime_admin_trips')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'trips' },
+        () => {
+          fetchTripsList();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'trip_attendance' },
+        () => {
+          fetchTripsList();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchTripsList]);
+
+  // Compute live KPI metrics based strictly on actual database records
+  const totalScheduled = trips.length;
+  const inTransit = trips.filter(
+    (t) => t.overallStatus === 'pickup_active' || t.overallStatus === 'dropoff_active'
+  ).length;
+  const completed = trips.filter((t) => t.overallStatus === 'completed').length;
+  const pending = trips.filter((t) => t.overallStatus === 'pending').length;
+  const pickupDone = trips.filter((t) => t.overallStatus === 'pickup_done').length;
 
   // Handlers
-  const handleScheduleTrip = (newTrip) => {
-    setTrips((prev) => [
-      {
-        ...newTrip,
-        num: prev.length + 1,
-      },
-      ...prev,
-    ]);
-  };
-
-  const handleSaveTrip = (updatedTrip) => {
-    setTrips((prev) =>
-      prev.map((t) => (t.id === updatedTrip.id ? updatedTrip : t))
-    );
+  const handleDeleteTrip = async (tripId) => {
+    if (!window.confirm('Are you sure you want to delete this trip record?')) return;
+    try {
+      await deleteTrip(tripId);
+      setTrips((prev) => prev.filter((t) => t.id !== tripId));
+    } catch (err) {
+      alert('Failed to delete trip: ' + (err.message || 'Unknown error'));
+    }
   };
 
   const handleLocateTrip = (trip) => {
@@ -66,7 +92,6 @@ const Trips = ({
 
   const handleViewTrip = (trip) => {
     setSelectedTrip(trip);
-    setDetailsMode('view');
     setIsDetailsModalOpen(true);
   };
 
@@ -89,21 +114,38 @@ const Trips = ({
           className="flex-1 p-8 space-y-6 max-w-[1440px] w-full mx-auto"
           data-purpose="trips-main-area"
         >
-          {/* KPI Overview Cards */}
+          {/* KPI Overview Cards - Live Real Database Counts */}
           <TripStatCards
-            totalScheduled={displayTotalScheduled}
-            inTransit={displayInTransit}
-            completed={displayCompleted}
-            delayedPending={displayDelayedPending}
-            delayedCount={displayDelayedCount}
+            totalScheduled={totalScheduled}
+            inTransit={inTransit}
+            completed={completed}
+            pending={pending}
+            pickupDone={pickupDone}
+            loading={loading}
           />
+
+          {/* Error Banner */}
+          {error && (
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold flex items-center justify-between">
+              <span>Failed to fetch trips: {error}</span>
+              <button
+                type="button"
+                onClick={fetchTripsList}
+                className="underline hover:text-rose-900 cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
           {/* Trips Management Section & Table */}
           <TripsTableSection
             tripsList={trips}
-            onScheduleTripClick={() => setIsScheduleModalOpen(true)}
+            loading={loading}
             onLocateTrip={handleLocateTrip}
-            onViewEditTrip={handleViewTrip}
+            onViewTrip={handleViewTrip}
+            onDeleteTrip={handleDeleteTrip}
+            onRefresh={fetchTripsList}
           />
 
           <div className="h-4"></div>
@@ -113,21 +155,11 @@ const Trips = ({
         <TripManagementFooter />
       </div>
 
-      {/* Schedule Trip Modal */}
-      <ScheduleTripModal
-        isOpen={isScheduleModalOpen}
-        onClose={() => setIsScheduleModalOpen(false)}
-        onScheduleTrip={handleScheduleTrip}
-        currentCount={trips.length}
-      />
-
-      {/* Trip Details & Edit Modal */}
+      {/* Trip Details & Manifest Modal */}
       <TripDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         trip={selectedTrip}
-        onSaveTrip={handleSaveTrip}
-        mode={detailsMode}
         onLocate={handleLocateTrip}
       />
 

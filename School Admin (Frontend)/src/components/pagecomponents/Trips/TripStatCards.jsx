@@ -7,31 +7,32 @@ import {
 } from 'react-icons/md';
 
 const TripStatCards = ({
-  totalScheduled = 36,
-  inTransit = 18,
-  completed = 14,
-  delayedPending = 4,
-  delayedCount = 2,
+  totalScheduled = 0,
+  inTransit = 0,
+  completed = 0,
+  pending = 0,
+  pickupDone = 0,
+  loading = false,
 }) => {
   return (
     <section
       className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
       data-purpose="kpi-metric-cards"
     >
-      {/* Card 1: Total Scheduled Trips */}
+      {/* Card 1: Total Trips */}
       <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex justify-between items-start transition-all hover:shadow-md">
         <div className="space-y-1">
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Total Scheduled Trips
+            Total Trips Created
           </span>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold text-slate-900 tracking-tight">
-              {totalScheduled}
+              {loading ? '...' : totalScheduled}
             </span>
-            <span className="text-xs text-slate-400 font-medium">Today</span>
+            <span className="text-xs text-slate-400 font-medium">Recorded</span>
           </div>
           <p className="text-xs text-slate-500 font-medium pt-0.5">
-            2 Shifts (Morning / Afternoon)
+            Driver-initiated daily routes
           </p>
         </div>
         <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
@@ -47,16 +48,18 @@ const TripStatCards = ({
           </span>
           <div className="flex items-center gap-2">
             <span className="text-3xl font-bold text-slate-900 tracking-tight">
-              {inTransit}
+              {loading ? '...' : inTransit}
             </span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
-              Active
-            </span>
+            {inTransit > 0 && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
+                Live
+              </span>
+            )}
           </div>
           <p className="text-xs text-slate-500 font-medium pt-0.5 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>Live Telematics Tracking</span>
+            <span className={`w-2 h-2 rounded-full ${inTransit > 0 ? 'bg-emerald-500 animate-ping' : 'bg-slate-300'}`} />
+            <span>Active GPS Broadcasting</span>
           </p>
         </div>
         <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
@@ -72,12 +75,12 @@ const TripStatCards = ({
           </span>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold text-slate-900 tracking-tight">
-              {completed}
+              {loading ? '...' : completed}
             </span>
             <span className="text-xs text-slate-400 font-medium">Finished</span>
           </div>
           <p className="text-xs text-emerald-600 font-medium pt-0.5">
-            100% Morning Drop-offs
+            Both shifts safely concluded
           </p>
         </div>
         <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shrink-0">
@@ -85,23 +88,22 @@ const TripStatCards = ({
         </div>
       </div>
 
-      {/* Card 4: Delayed / Pending */}
+      {/* Card 4: Pending / At School */}
       <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex justify-between items-start transition-all hover:shadow-md">
         <div className="space-y-1">
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Delayed / Pending
+            At School / Pending
           </span>
           <div className="flex items-center gap-2">
             <span className="text-3xl font-bold text-slate-900 tracking-tight">
-              {delayedPending}
+              {loading ? '...' : pending + pickupDone}
             </span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" />
-              {delayedCount} Delayed
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+              {pickupDone} At School
             </span>
           </div>
           <p className="text-xs text-slate-500 font-medium pt-0.5">
-            2 Upcoming Shift Trips
+            {pending} awaiting pickup start
           </p>
         </div>
         <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">

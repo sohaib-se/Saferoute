@@ -2,377 +2,223 @@ import React, { useState, useEffect } from 'react';
 import {
   MdDirectionsBus,
   MdLocationOn,
-  MdEdit,
+  MdCheckCircle,
+  MdClose,
+  MdOutlineAccessTime,
 } from 'react-icons/md';
 import Modal from '../../common/Modal';
+import { getTripAttendance } from '../../../services/tripsService';
 
 const TripDetailsModal = ({
   trip,
   isOpen,
   onClose,
-  onSaveTrip,
-  mode = 'view',
   onLocate,
 }) => {
-  const [currentMode, setCurrentMode] = useState(mode);
-  const [formData, setFormData] = useState({});
+  const [attendanceList, setAttendanceList] = useState([]);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   useEffect(() => {
-    setCurrentMode(mode);
-  }, [mode]);
-
-  useEffect(() => {
-    if (trip) {
-      setFormData({
-        ...trip,
-      });
+    if (isOpen && trip?.id) {
+      setLoadingAttendance(true);
+      getTripAttendance(trip.id)
+        .then(setAttendanceList)
+        .catch((err) => {
+          console.error('Failed to load trip attendance:', err);
+          setAttendanceList([]);
+        })
+        .finally(() => setLoadingAttendance(false));
+    } else {
+      setAttendanceList([]);
     }
-  }, [trip]);
+  }, [isOpen, trip?.id]);
 
   if (!isOpen || !trip) return null;
-
-  const handleSave = (e) => {
-    e.preventDefault();
-
-    let statusBadgeStyle = formData.statusBadgeStyle;
-    let statusDotColor = formData.statusDotColor;
-    let etaStatus = formData.etaStatus;
-
-    if (formData.status === 'On Route') {
-      statusBadgeStyle = 'bg-emerald-50 text-emerald-600 border border-emerald-200';
-      statusDotColor = 'bg-emerald-500';
-      etaStatus = 'on-time';
-    } else if (formData.status === 'Picked Up') {
-      statusBadgeStyle = 'bg-teal-50 text-teal-700 border border-teal-200';
-      statusDotColor = 'bg-teal-500';
-      etaStatus = 'in-progress';
-    } else if (formData.status === 'Arrived') {
-      statusBadgeStyle = 'bg-slate-100 text-slate-700 border border-slate-200';
-      statusDotColor = 'bg-emerald-500';
-      etaStatus = 'arrived';
-    } else if (formData.status === 'Delayed') {
-      statusBadgeStyle = 'bg-amber-100 text-amber-800 border border-amber-300';
-      statusDotColor = 'bg-amber-500';
-      etaStatus = 'delayed';
-    } else if (formData.status === 'Pending') {
-      statusBadgeStyle = 'bg-slate-100 text-slate-600 border border-slate-200';
-      statusDotColor = 'bg-slate-400';
-      etaStatus = 'pending';
-    }
-
-    const updated = {
-      ...formData,
-      statusBadgeStyle,
-      statusDotColor,
-      etaStatus,
-      completionRate: Math.min(
-        100,
-        Math.round(((formData.studentsBoarded || 0) / (formData.totalCapacity || 1)) * 100)
-      ),
-    };
-
-    if (onSaveTrip) {
-      onSaveTrip(updated);
-    }
-    onClose();
-  };
-
-  const percent = Math.min(
-    100,
-    Math.round(((formData.studentsBoarded || 0) / (formData.totalCapacity || 1)) * 100)
-  );
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       icon={<MdDirectionsBus size={20} />}
-      title={currentMode === 'edit' ? `Edit Trip ${trip.id}` : `Trip Manifest ${trip.id}`}
-      subtitle={`${trip.shift} • ${trip.sector}`}
-      maxWidth="max-w-xl"
+      title={`Trip Manifest ${trip.displayId || trip.id}`}
+      subtitle={`${trip.vehicleName} • ${trip.route} • Date: ${trip.tripDate}`}
+      maxWidth="max-w-3xl"
     >
-      {currentMode === 'view' ? (
-        <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
-          {/* Top Info Banner */}
-          <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-12 h-12 rounded-xl border flex flex-col items-center justify-center font-bold text-sm shrink-0 ${
-                  trip.busBadgeStyle || 'bg-blue-100/80 border-blue-200 text-blue-700'
-                }`}
-              >
-                <span className="text-[10px] uppercase font-semibold">Bus</span>
-                <span>{trip.busCode}</span>
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-slate-900">{trip.route}</h4>
-                <p className="text-xs text-slate-500 mt-0.5">{trip.routeSub}</p>
-              </div>
+      <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto custom-scrollbar">
+        {/* Top Summary Banner */}
+        <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 font-bold text-sm flex flex-col items-center justify-center shrink-0 border border-blue-200">
+              <span className="text-[10px] uppercase font-semibold">Bus</span>
+              <span>{trip.vehicleName}</span>
             </div>
-
-            <div className="flex items-center gap-2">
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                  trip.statusBadgeStyle || 'bg-slate-100 text-slate-700 border border-slate-200'
-                }`}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full mr-2 ${
-                    trip.statusDotColor || 'bg-blue-500'
-                  }`}
-                />
-                {trip.status}
-              </span>
-            </div>
-          </div>
-
-          {/* Key Metrics Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <div className="p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-2xs">
-              <span className="text-[10px] font-semibold uppercase text-slate-400 block tracking-wider">
-                Schedule Timings
-              </span>
-              <p className="text-xs font-bold text-slate-800 mt-1">{trip.timings}</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">{trip.etaNote}</p>
-            </div>
-
-            <div className="p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-2xs">
-              <span className="text-[10px] font-semibold uppercase text-slate-400 block tracking-wider">
-                Students Boarded
-              </span>
-              <p className="text-xs font-bold text-slate-800 mt-1">
-                {trip.studentsBoarded} / {trip.totalCapacity} ({percent}%)
+            <div>
+              <h4 className="text-sm font-bold text-slate-900">{trip.route}</h4>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Driver: <span className="font-semibold text-slate-700">{trip.driverName}</span> • Date: {trip.tripDate}
               </p>
-              <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden mt-1.5">
-                <div
-                  className="bg-blue-600 h-1.5 rounded-full"
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-2xs col-span-2 sm:col-span-1">
-              <span className="text-[10px] font-semibold uppercase text-slate-400 block tracking-wider">
-                Current Speed / GPS
-              </span>
-              <p className="text-xs font-bold text-slate-800 mt-1">{trip.speed || '30 km/h'}</p>
-              <p className="text-[11px] text-emerald-600 font-medium mt-0.5">Telemetry Connected</p>
             </div>
           </div>
 
-          {/* Driver & Telematics Details */}
-          <div className="space-y-3">
-            <h5 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-              Assigned Personnel &amp; Vehicle
-            </h5>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs shrink-0">
-                  {trip.driverInitials}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-800">{trip.driverName}</p>
-                  <p className="text-[11px] text-slate-500">{trip.driverPhone}</p>
-                  <span className="inline-block mt-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                    Licensed &amp; Verified
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-200/80 text-slate-700 flex items-center justify-center text-xs shrink-0">
-                  <MdDirectionsBus size={20} />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-800">{trip.busName}</p>
-                  <p className="text-[11px] text-slate-500">Capacity: {trip.totalCapacity} Seats</p>
-                  <span className="inline-block mt-1 text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                    Active GPS Tracker
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Current Stop & Live Transit Notes */}
-          <div className="p-4 bg-blue-50/40 border border-blue-100 rounded-xl space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-blue-900">
-              <MdLocationOn className="text-blue-600" size={16} />
-              <span>Current Transit Telematics</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="text-slate-400 block text-[11px]">Last Logged Location:</span>
-                <span className="font-semibold text-slate-800">
-                  {trip.currentLocation || 'Depot Central Station'}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[11px]">Upcoming Stop / Status:</span>
-                <span className="font-semibold text-slate-800">
-                  {trip.nextStop || 'In Progress'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Modal View Footer */}
-          <div className="pt-2 flex items-center justify-between border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() => onLocate && onLocate(trip)}
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition cursor-pointer"
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                trip.overallBadge?.style || 'bg-slate-100 text-slate-700 border border-slate-200'
+              }`}
             >
-              <MdLocationOn size={16} />
-              <span>Track Live on Map</span>
-            </button>
+              <span
+                className={`w-2 h-2 rounded-full mr-2 ${
+                  trip.overallBadge?.dot || 'bg-blue-500'
+                }`}
+              />
+              {trip.overallBadge?.label || trip.overallStatus}
+            </span>
+          </div>
+        </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setCurrentMode('edit')}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition cursor-pointer"
-              >
-                <MdEdit size={14} />
-                <span>Edit Trip</span>
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition cursor-pointer"
-              >
-                Close
-              </button>
+        {/* Sub-Trips Two-Phase Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Pickup Sub-trip */}
+          <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-800">1. Morning Pickup</span>
+              <span className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold ${trip.pickupBadge?.style}`}>
+                {trip.pickupBadge?.label}
+              </span>
+            </div>
+            <div className="text-xs text-slate-600 space-y-1">
+              <p>• Students Picked: <span className="font-semibold text-emerald-600">{trip.studentsPicked}</span> / {trip.totalStudents}</p>
+              <p>• Absent Students: <span className="font-semibold text-rose-600">{trip.studentsAbsent}</span></p>
+              {trip.pickupStartedAt && (
+                <p className="text-[11px] text-slate-400">
+                  Started: {new Date(trip.pickupStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Dropoff Sub-trip */}
+          <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-800">2. Afternoon Drop-off</span>
+              <span className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold ${trip.dropoffBadge?.style}`}>
+                {trip.dropoffBadge?.label}
+              </span>
+            </div>
+            <div className="text-xs text-slate-600 space-y-1">
+              <p>• Students Dropped Home: <span className="font-semibold text-blue-600">{trip.studentsDropped}</span> / {trip.studentsPicked}</p>
+              <p>• In Transit / Remaining: <span className="font-semibold text-amber-600">{Math.max(0, trip.studentsPicked - trip.studentsDropped)}</span></p>
+              {trip.dropoffStartedAt && (
+                <p className="text-[11px] text-slate-400">
+                  Started: {new Date(trip.dropoffStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
             </div>
           </div>
         </div>
-      ) : (
-        /* Edit Mode Form */
-        <form onSubmit={handleSave}>
-          <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Trip Status <span className="text-rose-500">*</span>
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white font-sans cursor-pointer"
-                >
-                  <option value="On Route">On Route (In Transit)</option>
-                  <option value="Picked Up">Picked Up (Boarding)</option>
-                  <option value="Arrived">Arrived (Completed)</option>
-                  <option value="Delayed">Delayed (Bottleneck)</option>
-                  <option value="Pending">Pending (Not Started)</option>
-                </select>
-              </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Timings Window
-                </label>
-                <input
-                  type="text"
-                  value={formData.timings || ''}
-                  onChange={(e) => setFormData({ ...formData, timings: e.target.value })}
-                  placeholder="07:15 AM - 08:15 AM"
-                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white font-sans"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  ETA / Status Note
-                </label>
-                <input
-                  type="text"
-                  value={formData.etaNote || ''}
-                  onChange={(e) => setFormData({ ...formData, etaNote: e.target.value })}
-                  placeholder="ETA: 08:12 AM (On Time)"
-                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white font-sans"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Students Boarded Count
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max={formData.totalCapacity || 50}
-                  value={formData.studentsBoarded || 0}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      studentsBoarded: parseInt(e.target.value, 10) || 0,
-                    })
-                  }
-                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white font-sans"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Assigned Driver
-                </label>
-                <input
-                  type="text"
-                  value={formData.driverName || ''}
-                  onChange={(e) => setFormData({ ...formData, driverName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white font-sans"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Driver Phone
-                </label>
-                <input
-                  type="text"
-                  value={formData.driverPhone || ''}
-                  onChange={(e) => setFormData({ ...formData, driverPhone: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white font-sans"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Current Location Telematics
-              </label>
-              <input
-                type="text"
-                value={formData.currentLocation || ''}
-                onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })}
-                placeholder="e.g. Sector A-3 Main Boulevard"
-                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white font-sans"
-              />
-            </div>
+        {/* Student Attendance Manifest Table */}
+        <div className="border border-slate-200/80 rounded-xl overflow-hidden bg-white">
+          <div className="p-3 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between">
+            <h5 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+              Student Attendance Manifest ({attendanceList.length})
+            </h5>
+            {loadingAttendance && (
+              <span className="text-xs text-blue-600 font-medium">Loading records...</span>
+            )}
           </div>
 
-          <div className="px-6 py-4 bg-slate-50/60 border-t border-slate-100 flex items-center justify-end gap-2.5">
-            <button
-              type="button"
-              onClick={() => setCurrentMode('view')}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition cursor-pointer"
-            >
-              Save Changes
-            </button>
+          <div className="overflow-x-auto max-h-60">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-50/50 border-b border-slate-100 text-[10.5px] font-semibold uppercase text-slate-400">
+                  <th className="py-2 px-3 w-10 text-center">#</th>
+                  <th className="py-2 px-3">Student</th>
+                  <th className="py-2 px-3">Stop Address</th>
+                  <th className="py-2 px-3 text-center">Pickup Status</th>
+                  <th className="py-2 px-3 text-center">Drop-off Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {attendanceList.length > 0 ? (
+                  attendanceList.map((st, i) => (
+                    <tr key={st.id || i} className="hover:bg-slate-50/40">
+                      <td className="py-2.5 px-3 text-center text-slate-400">{i + 1}</td>
+                      <td className="py-2.5 px-3">
+                        <div className="font-bold text-slate-900">{st.studentName}</div>
+                        <div className="text-[10px] text-slate-400">{st.classGrade} {st.section ? `• ${st.section}` : ''}</div>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600 max-w-[180px] truncate">
+                        {st.address}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${
+                            st.pickupStatus === 'picked_up'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : st.pickupStatus === 'absent'
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
+                          {st.pickupStatus === 'picked_up'
+                            ? `Picked ${st.pickedUpAt ? `(${st.pickedUpAt})` : ''}`
+                            : st.pickupStatus === 'absent'
+                            ? 'Absent'
+                            : 'Pending'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${
+                            st.dropoffStatus === 'dropped'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : st.dropoffStatus === 'skipped'
+                              ? 'bg-slate-100 text-slate-500'
+                              : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
+                          {st.dropoffStatus === 'dropped'
+                            ? `Dropped ${st.droppedAt ? `(${st.droppedAt})` : ''}`
+                            : st.dropoffStatus === 'skipped'
+                            ? 'Skipped'
+                            : 'Pending'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-6 text-center text-slate-400 text-xs">
+                      {loadingAttendance ? 'Loading manifest...' : 'No student records attached to this trip.'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        </form>
-      )}
+        </div>
+
+        {/* Modal View Footer */}
+        <div className="pt-2 flex items-center justify-between border-t border-slate-100">
+          <button
+            type="button"
+            onClick={() => onLocate && onLocate(trip)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition cursor-pointer"
+          >
+            <MdLocationOn size={16} />
+            <span>Track Live GPS on Map</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </Modal>
   );
 };

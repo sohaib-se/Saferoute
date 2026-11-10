@@ -1,24 +1,26 @@
 import React, { useState } from 'react';
 import {
   MdSearch,
-  MdAdd,
   MdFileDownload,
   MdKeyboardArrowDown,
   MdLocationOn,
-  MdEdit,
+  MdVisibility,
+  MdDeleteOutline,
+  MdRefresh,
   MdChevronLeft,
   MdChevronRight,
 } from 'react-icons/md';
 
 const TripsTableSection = ({
   tripsList = [],
-  onScheduleTripClick,
+  loading = false,
   onLocateTrip,
-  onViewEditTrip,
+  onViewTrip,
+  onDeleteTrip,
+  onRefresh,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('All Dates');
-  const [shiftFilter, setShiftFilter] = useState('All Shifts');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
   const [currentPageNum, setCurrentPageNum] = useState(1);
   const itemsPerPage = 8;
@@ -29,27 +31,21 @@ const TripsTableSection = ({
     const matchesSearch =
       !term ||
       trip.id?.toLowerCase().includes(term) ||
-      trip.tripCode?.toLowerCase().includes(term) ||
-      trip.busName?.toLowerCase().includes(term) ||
-      trip.busCode?.toLowerCase().includes(term) ||
+      trip.displayId?.toLowerCase().includes(term) ||
+      trip.vehicleName?.toLowerCase().includes(term) ||
       trip.driverName?.toLowerCase().includes(term) ||
-      trip.route?.toLowerCase().includes(term) ||
-      trip.sector?.toLowerCase().includes(term);
+      trip.route?.toLowerCase().includes(term);
 
     const matchesDate =
       dateFilter === 'All Dates' ||
-      trip.date?.toLowerCase().includes(dateFilter.toLowerCase());
-
-    const matchesShift =
-      shiftFilter === 'All Shifts' ||
-      (shiftFilter === 'Morning Shift Only' && (trip.shift?.includes('Morning') || trip.shiftType === 'Morning')) ||
-      (shiftFilter === 'Afternoon Shift Only' && (trip.shift?.includes('Afternoon') || trip.shiftType === 'Afternoon'));
+      (dateFilter === 'Today' && trip.tripDate === new Date().toISOString().slice(0, 10)) ||
+      trip.tripDate?.includes(dateFilter);
 
     const matchesStatus =
       statusFilter === 'All Statuses' ||
-      trip.status?.toLowerCase() === statusFilter.toLowerCase();
+      trip.overallStatus === statusFilter;
 
-    return matchesSearch && matchesDate && matchesShift && matchesStatus;
+    return matchesSearch && matchesDate && matchesStatus;
   });
 
   // Pagination calculation
@@ -88,13 +84,31 @@ const TripsTableSection = ({
                 Trips Management
               </h2>
               <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-xs font-semibold">
-                {tripsList.length} Total Trips Today
+                {tripsList.length} Total Recorded
+              </span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
+                Live DB Sync
               </span>
             </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Live monitoring of trips initiated and managed directly by drivers
+            </p>
           </div>
 
           {/* Action buttons */}
           <div className="flex items-center gap-2.5 shrink-0">
+            {onRefresh && (
+              <button
+                type="button"
+                onClick={onRefresh}
+                className="px-3.5 py-2 border border-slate-200 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 rounded-xl flex items-center gap-2 transition-colors shadow-2xs cursor-pointer"
+                title="Refresh from Database"
+              >
+                <MdRefresh size={16} className={`text-slate-500 ${loading ? 'animate-spin' : ''}`} />
+                <span>Refresh</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={handleExport}
@@ -103,19 +117,11 @@ const TripsTableSection = ({
               <MdFileDownload size={16} className="text-slate-500" />
               <span>Export Manifest</span>
             </button>
-            <button
-              type="button"
-              onClick={onScheduleTripClick}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-xs font-semibold text-white rounded-xl flex items-center gap-2 transition-colors shadow-xs cursor-pointer"
-            >
-              <MdAdd size={16} />
-              <span>Schedule Trip</span>
-            </button>
           </div>
         </div>
 
         {/* Filters Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
           {/* Search Table */}
           <div className="relative">
             <MdSearch className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -126,7 +132,7 @@ const TripsTableSection = ({
                 setSearchTerm(e.target.value);
                 setCurrentPageNum(1);
               }}
-              placeholder="Search trip, bus, driver..."
+              placeholder="Search trip ID, driver, vehicle, route..."
               className="w-full text-xs bg-slate-50/70 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 font-sans transition-all"
             />
           </div>
@@ -142,31 +148,12 @@ const TripsTableSection = ({
               className="w-full text-xs bg-slate-50/70 border border-slate-200 rounded-xl px-3 pr-8 py-2 text-slate-700 appearance-none focus:outline-none focus:bg-white focus:border-blue-500 cursor-pointer font-medium"
             >
               <option value="All Dates">All Dates</option>
-              <option value="Today">Today (24 May 2026)</option>
-              <option value="Tomorrow">Tomorrow (25 May 2026)</option>
-              <option value="Yesterday">Yesterday (23 May 2026)</option>
+              <option value="Today">Today Only</option>
             </select>
             <MdKeyboardArrowDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
 
-          {/* Shifts Filter */}
-          <div className="relative">
-            <select
-              value={shiftFilter}
-              onChange={(e) => {
-                setShiftFilter(e.target.value);
-                setCurrentPageNum(1);
-              }}
-              className="w-full text-xs bg-slate-50/70 border border-slate-200 rounded-xl px-3 pr-8 py-2 text-slate-700 appearance-none focus:outline-none focus:bg-white focus:border-blue-500 cursor-pointer font-medium"
-            >
-              <option value="All Shifts">All Shifts (Morning &amp; Afternoon)</option>
-              <option value="Morning Shift Only">Morning Shift Only</option>
-              <option value="Afternoon Shift Only">Afternoon Shift Only</option>
-            </select>
-            <MdKeyboardArrowDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          </div>
-
-          {/* Status Filter */}
+          {/* Overall Status Filter */}
           <div className="relative">
             <select
               value={statusFilter}
@@ -176,12 +163,12 @@ const TripsTableSection = ({
               }}
               className="w-full text-xs bg-slate-50/70 border border-slate-200 rounded-xl px-3 pr-8 py-2 text-slate-700 appearance-none focus:outline-none focus:bg-white focus:border-blue-500 cursor-pointer font-medium"
             >
-              <option value="All Statuses">All Statuses (Active, Delayed, Done)</option>
-              <option value="On Route">On Route</option>
-              <option value="Picked Up">Picked Up</option>
-              <option value="Arrived">Arrived</option>
-              <option value="Delayed">Delayed</option>
-              <option value="Pending">Pending</option>
+              <option value="All Statuses">All Statuses</option>
+              <option value="pending">Pending (Not Started)</option>
+              <option value="pickup_active">Pickup Active</option>
+              <option value="pickup_done">At School (Pickup Done)</option>
+              <option value="dropoff_active">Dropoff Active</option>
+              <option value="completed">Completed</option>
             </select>
             <MdKeyboardArrowDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
@@ -195,12 +182,12 @@ const TripsTableSection = ({
             <tr className="bg-slate-50/60 border-b border-slate-100 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
               <th className="py-3.5 px-4 w-12 text-center" scope="col">#</th>
               <th className="py-3.5 px-4 font-bold" scope="col">TRIP DETAILS</th>
-              <th className="py-3.5 px-4 font-bold" scope="col">BUS NO.</th>
-              <th className="py-3.5 px-4 font-bold" scope="col">ASSIGNED ROUTE</th>
+              <th className="py-3.5 px-4 font-bold" scope="col">VEHICLE</th>
+              <th className="py-3.5 px-4 font-bold" scope="col">ROUTE</th>
               <th className="py-3.5 px-4 font-bold" scope="col">DRIVER</th>
-              <th className="py-3.5 px-4 font-bold" scope="col">SCHEDULE / TIMINGS</th>
-              <th className="py-3.5 px-4 font-bold" scope="col">STUDENTS BOARDED</th>
-              <th className="py-3.5 px-4 font-bold text-center" scope="col">STATUS</th>
+              <th className="py-3.5 px-4 font-bold" scope="col">1. PICKUP SUB-TRIP</th>
+              <th className="py-3.5 px-4 font-bold" scope="col">2. DROP-OFF SUB-TRIP</th>
+              <th className="py-3.5 px-4 font-bold text-center" scope="col">OVERALL STATUS</th>
               <th className="py-3.5 px-4 font-bold text-center" scope="col">ACTION</th>
             </tr>
           </thead>
@@ -208,30 +195,6 @@ const TripsTableSection = ({
             {paginatedTrips.length > 0 ? (
               paginatedTrips.map((trip, idx) => {
                 const rowNumber = startIndex + idx + 1;
-                const percent = Math.min(
-                  100,
-                  Math.round(((trip.studentsBoarded || 0) / (trip.totalCapacity || 1)) * 100)
-                );
-
-                // Dynamic progress bar styling
-                let progressColor = 'bg-blue-600';
-                if (trip.status === 'Arrived' || percent === 100) {
-                  progressColor = 'bg-emerald-500';
-                } else if (trip.status === 'Delayed') {
-                  progressColor = 'bg-amber-500';
-                } else if (trip.status === 'Picked Up') {
-                  progressColor = 'bg-cyan-500';
-                } else if (trip.status === 'Pending') {
-                  progressColor = 'bg-slate-300';
-                }
-
-                // Dynamic ETA note styling
-                let etaColor = 'text-slate-500';
-                if (trip.etaStatus === 'on-time' || trip.etaStatus === 'arrived') {
-                  etaColor = 'text-emerald-600';
-                } else if (trip.etaStatus === 'delayed') {
-                  etaColor = 'text-amber-600';
-                }
 
                 return (
                   <tr
@@ -246,22 +209,17 @@ const TripsTableSection = ({
                     {/* Trip Details */}
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-slate-900 leading-tight">
-                        {trip.id}
+                        {trip.displayId}
                       </div>
                       <div className="text-[11px] text-slate-500 mt-0.5">
-                        {trip.shift} • {trip.sector}
+                        Date: {trip.tripDate}
                       </div>
                     </td>
 
-                    {/* Bus No */}
+                    {/* Bus / Vehicle */}
                     <td className="py-3.5 px-4">
-                      <div
-                        className={`w-9 h-9 rounded-xl border flex flex-col items-center justify-center font-bold leading-none ${
-                          trip.busBadgeStyle || 'bg-blue-100/80 border-blue-200 text-blue-700'
-                        }`}
-                      >
-                        <span className="text-[9px] uppercase font-semibold">Bus</span>
-                        <span className="text-xs">{trip.busCode}</span>
+                      <div className="font-semibold text-slate-800">
+                        {trip.vehicleName}
                       </div>
                     </td>
 
@@ -271,85 +229,70 @@ const TripsTableSection = ({
                         {trip.route}
                       </div>
                       <div className="text-[11px] text-slate-400 mt-0.5">
-                        {trip.routeSub}
+                        {trip.totalStudents} assigned students
                       </div>
                     </td>
 
                     {/* Driver */}
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700 shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center text-[10px] font-bold shrink-0">
                           {trip.driverInitials}
                         </div>
-                        <div>
-                          <div className="font-semibold text-slate-800 leading-tight">
-                            {trip.driverName}
-                          </div>
-                          <div className="text-[10px] text-slate-400 leading-tight mt-0.5">
-                            {trip.driverPhone}
-                          </div>
+                        <div className="font-semibold text-slate-800 leading-tight">
+                          {trip.driverName}
                         </div>
                       </div>
                     </td>
 
-                    {/* Schedule / Timings */}
+                    {/* Pickup Sub-trip */}
                     <td className="py-3.5 px-4">
-                      <div className="font-semibold text-slate-800 leading-tight">
-                        {trip.timings}
-                      </div>
-                      <div className={`text-[11px] font-medium mt-0.5 ${etaColor}`}>
-                        {trip.etaNote}
-                      </div>
-                    </td>
-
-                    {/* Students Boarded */}
-                    <td className="py-3.5 px-4 w-44">
-                      <div className="flex items-center justify-between text-[11px] mb-1">
-                        <span className="font-semibold text-slate-800">
-                          {trip.studentsBoarded}/{trip.totalCapacity}
-                        </span>
-                        <span className="text-slate-400 font-medium text-[10px]">
-                          {trip.status === 'Arrived' ? (
-                            <span className="text-emerald-600 font-semibold">100% Drop</span>
-                          ) : (
-                            `${percent}%`
-                          )}
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className={`h-1.5 rounded-full transition-all duration-300 ${progressColor}`}
-                          style={{ width: `${percent}%` }}
-                        />
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-semibold ${
+                          trip.pickupBadge?.style || 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {trip.pickupBadge?.label || trip.pickupStatus}
+                      </span>
+                      <div className="text-[10px] text-slate-500 mt-0.5">
+                        {trip.studentsPicked}/{trip.totalStudents} picked • {trip.studentsAbsent} absent
                       </div>
                     </td>
 
-                    {/* Status */}
+                    {/* Drop-off Sub-trip */}
+                    <td className="py-3.5 px-4">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-semibold ${
+                          trip.dropoffBadge?.style || 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {trip.dropoffBadge?.label || trip.dropoffStatus}
+                      </span>
+                      <div className="text-[10px] text-slate-500 mt-0.5">
+                        {trip.studentsDropped}/{trip.studentsPicked} dropped home
+                      </div>
+                    </td>
+
+                    {/* Overall Status */}
                     <td className="py-3.5 px-4 text-center">
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                          trip.statusBadgeStyle || 'bg-slate-100 text-slate-700 border border-slate-200'
+                          trip.overallBadge?.style || 'bg-slate-100 text-slate-700 border border-slate-200'
                         }`}
                       >
-                        {trip.status === 'Arrived' ? (
-                          <>✓ Arrived</>
-                        ) : (
-                          <>
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                                trip.statusDotColor || 'bg-blue-500'
-                              }`}
-                            />
-                            {trip.status}
-                          </>
-                        )}
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                            trip.overallBadge?.dot || 'bg-blue-500'
+                          }`}
+                        />
+                        {trip.overallBadge?.label || trip.overallStatus}
                       </span>
                     </td>
 
                     {/* Action */}
                     <td className="py-3.5 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5 text-slate-400">
-                        {/* Locate Button (Available for active or in-transit trips) */}
+                        {/* Locate Button */}
                         <button
                           type="button"
                           onClick={() => onLocateTrip && onLocateTrip(trip)}
@@ -359,14 +302,24 @@ const TripsTableSection = ({
                           <MdLocationOn size={16} />
                         </button>
 
-                        {/* Edit / Details Button */}
+                        {/* View Details Button */}
                         <button
                           type="button"
-                          onClick={() => onViewEditTrip && onViewEditTrip(trip)}
+                          onClick={() => onViewTrip && onViewTrip(trip)}
                           className="p-1.5 rounded-lg hover:text-blue-600 hover:bg-slate-100 transition-colors cursor-pointer"
-                          title="View / Edit Trip"
+                          title="View Manifest & Attendance"
                         >
-                          <MdEdit size={16} />
+                          <MdVisibility size={16} />
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => onDeleteTrip && onDeleteTrip(trip.id)}
+                          className="p-1.5 rounded-lg hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Delete Trip Record"
+                        >
+                          <MdDeleteOutline size={16} />
                         </button>
                       </div>
                     </td>
@@ -377,9 +330,11 @@ const TripsTableSection = ({
               <tr>
                 <td
                   colSpan={9}
-                  className="py-10 text-center text-slate-400 text-xs font-normal"
+                  className="py-12 text-center text-slate-400 text-xs font-normal"
                 >
-                  No trips found matching the specified filters or search term.
+                  {loading
+                    ? 'Loading trips from database...'
+                    : 'No trips recorded in database matching the specified filters.'}
                 </td>
               </tr>
             )}

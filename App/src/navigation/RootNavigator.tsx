@@ -10,7 +10,7 @@ import { colors } from '../lib/theme';
 
 // Driver Screens
 import { DriverDashboardScreen } from '../screens/driver/DriverDashboardScreen';
-import { DriverRosterScreen } from '../screens/driver/DriverRosterScreen';
+import { DriverTripScreen } from '../screens/driver/DriverTripScreen';
 import { DriverCallParentScreen } from '../screens/driver/DriverCallParentScreen';
 import { DriverNotificationsScreen } from '../screens/driver/DriverNotificationsScreen';
 import { DriverSOSScreen } from '../screens/driver/DriverSOSScreen';
@@ -63,7 +63,7 @@ export const RootNavigator: React.FC = () => {
   if (user.role === 'driver') {
     const driverTabs: TabItem[] = [
       { id: 'dashboard', label: 'Dashboard', icon: 'speedometer-outline' },
-      { id: 'roster', label: 'Roster', icon: 'list-outline' },
+      { id: 'trip', label: 'Trip', icon: 'bus-outline' },
       { id: 'sos', label: 'SOS', icon: 'alert-circle', isEmergency: true },
       { id: 'call', label: 'Call Parent', icon: 'call-outline' },
       { id: 'profile', label: 'Profile', icon: 'person-outline' },
@@ -74,7 +74,7 @@ export const RootNavigator: React.FC = () => {
         setIsDriverSOSOpen(true);
       } else {
         setIsDriverSOSOpen(false);
-        setDriverTab(tabId);
+        setDriverTab(tabId === 'roster' ? 'trip' : tabId);
       }
     };
 
@@ -111,9 +111,10 @@ export const RootNavigator: React.FC = () => {
               onOpenSOS={() => setIsDriverSOSOpen(true)}
             />
           );
+        case 'trip':
         case 'roster':
           return (
-            <DriverRosterScreen
+            <DriverTripScreen
               onBack={() => setDriverTab('dashboard')}
               onOpenNotifications={() => setDriverTab('notifications')}
             />
