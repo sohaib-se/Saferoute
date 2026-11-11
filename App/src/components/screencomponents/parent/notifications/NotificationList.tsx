@@ -8,7 +8,7 @@ export interface NotificationItemData {
   title: string;
   body: string;
   time: string;
-  type: 'proximity' | 'trip_start' | 'dropped_off' | 'picked_up' | 'notice' | 'alert';
+  type: 'proximity' | 'trip_start' | 'dropped_off' | 'picked_up' | 'notice' | 'alert' | 'sos';
   isRead: boolean;
 }
 
@@ -55,11 +55,12 @@ export const NotificationList: React.FC<NotificationListProps> = ({ notification
           lineColor: '#FBBF24',
         };
       case 'alert':
+      case 'sos':
         return {
           icon: 'warning' as const,
           bgColor: '#FEE2E2',
-          iconColor: '#EF4444',
-          lineColor: '#F87171',
+          iconColor: '#DC2626',
+          lineColor: '#EF4444',
         };
       default:
         return {
@@ -76,11 +77,16 @@ export const NotificationList: React.FC<NotificationListProps> = ({ notification
       {notifications.map((item, index) => {
         const config = getIconConfig(item.type);
         const isFirst = index === 0;
+        const isEmergency = item.type === 'sos';
 
         return (
           <View key={item.id} style={styles.itemWrapper}>
             <TouchableOpacity
-              style={[styles.card, isFirst && styles.firstCardAccent]}
+              style={[
+                styles.card,
+                isFirst && !isEmergency && styles.firstCardAccent,
+                isEmergency && styles.emergencyCardAccent,
+              ]}
               activeOpacity={0.8}
             >
               {/* Left Circular Icon Badge */}
@@ -91,23 +97,49 @@ export const NotificationList: React.FC<NotificationListProps> = ({ notification
               {/* Main Content */}
               <View style={styles.contentCol}>
                 <View style={styles.titleRow}>
-                  <Text style={styles.itemTitle} numberOfLines={1}>
+                  <Text
+                    style={[styles.itemTitle, isEmergency && styles.emergencyTitle]}
+                    numberOfLines={1}
+                  >
                     {item.title}
                   </Text>
-                  {!item.isRead && <View style={styles.unreadDot} />}
+                  {isEmergency ? (
+                    <View style={styles.emergencyBadge}>
+                      <Text style={styles.emergencyBadgeText}>EMERGENCY</Text>
+                    </View>
+                  ) : (
+                    !item.isRead && <View style={styles.unreadDot} />
+                  )}
                 </View>
 
-                <Text style={styles.itemBody}>{item.body}</Text>
+                <Text style={[styles.itemBody, isEmergency && styles.emergencyBody]}>
+                  {item.body}
+                </Text>
 
                 <View style={styles.timeRow}>
-                  <Ionicons name="time-outline" size={13} color="#64748B" />
-                  <Text style={styles.timeText}>{item.time}</Text>
+                  <Ionicons
+                    name="time-outline"
+                    size={13}
+                    color={isEmergency ? '#DC2626' : '#64748B'}
+                  />
+                  <Text style={[styles.timeText, isEmergency && styles.emergencyTimeText]}>
+                    {item.time}
+                  </Text>
                 </View>
               </View>
 
               {/* Right Chevron Button */}
-              <View style={styles.chevronButton}>
-                <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+              <View
+                style={[
+                  styles.chevronButton,
+                  isEmergency && { backgroundColor: '#FEE2E2' },
+                ]}
+              >
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={isEmergency ? '#DC2626' : '#94A3B8'}
+                />
               </View>
             </TouchableOpacity>
 
@@ -145,6 +177,12 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#007AFF',
   },
+  emergencyCardAccent: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#DC2626',
+    backgroundColor: '#FFF8F8',
+    borderColor: '#FECACA',
+  },
   iconCircle: {
     width: 44,
     height: 44,
@@ -169,6 +207,23 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     flex: 1,
   },
+  emergencyTitle: {
+    color: '#991B1B',
+    fontWeight: '800',
+  },
+  emergencyBadge: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 6,
+  },
+  emergencyBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
   unreadDot: {
     width: 8,
     height: 8,
@@ -182,6 +237,10 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     marginBottom: 6,
   },
+  emergencyBody: {
+    color: '#7F1D1D',
+    fontWeight: '500',
+  },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -191,6 +250,10 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     color: '#64748B',
     fontWeight: '500',
+  },
+  emergencyTimeText: {
+    color: '#DC2626',
+    fontWeight: '600',
   },
   chevronButton: {
     width: 28,

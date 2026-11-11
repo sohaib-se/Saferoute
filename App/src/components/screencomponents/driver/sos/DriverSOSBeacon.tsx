@@ -7,13 +7,12 @@ import { useDriverTrip } from '../../../../context/DriverTripContext';
 interface DriverSOSBeaconProps {
   isTriggered: boolean;
   onTrigger: () => void;
-  onClear: () => void;
+  onClear?: () => void;
 }
 
 export const DriverSOSBeacon: React.FC<DriverSOSBeaconProps> = ({
   isTriggered,
   onTrigger,
-  onClear,
 }) => {
   const { gpsState, vehicleName, vehiclePlate, routeTitle, students } = useDriverTrip();
 
@@ -53,14 +52,20 @@ export const DriverSOSBeacon: React.FC<DriverSOSBeaconProps> = ({
           Campus safety security vehicle and school transport rapid response teams have your live location channel. Keep your phone active.
         </Text>
 
-        <TouchableOpacity
-          style={styles.cancelAlertBtn}
-          onPress={onClear}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="close-circle-outline" size={18} color="#EF4444" />
-          <Text style={styles.cancelAlertText}>Resolve & Deactivate Emergency Beacon</Text>
-        </TouchableOpacity>
+        {/* SOS Sent Confirmation Card - Admin Only Resolution */}
+        <View style={styles.sentStatusBox}>
+          <View style={styles.sentStatusHeader}>
+            <Ionicons name="checkmark-circle" size={20} color="#16A34A" />
+            <Text style={styles.sentStatusTitle}>SOS HAS BEEN SENT</Text>
+          </View>
+          <Text style={styles.sentStatusDesc}>
+            Distress alert transmitted to School Administration. Fleet command and campus response officers have received this notification.
+          </Text>
+          <View style={styles.adminOnlyBadge}>
+            <Ionicons name="shield-checkmark" size={14} color="#991B1B" />
+            <Text style={styles.adminOnlyText}>Only School Admin can resolve this emergency</Text>
+          </View>
+        </View>
       </View>
     );
   }
@@ -257,21 +262,56 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     marginBottom: 16,
   },
-  cancelAlertBtn: {
+  sentStatusBox: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#86EFAC',
+    marginTop: 4,
+    shadowColor: '#16A34A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  sentStatusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#EF4444',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 16,
+    gap: 8,
+    marginBottom: 6,
+  },
+  sentStatusTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#15803D',
+    letterSpacing: 0.5,
+  },
+  sentStatusDesc: {
+    fontSize: 12,
+    color: '#334155',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 10,
+    fontWeight: '500',
+  },
+  adminOnlyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
     gap: 6,
   },
-  cancelAlertText: {
-    color: '#EF4444',
-    fontWeight: '800',
-    fontSize: 13,
+  adminOnlyText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#991B1B',
   },
 });
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MdDashboard,
   MdDirectionsBus,
@@ -13,21 +13,106 @@ import {
   MdSettings,
   MdRoute,
 } from 'react-icons/md';
+import { supabase } from '../../lib/supabaseClient';
+import { getCurrentSchoolId } from '../../lib/session';
 
-const navItems = [
-  { label: 'Dashboard', icon: MdDashboard },
-  { label: 'Students', icon: MdPersonOutline },
-  { label: 'Parents', icon: MdPeople },
-  { label: 'Drivers', icon: MdPerson },
-  { label: 'Vehicles', icon: MdDirectionsBus },
-  { label: 'Routes', icon: MdRoute },
-  { label: 'Trips', icon: MdAccessTime },
-  { label: 'Live Tracking', icon: MdLocationOn, liveDot: true },
-  { label: 'Notifications', icon: MdNotifications, badge: 3 },
-  { label: 'SOS Alerts', icon: MdWarning, badge: 1, danger: true },
-];
+const isValidUUID = (val) =>
+  Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
 
 const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
+  const [activeSosCount, setActiveSosCount] = useState(0);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
+  const fetchBadgeCounts = async () => {
+    try {
+      const schoolId = getCurrentSchoolId();
+
+      // 1. Live active SOS count
+      let sosQuery = supabase
+        .from('sos_alerts')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+
+      if (isValidUUID(schoolId)) {
+        sosQuery = sosQuery.or(`school_id.eq.${schoolId},school_id.is.null`);
+      }
+
+      const { count: sosCount, error: sosErr } = await sosQuery;
+      if (!sosErr && typeof sosCount === 'number') {
+        setActiveSosCount(sosCount);
+      }
+
+      // 2. Live unread admin notifications count
+      let notifQuery = supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_read', false)
+        .in('recipient_type', ['admin', 'all']);
+
+      if (isValidUUID(schoolId)) {
+        notifQuery = notifQuery.or(`school_id.eq.${schoolId},school_id.is.null`);
+      }
+
+      const { count: notifCount, error: notifErr } = await notifQuery;
+      if (!notifErr && typeof notifCount === 'number') {
+        setUnreadNotifCount(notifCount);
+      }
+    } catch (e) {
+      console.warn('Failed to fetch sidebar badge counts:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchBadgeCounts();
+
+    // 5s interval polling
+    const interval = setInterval(fetchBadgeCounts, 5000);
+
+    // Real-time listener for SOS alerts
+    const sosChannel = supabase
+      .channel('sidebar:sos_badges')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sos_alerts' }, () => {
+        fetchBadgeCounts();
+      })
+      .subscribe();
+
+    // Real-time listener for notifications
+    const notifChannel = supabase
+      .channel('sidebar:notif_badges')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+        fetchBadgeCounts();
+      })
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(sosChannel);
+      supabase.removeChannel(notifChannel);
+    };
+  }, []);
+
+  const navItems = [
+    { label: 'Dashboard', icon: MdDashboard },
+    { label: 'Students', icon: MdPersonOutline },
+    { label: 'Parents', icon: MdPeople },
+    { label: 'Drivers', icon: MdPerson },
+    { label: 'Vehicles', icon: MdDirectionsBus },
+    { label: 'Routes', icon: MdRoute },
+    { label: 'Trips', icon: MdAccessTime },
+    { label: 'Live Tracking', icon: MdLocationOn, liveDot: true },
+    {
+      label: 'Notifications',
+      icon: MdNotifications,
+      badge: unreadNotifCount > 0 ? unreadNotifCount : null,
+    },
+    {
+      label: 'SOS Alerts',
+      icon: MdWarning,
+      badge: activeSosCount > 0 ? activeSosCount : null,
+      danger: true,
+    },
+  ];
+
   return (
     <aside
       className="w-[240px] flex-shrink-0 flex flex-col justify-between h-screen sticky top-0 z-40 select-none bg-white border-r border-slate-200/80 font-sans shadow-[1px_0_3px_rgba(0,0,0,0.02)]"
@@ -52,7 +137,8 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
         {/* Navigation items */}
         <nav className="px-3 pt-4 pb-2 space-y-1 flex-1 overflow-y-auto custom-scrollbar">
           {navItems.map(({ label, icon: Icon, badge, danger, liveDot }) => {
-            const active = currentPage === label || (label === 'Students' && currentPage === 'AddStudent');
+            const active =
+              currentPage === label || (label === 'Students' && currentPage === 'AddStudent');
 
             let itemClass = 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium';
             if (active) {
@@ -93,15 +179,15 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
                 {liveDot && !badge && (
                   <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 animate-pulse shrink-0" />
                 )}
-                {badge && (
+                {badge ? (
                   <span
                     className={`w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs ${
-                      danger ? 'bg-rose-500' : 'bg-blue-600'
+                      danger ? 'bg-rose-500 animate-pulse' : 'bg-blue-600'
                     }`}
                   >
                     {badge}
                   </span>
-                )}
+                ) : null}
               </a>
             );
           })}

@@ -4,8 +4,11 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { DriverTripProvider } from '../context/DriverTripContext';
+import { CallProvider } from '../context/CallContext';
+import { IncomingCallSheet } from '../components/common/IncomingCallSheet';
+import { ActiveCallSheet } from '../components/common/ActiveCallSheet';
 import { LoginScreen } from '../screens/LoginScreen';
-import { BottomMenu, TabItem, TabBar } from '../components/common/BottomMenu';
+import { TabItem, TabBar } from '../components/common/BottomMenu';
 import { colors } from '../lib/theme';
 
 // Driver Screens
@@ -58,7 +61,7 @@ export const RootNavigator: React.FC = () => {
   }
 
   // ==========================================
-  // 1. DRIVER PORTAL (Identical 5-Tab Layout to Parent)
+  // 1. DRIVER PORTAL
   // ==========================================
   if (user.role === 'driver') {
     const driverTabs: TabItem[] = [
@@ -77,30 +80,6 @@ export const RootNavigator: React.FC = () => {
         setDriverTab(tabId === 'roster' ? 'trip' : tabId);
       }
     };
-
-    if (isDriverSOSOpen) {
-      return (
-        <DriverTripProvider>
-          <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
-            <StatusBar style="dark" />
-            <View style={styles.screenBody}>
-              <DriverSOSScreen
-                onBack={() => setIsDriverSOSOpen(false)}
-                onOpenNotifications={() => {
-                  setIsDriverSOSOpen(false);
-                  setDriverTab('notifications');
-                }}
-              />
-            </View>
-            <TabBar
-              tabs={driverTabs}
-              activeTab="sos"
-              onTabPress={handleDriverTabPress}
-            />
-          </SafeAreaView>
-        </DriverTripProvider>
-      );
-    }
 
     const renderDriverScreen = () => {
       switch (driverTab) {
@@ -145,17 +124,33 @@ export const RootNavigator: React.FC = () => {
     };
 
     return (
-      <DriverTripProvider>
-        <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
-          <StatusBar style="dark" />
-          <View style={styles.screenBody}>{renderDriverScreen()}</View>
-          <TabBar
-            tabs={driverTabs}
-            activeTab={driverTab}
-            onTabPress={handleDriverTabPress}
-          />
-        </SafeAreaView>
-      </DriverTripProvider>
+      <CallProvider>
+        <DriverTripProvider>
+          <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
+            <StatusBar style="dark" />
+            <View style={styles.screenBody}>
+              {isDriverSOSOpen ? (
+                <DriverSOSScreen
+                  onBack={() => setIsDriverSOSOpen(false)}
+                  onOpenNotifications={() => {
+                    setIsDriverSOSOpen(false);
+                    setDriverTab('notifications');
+                  }}
+                />
+              ) : (
+                renderDriverScreen()
+              )}
+            </View>
+            <TabBar
+              tabs={driverTabs}
+              activeTab={isDriverSOSOpen ? 'sos' : driverTab}
+              onTabPress={handleDriverTabPress}
+            />
+            <IncomingCallSheet />
+            <ActiveCallSheet />
+          </SafeAreaView>
+        </DriverTripProvider>
+      </CallProvider>
     );
   }
 
@@ -178,28 +173,6 @@ export const RootNavigator: React.FC = () => {
       setParentTab(tabId);
     }
   };
-
-  if (isParentSOSOpen) {
-    return (
-      <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
-        <StatusBar style="dark" />
-        <View style={styles.screenBody}>
-          <ParentSOSScreen
-            onBack={() => setIsParentSOSOpen(false)}
-            onOpenNotifications={() => {
-              setIsParentSOSOpen(false);
-              setParentTab('notifications');
-            }}
-          />
-        </View>
-        <TabBar
-          tabs={parentTabs}
-          activeTab="sos"
-          onTabPress={handleParentTabPress}
-        />
-      </SafeAreaView>
-    );
-  }
 
   const renderParentScreen = () => {
     switch (parentTab) {
@@ -244,11 +217,31 @@ export const RootNavigator: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
-      <View style={styles.screenBody}>{renderParentScreen()}</View>
-      <TabBar tabs={parentTabs} activeTab={parentTab} onTabPress={handleParentTabPress} />
-    </SafeAreaView>
+    <CallProvider>
+      <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
+        <StatusBar style="dark" />
+        <View style={styles.screenBody}>
+          {isParentSOSOpen ? (
+            <ParentSOSScreen
+              onBack={() => setIsParentSOSOpen(false)}
+              onOpenNotifications={() => {
+                setIsParentSOSOpen(false);
+                setParentTab('notifications');
+              }}
+            />
+          ) : (
+            renderParentScreen()
+          )}
+        </View>
+        <TabBar
+          tabs={parentTabs}
+          activeTab={isParentSOSOpen ? 'sos' : parentTab}
+          onTabPress={handleParentTabPress}
+        />
+        <IncomingCallSheet />
+        <ActiveCallSheet />
+      </SafeAreaView>
+    </CallProvider>
   );
 };
 

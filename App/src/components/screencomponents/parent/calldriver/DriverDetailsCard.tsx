@@ -13,11 +13,11 @@ interface DriverDetailsCardProps {
 }
 
 export const DriverDetailsCard: React.FC<DriverDetailsCardProps> = ({
-  driverName = 'Hilal',
-  phone = '031241242',
-  vehicleName = 'Bus 1',
-  plateNumber = 'ICT-4921',
-  licenseNumber = 'DL-32412',
+  driverName = 'Assigned Driver',
+  phone = 'N/A',
+  vehicleName = 'Assigned Van',
+  plateNumber = 'N/A',
+  licenseNumber = 'N/A',
   onCallDriver,
 }) => {
   const handleCall = () => {

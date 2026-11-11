@@ -7,7 +7,11 @@ import {
   NotificationItemData,
 } from '../../components/screencomponents/parent/notifications/NotificationList';
 import { useAuth } from '../../context/AuthContext';
-import { fetchNotificationsFromDb, markNotificationsAsReadInDb } from '../../services/notificationService';
+import {
+  fetchNotificationsFromDb,
+  markNotificationsAsReadInDb,
+  subscribeToNotifications,
+} from '../../services/notificationService';
 
 interface ParentNotificationsScreenProps {
   onBack?: () => void;
@@ -27,8 +31,24 @@ export const ParentNotificationsScreen: React.FC<ParentNotificationsScreenProps>
       }
     };
     loadNotifs();
+
+    const unsubscribe = subscribeToNotifications(
+      'parent',
+      user?.userId,
+      user?.schoolId,
+      (newNotif) => {
+        if (isMounted) {
+          setNotifications((prev) => [
+            newNotif,
+            ...prev.filter((item) => item.id !== newNotif.id),
+          ]);
+        }
+      }
+    );
+
     return () => {
       isMounted = false;
+      unsubscribe();
     };
   }, [user]);
 

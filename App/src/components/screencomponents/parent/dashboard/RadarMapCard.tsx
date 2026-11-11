@@ -13,8 +13,8 @@ interface RadarMapCardProps {
 }
 
 export const RadarMapCard: React.FC<RadarMapCardProps> = ({
-  vehicleName = 'Bus 1',
-  driverName = 'Hilal',
+  vehicleName = 'Assigned Van',
+  driverName = 'Assigned Driver',
   speedKmh = 36,
   etaMins = 7,
   distanceKm = 2.1,
