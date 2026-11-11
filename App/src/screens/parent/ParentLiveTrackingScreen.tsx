@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Linking } from 'react-native';
 import { Header } from '../../components/common/Header';
 import { OpenStreetMapLiveView } from '../../components/screencomponents/parent/livetracking/OpenStreetMapLiveView';
 import { CurrentTripStatusCard } from '../../components/screencomponents/parent/livetracking/CurrentTripStatusCard';
-import {
-  ParentInAppCallModal,
-  ParentActiveCall,
-} from '../../components/screencomponents/parent/calldriver/ParentInAppCallModal';
 import { useAuth } from '../../context/AuthContext';
+import { useCall } from '../../context/CallContext';
 import {
-  getAssignedDriverDetails,
+  getAssignedDriverDetailsForParent,
   subscribeToLiveVehicleLocation,
   getParentChildren,
   AssignedDriverDetails,
@@ -28,17 +25,17 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
   onOpenNotifications,
 }) => {
   const { user } = useAuth();
-  const [activeCall, setActiveCall] = useState<ParentActiveCall | null>(null);
+  const { startCall } = useCall();
   const [children, setChildren] = useState<ChildData[]>([]);
 
   // Live driver & vehicle details from Supabase
   const [driverInfo, setDriverInfo] = useState<AssignedDriverDetails>({
-    driverName: 'Hilal',
-    phone: '03124124',
-    vehicleName: 'Bus 1',
-    plateNumber: 'ICT-4921',
-    licenseNumber: 'DL-32412',
-    route: 'Morning Route - Sector G-10',
+    driverName: 'Loading Driver...',
+    phone: '',
+    vehicleName: '',
+    plateNumber: '',
+    licenseNumber: '',
+    route: '',
   });
 
   // Live coordinates streamed from driver's broadcast
@@ -54,41 +51,60 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
 
   useEffect(() => {
     let isMounted = true;
+    let unsubscribeLocation: (() => void) | null = null;
+
     const fetchDriverAndChildren = async () => {
-      const details = await getAssignedDriverDetails('Hilal', 'Bus 1');
-      const childList = await getParentChildren(user?.userId, user?.schoolId);
+      const details = await getAssignedDriverDetailsForParent(
+        user?.userId,
+        user?.name,
+        user?.schoolId,
+        user?.profile?.bus
+      );
+      const childList = await getParentChildren(user?.userId, user?.name, user?.schoolId);
       if (isMounted) {
         setDriverInfo(details);
         setChildren(childList);
+
+        const targetVehicle = details.vehicleName || 'Bus 1';
+        unsubscribeLocation = subscribeToLiveVehicleLocation(targetVehicle, (newLoc) => {
+          if (isMounted) {
+            setLocation(newLoc);
+          }
+        });
       }
     };
     fetchDriverAndChildren();
 
-    const unsubscribe = subscribeToLiveVehicleLocation('Bus 1', (newLoc) => {
-      if (isMounted) {
-        setLocation(newLoc);
-      }
-    });
-
     return () => {
       isMounted = false;
-      unsubscribe();
+      if (unsubscribeLocation) {
+        unsubscribeLocation();
+      }
     };
   }, [user]);
 
   const handleStartDriverCall = () => {
-    setActiveCall({
-      name: driverInfo.driverName,
-      role: `Assigned Driver • ${driverInfo.vehicleName}`,
-      phone: driverInfo.phone,
-      avatarIcon: 'person',
+    if (!driverInfo.driverUserId) {
+      if (driverInfo.phone && driverInfo.phone !== 'N/A') {
+        Linking.openURL(`tel:${driverInfo.phone}`);
+      }
+      return;
+    }
+    startCall({
+      calleeId: driverInfo.driverUserId,
+      calleeRole: 'driver',
+      calleeName: driverInfo.driverName,
+      studentName: user?.name ? `${user.name}'s child` : 'Child',
+      vehicleName: driverInfo.vehicleName,
     });
   };
 
   const childrenStatusText =
     children.length > 0
       ? children.map((c) => `${c.name} (${c.grade}) • ${c.status}`).join(' | ')
-      : 'Enrolled: Sohaib Khan (Grade 5 - Sec A)';
+      : driverInfo.driverName && driverInfo.driverName !== 'Loading Driver...'
+      ? `Assigned: ${driverInfo.driverName} • ${driverInfo.vehicleName}`
+      : 'Fetching enrolled student status...';
 
   const firstChildAddress =
     children[0]?.stopAddress || 'Khatme Nabuwat Chowk';
@@ -129,15 +145,9 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
           etaMins={6}
           currentSector="Sector G-10"
           childrenStatusText={childrenStatusText}
-          onCallDriver={handleStartDriverCall}
+          onCallDriver={onCallDriver || handleStartDriverCall}
         />
       </View>
-
-      {/* 4. In-App VoIP Call Modal Popup */}
-      <ParentInAppCallModal
-        call={activeCall}
-        onEndCall={() => setActiveCall(null)}
-      />
     </View>
   );
 };

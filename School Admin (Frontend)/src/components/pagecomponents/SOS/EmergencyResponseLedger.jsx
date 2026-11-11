@@ -1,115 +1,73 @@
 import { useState } from 'react';
 import {
   MdSearch,
-  MdCalendarToday,
-  MdKeyboardArrowDown,
   MdWarning,
   MdPeople,
-  MdDomain,
   MdLocationOn,
+  MdCheckCircle,
+  MdFileDownload,
 } from 'react-icons/md';
 
-const initialLedgerData = [
-  {
-    num: 1,
-    type: 'Driver SOS',
-    id: 'SOS-9042',
-    typeCategory: 'Driver SOS',
-    initiatorInitials: 'BA',
-    initiatorName: 'Bilal Ahmed',
-    initiatorRole: 'Staff Driver',
-    bus: 'Bus 09',
-    route: 'Route 3 (Univ. Express)',
-    location: 'Near Ring Road Crossing',
-    coords: '33.6844, 73.0479',
-    time: '07:35 AM',
-    status: '8 mins active',
-    statusType: 'critical',
-    isCriticalRow: true,
-  },
-  {
-    num: 2,
-    type: 'Parent SOS',
-    id: 'SOS-9039',
-    typeCategory: 'Parent SOS',
-    initiatorInitials: 'AK',
-    initiatorName: 'Ayesha Khan',
-    initiatorRole: 'Parent of Zaid (G-5)',
-    bus: 'Bus 12',
-    route: 'Route 1 (Green Valley)',
-    location: 'Sector B-1 Stop',
-    coords: null,
-    time: '07:12 AM',
-    status: 'Acknowledged',
-    statusType: 'acknowledged',
-    isCriticalRow: false,
-  },
-  {
-    num: 3,
-    type: 'Driver SOS',
-    id: 'SOS-9035',
-    typeCategory: 'Driver SOS',
-    initiatorInitials: 'MA',
-    initiatorName: 'Muhammad Ali',
-    initiatorRole: 'Staff Driver',
-    bus: 'Bus 12',
-    route: 'Route 1 (Green Valley)',
-    location: 'Sector 4 Junction',
-    coords: null,
-    time: '06:50 AM',
-    status: 'Resolved',
-    statusType: 'resolved',
-    isCriticalRow: false,
-  },
-  {
-    num: 4,
-    type: 'Parent SOS',
-    id: 'SOS-9031',
-    typeCategory: 'Parent SOS',
-    initiatorInitials: 'SK',
-    initiatorName: 'Sara Khan',
-    initiatorRole: 'Parent of Zain (G-7)',
-    bus: 'Bus 07',
-    route: 'Route 2 (Model Town)',
-    location: 'School Gate 3 Terminal',
-    coords: null,
-    time: '06:40 AM',
-    status: 'Resolved',
-    statusType: 'resolved',
-    isCriticalRow: false,
-  },
-  {
-    num: 5,
-    type: 'Depot Warning',
-    id: 'SOS-9028',
-    typeCategory: 'Impact & Sensor',
-    initiatorInitials: 'RM',
-    initiatorName: 'Rashid Mehmood',
-    initiatorRole: 'Staff Driver',
-    bus: 'Bus 15',
-    route: 'Route 4 (Johar Town)',
-    location: 'Central Workshop Bays',
-    coords: null,
-    time: '06:15 AM',
-    status: 'Resolved',
-    statusType: 'resolved',
-    isCriticalRow: false,
-  },
-];
-
-const EmergencyResponseLedger = () => {
+const EmergencyResponseLedger = ({ alerts = [], onResolveAlert }) => {
   const [activeTab, setActiveTab] = useState('All Alerts');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
 
-  const filteredData = initialLedgerData.filter((item) => {
-    // Tab Filter
-    if (activeTab === 'Parent SOS' && item.typeCategory !== 'Parent SOS') return false;
+  // Map raw DB alerts into table display rows
+  const ledgerData = alerts.map((row, index) => {
+    const isDriver = row.sender_type === 'driver';
+    const senderType = isDriver ? 'Driver SOS' : 'Parent SOS';
+    const initials = (row.sender_name || 'SR')
+      .trim()
+      .split(' ')
+      .map((w) => w[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+
+    const isCritical = row.status === 'active';
+    const created = row.created_at ? new Date(row.created_at) : new Date();
+    const timeStr = created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const lat = Number(row.latitude);
+    const lng = Number(row.longitude);
+    const coordsStr =
+      !isNaN(lat) && !isNaN(lng) && lat !== 0
+        ? `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+        : null;
+
+    return {
+      num: index + 1,
+      realId: row.id,
+      id: `SOS-${row.id.slice(0, 4).toUpperCase()}`,
+      type: senderType,
+      typeCategory: senderType,
+      initiatorInitials: initials || 'SR',
+      initiatorName: row.sender_name || (isDriver ? 'Staff Driver' : 'Registered Parent'),
+      initiatorRole: isDriver ? 'Staff Driver' : 'Registered Parent',
+      bus: row.vehicle_name || (isDriver ? 'Assigned Bus' : 'Parent Stop'),
+      route: isDriver ? 'Active Fleet Route' : 'Assigned Stop',
+      location: coordsStr ? `GPS (${coordsStr})` : 'Telemetry Distress Point',
+      coords: coordsStr,
+      time: timeStr,
+      status: isCritical ? 'Active Beacon' : 'Resolved',
+      statusType: isCritical ? 'critical' : 'resolved',
+      isCriticalRow: isCritical,
+    };
+  });
+
+  const counts = {
+    all: ledgerData.length,
+    driver: ledgerData.filter((i) => i.typeCategory === 'Driver SOS').length,
+    parent: ledgerData.filter((i) => i.typeCategory === 'Parent SOS').length,
+    resolved: ledgerData.filter((i) => i.statusType === 'resolved').length,
+  };
+
+  const filteredData = ledgerData.filter((item) => {
     if (activeTab === 'Driver SOS' && item.typeCategory !== 'Driver SOS') return false;
-    if (activeTab === 'Impact & Sensor' && item.typeCategory !== 'Impact & Sensor') return false;
+    if (activeTab === 'Parent SOS' && item.typeCategory !== 'Parent SOS') return false;
     if (activeTab === 'Resolved' && item.statusType !== 'resolved') return false;
 
-    // Search Filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
@@ -123,25 +81,73 @@ const EmergencyResponseLedger = () => {
     return true;
   });
 
+  const handleExport = () => {
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(filteredData, null, 2)
+    )}`;
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', jsonString);
+    downloadAnchor.setAttribute('download', 'emergency_sos_ledger.json');
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
   return (
-    <div className="space-y-4">
-      {/* Filter Navigation Tabs & Controls */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-        {/* Tabs Bar */}
-        <div className="flex items-center gap-2 border-b border-slate-100 pb-3 flex-wrap">
+    <section
+      className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden font-sans w-full"
+      data-purpose="emergency-response-ledger-container"
+    >
+      {/* Table Top Toolbar (styled like ParentsTableSection) */}
+      <div className="p-6 border-b border-slate-100 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+              Emergency Response Ledger
+            </h3>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
+              {filteredData.length} Logged
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-72">
+              <MdSearch className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                className="w-full pl-9 pr-3.5 py-2 text-xs bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800 placeholder-slate-400 transition-all font-sans"
+                placeholder="Search by ID, Bus, Driver, Parent..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Export Button */}
+            <button
+              onClick={handleExport}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 transition shadow-2xs cursor-pointer"
+            >
+              <MdFileDownload className="w-4 h-4 text-slate-500" />
+              <span>Export</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Navigation Tabs Bar */}
+        <div className="flex items-center gap-2 pt-1 border-t border-slate-100 flex-wrap">
           {[
-            { label: 'All Alerts (5)', name: 'All Alerts' },
-            { label: 'Parent SOS (2)', name: 'Parent SOS' },
-            { label: 'Driver SOS (2)', name: 'Driver SOS' },
-            { label: 'Impact & Sensor (1)', name: 'Impact & Sensor' },
-            { label: 'Resolved (4)', name: 'Resolved' },
+            { label: `All Alerts (${counts.all})`, name: 'All Alerts' },
+            { label: `Driver SOS (${counts.driver})`, name: 'Driver SOS' },
+            { label: `Parent SOS (${counts.parent})`, name: 'Parent SOS' },
+            { label: `Resolved (${counts.resolved})`, name: 'Resolved' },
           ].map((tab) => {
             const isActive = activeTab === tab.name;
             return (
               <button
                 key={tab.name}
                 onClick={() => setActiveTab(tab.name)}
-                className={`px-3 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
                   isActive
                     ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200'
                     : 'text-slate-600 hover:text-slate-900 font-medium hover:bg-slate-50'
@@ -152,244 +158,179 @@ const EmergencyResponseLedger = () => {
             );
           })}
         </div>
-
-        {/* Controls row: Search, Date Filter, Dropdowns */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <span className="text-xs text-slate-500 font-medium">Auto-sync:</span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100 text-[11px] font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping"></span>
-              Live 5s Polling
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
-            {/* Search within alerts */}
-            <div className="relative w-full sm:w-64">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                <MdSearch className="w-3.5 h-3.5" />
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by Alert ID, Bus No, Parent..."
-                className="w-full pl-9 pr-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-              />
-            </div>
-
-            {/* Date Dropdown */}
-            <button className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-medium flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-slate-50 shadow-xs">
-              <MdCalendarToday className="w-3.5 h-3.5 text-slate-400" />
-              Today, Sep 28
-            </button>
-
-            {/* Severity Dropdown */}
-            <button className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-medium flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-slate-50 shadow-xs">
-              All Severity Levels
-              <MdKeyboardArrowDown className="w-3 h-3 text-slate-400" />
-            </button>
-          </div>
-        </div>
       </div>
 
-      {/* Response Ledger Table Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden">
-        {/* Table Header summary */}
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-slate-900">Emergency Response Ledger</h3>
-              <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-bold rounded-full border border-blue-100">
-                {filteredData.length} Total Events
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Displaying entries logged in past 24 hours
-            </p>
-          </div>
-        </div>
-
-        {/* Ledger Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-slate-50/75 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-4 w-8">#</th>
-                <th className="py-3 px-4">ALERT TYPE &amp; ID</th>
-                <th className="py-3 px-4">INITIATOR / USER</th>
-                <th className="py-3 px-4">BUS &amp; ROUTE</th>
-                <th className="py-3 px-4">LOCATION TELEMETRY</th>
-                <th className="py-3 px-4 text-right">TIME / STATUS</th>
+      {/* Full-Page Responsive Table */}
+      <div className="overflow-x-auto w-full">
+        <table className="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr className="bg-slate-50/75 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <th className="py-3.5 px-5 w-12">#</th>
+              <th className="py-3.5 px-5">ALERT TYPE &amp; ID</th>
+              <th className="py-3.5 px-5">INITIATOR / USER</th>
+              <th className="py-3.5 px-5">VEHICLE / ROUTE</th>
+              <th className="py-3.5 px-5">LOCATION TELEMETRY</th>
+              <th className="py-3.5 px-5 text-right">STATUS / ACTION</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredData.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-14 text-center text-slate-400 italic">
+                  No emergency distress alerts recorded in database.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400 italic">
-                    No emergency alert records match your criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredData.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={`transition-colors ${
-                      row.isCriticalRow
-                        ? 'bg-red-50/40 hover:bg-red-50/70'
-                        : 'hover:bg-slate-50/80'
+            ) : (
+              filteredData.map((row) => (
+                <tr
+                  key={row.realId}
+                  className={`transition-colors ${
+                    row.isCriticalRow
+                      ? 'bg-red-50/50 hover:bg-red-50/80'
+                      : 'hover:bg-slate-50/80'
+                  }`}
+                >
+                  <td
+                    className={`py-3.5 px-5 font-bold ${
+                      row.isCriticalRow ? 'text-red-600' : 'text-slate-400'
                     }`}
                   >
-                    <td
-                      className={`py-3 px-4 font-bold ${
-                        row.isCriticalRow ? 'text-red-600' : 'text-slate-400'
+                    {row.num}
+                  </td>
+
+                  <td className="py-3.5 px-5">
+                    <div className="flex flex-col">
+                      <span
+                        className={`inline-flex items-center gap-1.5 text-[11px] font-bold ${
+                          row.type === 'Driver SOS'
+                            ? row.isCriticalRow
+                              ? 'text-red-700'
+                              : 'text-blue-700'
+                            : 'text-indigo-700'
+                        }`}
+                      >
+                        {row.type === 'Driver SOS' ? (
+                          <MdWarning
+                            className={`w-3.5 h-3.5 ${
+                              row.isCriticalRow ? 'text-red-600 animate-pulse' : 'text-blue-600'
+                            }`}
+                          />
+                        ) : (
+                          <MdPeople className="w-3.5 h-3.5 text-indigo-600" />
+                        )}
+                        {row.type}
+                      </span>
+                      <span className="font-bold text-slate-800 text-[11px] mt-0.5">
+                        #{row.id}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="py-3.5 px-5">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-8 h-8 rounded-full font-bold text-[11px] flex items-center justify-center ${
+                          row.isCriticalRow
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        {row.initiatorInitials}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 leading-tight">
+                          {row.initiatorName}
+                        </p>
+                        <span className="text-[10px] text-slate-500">
+                          {row.initiatorRole}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="py-3.5 px-5">
+                    <span className="font-bold text-slate-900 block">{row.bus}</span>
+                    <span className="text-[10px] text-slate-500">{row.route}</span>
+                  </td>
+
+                  <td className="py-3.5 px-5">
+                    <span
+                      className={`block ${
+                        row.isCriticalRow
+                          ? 'font-medium text-slate-800'
+                          : 'font-medium text-slate-700'
                       }`}
                     >
-                      {row.num}
-                    </td>
+                      {row.location}
+                    </span>
+                    {row.coords && (
+                      <span className="text-[10px] text-blue-600 font-mono flex items-center gap-1">
+                        <MdLocationOn className="w-3 h-3 text-red-500" />
+                        {row.coords}
+                      </span>
+                    )}
+                  </td>
 
-                    <td className="py-3 px-4">
-                      <div className="flex flex-col">
-                        <span
-                          className={`inline-flex items-center gap-1 text-[11px] font-bold ${
-                            row.type === 'Driver SOS'
-                              ? row.isCriticalRow
-                                ? 'text-red-700'
-                                : 'text-blue-700'
-                              : row.type === 'Parent SOS'
-                              ? 'text-blue-700'
-                              : 'text-slate-700'
-                          }`}
-                        >
-                          {row.type === 'Driver SOS' && (
-                            <MdWarning
-                              className={`w-3 h-3 ${
-                                row.isCriticalRow ? 'text-red-600' : 'text-blue-600'
-                              }`}
-                            />
-                          )}
-                          {row.type === 'Parent SOS' && (
-                            <MdPeople className="w-3 h-3 text-blue-600" />
-                          )}
-                          {row.type === 'Depot Warning' && (
-                            <MdDomain className="w-3 h-3 text-slate-500" />
-                          )}
-                          {row.type}
-                        </span>
-                        <span className="font-bold text-slate-800 text-[11px] mt-0.5">
-                          {row.id}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="py-3 px-4">
+                  <td className="py-3.5 px-5 text-right">
+                    <div className="flex flex-col items-end gap-1.5">
                       <div className="flex items-center gap-2">
-                        <div
-                          className={`w-7 h-7 rounded-full font-bold text-[10px] flex items-center justify-center ${
-                            row.isCriticalRow
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-slate-100 text-slate-700'
+                        <span className="text-xs text-slate-500 font-medium">
+                          {row.time}
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                            row.statusType === 'critical'
+                              ? 'bg-red-100 text-red-700 border border-red-200 animate-pulse'
+                              : 'bg-slate-100 text-slate-600'
                           }`}
                         >
-                          {row.initiatorInitials}
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-900 leading-tight">
-                            {row.initiatorName}
-                          </p>
-                          <span className="text-[10px] text-slate-500">
-                            {row.initiatorRole}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <span className="font-bold text-slate-900 block">{row.bus}</span>
-                      <span className="text-[10px] text-slate-500">{row.route}</span>
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <span
-                        className={`block ${
-                          row.isCriticalRow
-                            ? 'font-medium text-slate-800'
-                            : 'font-medium text-slate-700'
-                        }`}
-                      >
-                        {row.location}
-                      </span>
-                      {row.coords && (
-                        <span className="text-[10px] text-blue-600 font-mono flex items-center gap-1">
-                          <MdLocationOn className="w-2.5 h-2.5" />
-                          {row.coords}
+                          {row.status}
                         </span>
+                      </div>
+
+                      {row.isCriticalRow && onResolveAlert && (
+                        <button
+                          onClick={() => onResolveAlert(row.realId)}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg transition-colors cursor-pointer shadow-2xs"
+                        >
+                          <MdCheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          Resolve
+                        </button>
                       )}
-                    </td>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-                    <td className="py-3 px-4 text-right">
-                      <span
-                        className={`block ${
-                          row.isCriticalRow
-                            ? 'font-bold text-red-600'
-                            : 'font-medium text-slate-800'
-                        }`}
-                      >
-                        {row.time}
-                      </span>
-                      <span
-                        className={`text-[10px] font-semibold ${
-                          row.statusType === 'critical'
-                            ? 'text-red-500'
-                            : row.statusType === 'acknowledged'
-                            ? 'text-emerald-600'
-                            : 'text-slate-400'
-                        }`}
-                      >
-                        {row.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination Bar */}
-        <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Showing 1-5 of 12 Recorded Incidents This Week</span>
-          <div className="flex items-center gap-1 font-medium">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50 cursor-pointer transition-colors"
-            >
-              Prev
-            </button>
-            {[1, 2, 3].map((num) => (
-              <button
-                key={num}
-                onClick={() => setPage(num)}
-                className={`w-7 h-7 rounded-lg text-xs font-semibold flex items-center justify-center cursor-pointer transition-colors ${
-                  page === num
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'border border-slate-200 hover:bg-slate-50 text-slate-600'
-                }`}
-              >
-                {num}
-              </button>
-            ))}
-            <button
-              onClick={() => setPage((p) => Math.min(3, p + 1))}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 cursor-pointer transition-colors"
-            >
-              Next
-            </button>
-          </div>
+      {/* Pagination Footer */}
+      <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span>
+          Showing {filteredData.length} of {filteredData.length} Recorded Incident{filteredData.length === 1 ? '' : 's'}
+        </span>
+        <div className="flex items-center gap-1 font-medium">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50 cursor-pointer transition-colors"
+          >
+            Prev
+          </button>
+          <span className="px-3 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs">
+            {page}
+          </span>
+          <button
+            disabled={true}
+            className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50 cursor-pointer transition-colors"
+          >
+            Next
+          </button>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

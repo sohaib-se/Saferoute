@@ -9,7 +9,11 @@ import {
 } from '../../components/screencomponents/parent/dashboard/ChildStatusCard';
 import { RadarMapCard } from '../../components/screencomponents/parent/dashboard/RadarMapCard';
 import { useAuth } from '../../context/AuthContext';
-import { getParentChildren, subscribeToStudentStatusChanges } from '../../services/parentService';
+import {
+  getParentChildren,
+  subscribeToStudentStatusChanges,
+  getAssignedDriverDetailsForParent,
+} from '../../services/parentService';
 import { colors, radii } from '../../lib/theme';
 
 interface ParentDashboardScreenProps {
@@ -25,13 +29,19 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
   const [children, setChildren] = useState<ChildData[]>([]);
   const [isLoadingChildren, setIsLoadingChildren] = useState(true);
 
+  const [assignedDriverInfo, setAssignedDriverInfo] = useState<any>(null);
+
   useEffect(() => {
     let isMounted = true;
     const fetchChildren = async () => {
       setIsLoadingChildren(true);
-      const data = await getParentChildren(user?.userId, user?.name, user?.schoolId);
+      const [data, driverRes] = await Promise.all([
+        getParentChildren(user?.userId, user?.name, user?.schoolId),
+        getAssignedDriverDetailsForParent(user?.userId, user?.name, user?.schoolId, user?.profile?.bus),
+      ]);
       if (isMounted) {
         setChildren(data);
+        setAssignedDriverInfo(driverRes);
         setIsLoadingChildren(false);
       }
     };
@@ -48,8 +58,10 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
   }, [user]);
 
   const primaryChild = children[0];
-  const vehicleDisplayName = primaryChild?.vehicle ? primaryChild.vehicle.split(' ')[0] : 'Bus 1';
-  const driverDisplayName = primaryChild?.driverName || 'Hilal';
+  const vehicleDisplayName = primaryChild?.vehicle
+    ? primaryChild.vehicle.split(' ')[0]
+    : assignedDriverInfo?.vehicleName || user?.profile?.bus || 'Assigned Van';
+  const driverDisplayName = primaryChild?.driverName || assignedDriverInfo?.driverName || 'Driver';
 
   const handleTrackChild = (child: ChildData) => {
     onNavigateTab('tracking');
@@ -107,8 +119,8 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
         </View>
 
         <RadarMapCard
-          vehicleName="Bus 1"
-          driverName="Hilal"
+          vehicleName={vehicleDisplayName}
+          driverName={driverDisplayName}
           speedKmh={36}
           distanceKm={2.1}
           onPressFullMap={() => onNavigateTab('tracking')}

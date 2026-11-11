@@ -91,31 +91,39 @@ export const getDriverRoster = async (
 
     const studentListToProcess = assignedStudents.length > 0 ? assignedStudents : studentsData;
 
-    // Fetch parents lookup map to get parent phone numbers and addresses
+    // Fetch parents lookup map to get parent phone numbers, addresses, and userIds
     const parentIds = studentListToProcess
       .map((s) => s.parent_id)
       .filter((id): id is string => Boolean(id));
+    const parentNames = studentListToProcess
+      .map((s) => s.parent_name)
+      .filter((name): name is string => Boolean(name));
 
-    let parentsMap: Record<string, { phone: string; address: string; name: string }> = {};
+    let parentsMapById: Record<string, { id: string; phone: string; address: string; name: string }> = {};
+    let parentsMapByName: Record<string, { id: string; phone: string; address: string; name: string }> = {};
 
-    if (parentIds.length > 0) {
-      const { data: parentsData } = await supabase
-        .from('parents')
-        .select('id, name, phone, address')
-        .in('id', parentIds);
+    let parentQuery = supabase.from('parents').select('id, name, phone, address');
+    if (schoolId) parentQuery = parentQuery.eq('school_id', schoolId);
 
-      (parentsData || []).forEach((p) => {
-        parentsMap[p.id] = {
-          phone: p.phone || '',
-          address: p.address || '',
-          name: p.name || '',
-        };
-      });
-    }
+    const { data: parentsData } = await parentQuery;
+    (parentsData || []).forEach((p) => {
+      const info = {
+        id: p.id,
+        phone: p.phone || '',
+        address: p.address || '',
+        name: p.name || '',
+      };
+      if (p.id) parentsMapById[p.id] = info;
+      if (p.name) parentsMapByName[p.name.trim().toLowerCase()] = info;
+    });
 
     return studentListToProcess.map((s, index) => {
-      const parent = s.parent_id ? parentsMap[s.parent_id] : null;
-      const parentPhone = parent?.phone || s.phone || '0312412412';
+      const parent =
+        (s.parent_id && parentsMapById[s.parent_id]) ||
+        (s.parent_name && parentsMapByName[s.parent_name.trim().toLowerCase()]) ||
+        null;
+
+      const parentPhone = parent?.phone || s.phone || 'N/A';
       const parentName = parent?.name || s.parent_name || 'Guardian';
       const stopAddress = s.address || parent?.address || 'Designated Home Stop';
 
@@ -147,6 +155,7 @@ export const getDriverRoster = async (
         milestone,
         parentName,
         parentPhone,
+        parentUserId: s.parent_id || parent?.id || undefined,
         avatarInitials,
         adminNotice: dbStatus === 'Absent' ? 'Student flagged absent today' : undefined,
       };

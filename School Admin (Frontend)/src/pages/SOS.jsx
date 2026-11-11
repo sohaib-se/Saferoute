@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import SOSPageHeader from '../components/pagecomponents/SOS/SOSPageHeader';
 import SOSStatCards from '../components/pagecomponents/SOS/SOSStatCards';
 import CriticalAlertBanner from '../components/pagecomponents/SOS/CriticalAlertBanner';
 import EmergencyResponseLedger from '../components/pagecomponents/SOS/EmergencyResponseLedger';
-import EmergencyRadarMap from '../components/pagecomponents/SOS/EmergencyRadarMap';
-import IncidentTimeline from '../components/pagecomponents/SOS/IncidentTimeline';
 import SOSFooter from '../components/pagecomponents/SOS/SOSFooter';
+import { supabase } from '../lib/supabaseClient';
+import { getCurrentSchoolId } from '../lib/session';
+
+const isValidUUID = (val) =>
+  Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
 
 const SOS = ({ onLogout, onNavigate, currentPage = 'SOS Alerts' }) => {
+  const [alerts, setAlerts] = useState([]);
   const [toastMessage, setToastMessage] = useState(null);
 
   const showNotification = (msg) => {
@@ -18,6 +22,71 @@ const SOS = ({ onLogout, onNavigate, currentPage = 'SOS Alerts' }) => {
       setToastMessage(null);
     }, 4000);
   };
+
+  const fetchAlerts = useCallback(async () => {
+    try {
+      let query = supabase
+        .from('sos_alerts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      const schoolId = getCurrentSchoolId();
+      if (isValidUUID(schoolId)) {
+        query = query.or(`school_id.eq.${schoolId},school_id.is.null`);
+      }
+
+      const { data, error } = await query;
+      if (!error && data) {
+        setAlerts(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch sos_alerts:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAlerts();
+
+    // 5-second polling fallback
+    const interval = setInterval(fetchAlerts, 5000);
+
+    // Real-time Supabase subscription
+    const channel = supabase
+      .channel('admin:sos_page_channel')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'sos_alerts' },
+        () => {
+          fetchAlerts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, [fetchAlerts]);
+
+  const handleResolveAlert = async (alertId) => {
+    try {
+      const { error } = await supabase
+        .from('sos_alerts')
+        .update({ status: 'resolved' })
+        .eq('id', alertId);
+
+      if (error) throw error;
+      showNotification(`Incident #${alertId.slice(0, 4).toUpperCase()} marked as Resolved.`);
+      await fetchAlerts();
+    } catch (err) {
+      console.error('Failed to resolve alert:', err);
+      showNotification('Could not resolve alert. Please try again.');
+    }
+  };
+
+  const activeAlerts = alerts.filter((a) => a.status === 'active');
+  const activeAlert = activeAlerts[0] || null;
 
   return (
     <div className="h-screen flex bg-[#F8FAFC] antialiased text-slate-800 overflow-hidden font-sans">
@@ -35,39 +104,23 @@ const SOS = ({ onLogout, onNavigate, currentPage = 'SOS Alerts' }) => {
         )}
 
         <main className="p-8 space-y-6 max-w-[1440px] w-full mx-auto flex-1">
-          {/* Page Header & Actions */}
-          <SOSPageHeader
-            onBroadcast={() => showNotification('Safety Advisory broadcast sent to active fleet & parents.')}
-            onExport={() => showNotification('Exporting Incident Log #SOS-9042 as PDF/CSV...')}
-            onTriggerDistress={() => showNotification('Manual Distress Trigger Initiated!')}
-          />
+          {/* Page Header */}
+          <SOSPageHeader />
 
-          {/* KPI Stat Cards */}
-          <SOSStatCards />
+          {/* KPI Stat Cards (Dynamic from real DB) */}
+          <SOSStatCards alerts={alerts} />
 
-          {/* Critical Alert Banner Card */}
+          {/* Critical Alert Banner Card (Shows only when an active critical alert exists) */}
           <CriticalAlertBanner
-            onDeployEMS={() => showNotification('Emergency 911 / EMS Link dispatched with GPS telemetry.')}
-            onOpenVideo={() => showNotification('Connecting to Bus 09 Live Cabin Video Feed...')}
-            onSmsParents={() => showNotification('Broadcasting SMS alert to 28 onboard student parents...')}
-            onBusStandby={() => showNotification('Bus 15 dispatched to standby coordinates.')}
+            activeAlert={activeAlert}
+            onResolveAlert={handleResolveAlert}
           />
 
-          {/* Two-Column Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left Column Ledger (Col-8) */}
-            <div className="lg:col-span-8 space-y-4">
-              <EmergencyResponseLedger />
-            </div>
-
-            {/* Right Column Telemetry (Col-4) */}
-            <div className="lg:col-span-4 space-y-4">
-              <EmergencyRadarMap />
-              <IncidentTimeline
-                onViewArchive={() => showNotification('Loading full diagnostic telemetry archive...')}
-              />
-            </div>
-          </div>
+          {/* Full-Width Emergency Response Ledger (matches Parents screen layout) */}
+          <EmergencyResponseLedger
+            alerts={alerts}
+            onResolveAlert={handleResolveAlert}
+          />
 
           <div className="h-4"></div>
         </main>

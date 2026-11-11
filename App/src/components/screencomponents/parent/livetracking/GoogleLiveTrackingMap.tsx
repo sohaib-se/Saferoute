@@ -15,8 +15,8 @@ export interface GoogleLiveTrackingMapProps {
 }
 
 export const GoogleLiveTrackingMap: React.FC<GoogleLiveTrackingMapProps> = ({
-  vehicleName = 'Bus 1',
-  driverName = 'Hilal',
+  vehicleName = 'Assigned Van',
+  driverName = 'Assigned Driver',
   latitude = 33.6844,
   longitude = 73.0479,
   speedKmh = 38,

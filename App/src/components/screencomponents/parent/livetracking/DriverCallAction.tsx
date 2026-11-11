@@ -9,7 +9,7 @@ interface DriverCallActionProps {
 }
 
 export const DriverCallAction: React.FC<DriverCallActionProps> = ({
-  driverName = 'Hilal',
+  driverName = 'Assigned Driver',
   onPress,
 }) => {
   return (

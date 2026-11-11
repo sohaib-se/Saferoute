@@ -39,7 +39,7 @@ export const DriverProfileHero: React.FC<DriverProfileHeroProps> = ({
         </View>
       </View>
 
-      {/* Overlapping Avatar Row (clean, tags removed) */}
+      {/* Overlapping Avatar Row */}
       <View style={styles.avatarRow}>
         <View style={styles.avatarWrapper}>
           <View style={styles.avatarRing}>
@@ -47,10 +47,6 @@ export const DriverProfileHero: React.FC<DriverProfileHeroProps> = ({
               <Ionicons name="person" size={46} color="#0284C7" />
             </View>
           </View>
-          {/* Edit Badge at bottom of circle */}
-          <TouchableOpacity style={styles.avatarEditBadge} onPress={onEdit} activeOpacity={0.85}>
-            <Ionicons name="pencil" size={11} color="#FFFFFF" />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -195,19 +191,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
-  },
-  avatarEditBadge: {
-    position: 'absolute',
-    bottom: -2,
-    alignSelf: 'center',
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#0F172A',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   nameSection: {
     alignItems: 'center',

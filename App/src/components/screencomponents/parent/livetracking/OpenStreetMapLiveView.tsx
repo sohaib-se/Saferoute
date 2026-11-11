@@ -18,14 +18,14 @@ export interface OpenStreetMapLiveViewProps {
 }
 
 export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
-  vehicleName = 'Bus 1',
-  driverName = 'Hilal',
+  vehicleName = 'Assigned Van',
+  driverName = 'Assigned Driver',
   latitude = 33.6844,
   longitude = 73.0479,
   speedKmh = 38,
   distanceKm = 1.8,
-  schoolName = 'Allied School Campus',
-  homeAddress = 'Khatme Nabuwat Chowk',
+  schoolName = 'School Campus',
+  homeAddress = 'Student Stop',
 }) => {
   const webViewRef = useRef<any>(null);
 
