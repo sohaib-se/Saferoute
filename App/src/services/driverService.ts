@@ -258,23 +258,79 @@ export const broadcastDriverLocationToDb = async (
   speedKmh: number = 35,
   heading: number = 0
 ): Promise<void> => {
+  if (!vehicleName) return;
+
   try {
-    await supabase.from('vehicle_locations').upsert(
-      {
-        school_id: schoolId || null,
-        driver_id: driverId || null,
-        vehicle_name: vehicleName,
-        latitude,
-        longitude,
-        speed_kmh: speedKmh,
-        heading,
-        is_active: true,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'vehicle_name' }
-    );
-  } catch {
-    // Graceful fallback if table is not yet migrated
+    const payload = {
+      school_id: schoolId || null,
+      driver_id: driverId || null,
+      vehicle_name: vehicleName,
+      latitude,
+      longitude,
+      speed_kmh: speedKmh,
+      heading,
+      is_active: true,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Primary: Upsert on unique vehicle_name
+    const { error } = await supabase
+      .from('vehicle_locations')
+      .upsert(payload, { onConflict: 'vehicle_name' });
+
+    if (error) {
+      console.warn('Primary upsert error in broadcastDriverLocationToDb:', error.message);
+
+      // If error is foreign key related (driver_id / school_id invalid UUID), retry with null FKs
+      if (error.code === '23503') {
+        await supabase.from('vehicle_locations').upsert(
+          { ...payload, school_id: null, driver_id: null },
+          { onConflict: 'vehicle_name' }
+        );
+      } else {
+        // Fallback: check if row exists and update, otherwise insert
+        const { data: existing } = await supabase
+          .from('vehicle_locations')
+          .select('id')
+          .eq('vehicle_name', vehicleName)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from('vehicle_locations')
+            .update(payload)
+            .eq('id', existing.id);
+        } else {
+          await supabase.from('vehicle_locations').insert([payload]);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('broadcastDriverLocationToDb exception:', err);
+  }
+};
+
+/**
+ * Stops broadcasting and clears the vehicle from vehicle_locations in Supabase.
+ */
+export const stopDriverLocationBroadcast = async (vehicleName: string) => {
+  try {
+    if (!vehicleName) return;
+    // Delete the location record so vehicle_locations ONLY holds vehicles with active trips
+    const { error } = await supabase
+      .from('vehicle_locations')
+      .delete()
+      .eq('vehicle_name', vehicleName);
+
+    if (error) {
+      // Fallback: mark is_active = false
+      await supabase
+        .from('vehicle_locations')
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('vehicle_name', vehicleName);
+    }
+  } catch (err) {
+    console.warn('stopDriverLocationBroadcast error:', err);
   }
 };
 

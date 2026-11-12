@@ -12,6 +12,7 @@ import {
   AssignedDriverDetails,
   ChildData,
 } from '../../services/parentService';
+import { shadows } from '../../lib/theme';
 
 interface ParentLiveTrackingScreenProps {
   onBack?: () => void;
@@ -27,6 +28,8 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
   const { user } = useAuth();
   const { startCall } = useCall();
   const [children, setChildren] = useState<ChildData[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState<string>('');
+  const [isTripActive, setIsTripActive] = useState<boolean>(false);
 
   // Live driver & vehicle details from Supabase
   const [driverInfo, setDriverInfo] = useState<AssignedDriverDetails>({
@@ -38,17 +41,13 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
     route: '',
   });
 
-  // Live coordinates streamed from driver's broadcast
+  // Live coordinates streamed from driver's broadcast (initial null to avoid dummy display)
   const [location, setLocation] = useState<{
     latitude: number;
     longitude: number;
-    speedKmh: number;
-  }>({
-    latitude: 33.6844,
-    longitude: 73.0479,
-    speedKmh: 35,
-  });
+  } | null>(null);
 
+  // 1. Initial fetch of parent's children
   useEffect(() => {
     let isMounted = true;
     let unsubscribeLocation: (() => void) | null = null;
@@ -62,7 +61,6 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
       );
       const childList = await getParentChildren(user?.userId, user?.name, user?.schoolId);
       if (isMounted) {
-        setDriverInfo(details);
         setChildren(childList);
 
         const targetVehicle = details.vehicleName || 'Bus 1';
@@ -73,7 +71,7 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
         });
       }
     };
-    fetchDriverAndChildren();
+    fetchDriverAndLocation();
 
     return () => {
       isMounted = false;
@@ -81,7 +79,7 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
         unsubscribeLocation();
       }
     };
-  }, [user]);
+  }, [targetVehicleName, targetDriverName]);
 
   const handleStartDriverCall = () => {
     if (!driverInfo.driverUserId) {
@@ -114,24 +112,20 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
       {/* 1. Screen Header */}
       <Header
         title="Live Van Tracking"
-        subtitle={`${driverInfo.vehicleName} • Active GPS Telemetry`}
+        subtitle={`${driverInfo.vehicleName} • ${isTripActive ? 'In Transit' : 'Trip Not Started'}`}
         onBack={onBack}
         onNotificationPress={onOpenNotifications}
       />
 
-      {/* 2. Full Screen OpenStreetMap Canvas */}
+      {/* 2. Full Width and Full Height Google-Tile Leaflet Map */}
       <View style={styles.mapSection}>
         <OpenStreetMapLiveView
           vehicleName={driverInfo.vehicleName}
           driverName={driverInfo.driverName}
-          latitude={location.latitude}
-          longitude={location.longitude}
-          speedKmh={location.speedKmh}
-          distanceKm={1.8}
-          schoolName="Allied School Campus"
-          homeAddress={firstChildAddress}
+          latitude={location?.latitude ?? 34.0100649}
+          longitude={location?.longitude ?? 71.6738585}
+          isTripActive={isTripActive}
         />
-      </View>
 
       {/* 3. Current Status of Trip Card */}
       <View style={styles.statusSection}>
@@ -155,18 +149,65 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F9FD',
+    backgroundColor: '#F8FAFC',
   },
   mapSection: {
     flex: 1,
     width: '100%',
-    overflow: 'hidden',
+    height: '100%',
+    position: 'relative',
   },
-  statusSection: {
+  topSelectorOverlay: {
+    position: 'absolute',
+    top: 10,
+    left: 14,
+    right: 14,
+    zIndex: 10,
+  },
+  tripStatusPill: {
+    position: 'absolute',
+    top: 14,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     paddingHorizontal: 14,
-    paddingTop: 8,
-    paddingBottom: 10,
-    backgroundColor: '#F4F9FD',
+    paddingVertical: 7,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    ...shadows.card,
+    zIndex: 9,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  tripStatusText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  floatingCallBtn: {
+    position: 'absolute',
+    bottom: 24,
+    left: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 24,
+    gap: 8,
+    ...shadows.card,
+    zIndex: 10,
+  },
+  floatingCallText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
 

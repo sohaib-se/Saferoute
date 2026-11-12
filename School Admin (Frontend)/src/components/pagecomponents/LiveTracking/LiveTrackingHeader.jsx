@@ -18,6 +18,7 @@ const LiveTrackingHeader = ({
   activeCount = 18,
   idleCount = 5,
   garageCount = 2,
+  routeOptions = [],
 }) => {
   return (
     <section
@@ -52,9 +53,19 @@ const LiveTrackingHeader = ({
             className="appearance-none pl-3.5 pr-8 py-2 text-xs font-semibold bg-white border border-slate-200/90 rounded-xl text-slate-700 shadow-2xs hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
           >
             <option value="All">All Routes</option>
-            <option value="Route 1 - Green Valley">Route 1 - Green Valley</option>
-            <option value="Route 2 - Pine Crest">Route 2 - Pine Crest</option>
-            <option value="Route 3 - City Center Express">Route 3 - City Center Express</option>
+            {routeOptions.length > 0 ? (
+              routeOptions.map((route) => (
+                <option key={route} value={route}>
+                  {route}
+                </option>
+              ))
+            ) : (
+              <>
+                <option value="Route 1 - Green Valley">Route 1 - Green Valley</option>
+                <option value="Route 2 - Pine Crest">Route 2 - Pine Crest</option>
+                <option value="Route 3 - City Center Express">Route 3 - City Center Express</option>
+              </>
+            )}
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2.5 pointer-events-none text-slate-400">
             <MdKeyboardArrowDown size={16} />

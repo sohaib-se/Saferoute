@@ -11,10 +11,7 @@ export interface OpenStreetMapLiveViewProps {
   driverName?: string;
   latitude?: number;
   longitude?: number;
-  speedKmh?: number;
-  distanceKm?: number;
-  schoolName?: string;
-  homeAddress?: string;
+  isTripActive?: boolean;
 }
 
 export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
@@ -33,14 +30,16 @@ export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
   useEffect(() => {
     if (webViewRef.current) {
       const script = `
-        if (window.updateBusPosition) {
-          window.updateBusPosition(${latitude}, ${longitude}, ${speedKmh}, '${vehicleName}');
+        if (window.setTripActiveStatus) {
+          window.setTripActiveStatus(${isTripActive}, ${latitude}, ${longitude}, '${vehicleName}');
+        } else if (window.updateBusPosition) {
+          window.updateBusPosition(${latitude}, ${longitude}, '${vehicleName}');
         }
         true;
       `;
       webViewRef.current.injectJavaScript(script);
     }
-  }, [latitude, longitude, speedKmh, vehicleName]);
+  }, [isTripActive, latitude, longitude, vehicleName]);
 
   const recenterMap = () => {
     if (webViewRef.current) {
@@ -114,8 +113,8 @@ export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
       transition: all 0.5s ease-out;
     }
     .bus-pin-circle {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: linear-gradient(135deg, #007AFF 0%, #0056B3 100%);
       border: 3px solid #FFFFFF;
@@ -124,13 +123,13 @@ export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
       align-items: center;
       justify-content: center;
       color: #FFFFFF;
-      font-size: 21px;
+      font-size: 22px;
       position: relative;
     }
     .bus-pulse {
       position: absolute;
-      width: 60px;
-      height: 60px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       background: rgba(0, 122, 255, 0.35);
       animation: pulse 2.2s infinite ease-out;
@@ -143,41 +142,14 @@ export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
     .bus-badge {
       background: #0F172A;
       color: #38BDF8;
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 800;
-      padding: 3px 8px;
+      padding: 3px 9px;
       border-radius: 10px;
       margin-top: 4px;
       white-space: nowrap;
       box-shadow: 0 3px 8px rgba(0,0,0,0.3);
       border: 1px solid rgba(255,255,255,0.15);
-    }
-    /* Stop Pins */
-    .stop-marker-school {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #059669;
-      border: 2.5px solid #FFFFFF;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #FFFFFF;
-      font-size: 15px;
-      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.4);
-    }
-    .stop-marker-home {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #8B5CF6;
-      border: 2.5px solid #FFFFFF;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #FFFFFF;
-      font-size: 15px;
-      box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4);
     }
     .leaflet-popup-content-wrapper {
       border-radius: 14px;
@@ -196,113 +168,115 @@ export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
   <div id="map"></div>
 
   <script>
+    var isTripActive = ${isTripActive ? 'true' : 'false'};
     var currentLat = ${latitude};
     var currentLng = ${longitude};
-    var speed = ${speedKmh};
     var vanName = '${vehicleName}';
-
-    // School Campus & Home Stop coordinates in Sector G-10 / Islamabad
-    var schoolCoord = [33.6938, 73.0336];
-    var homeCoord = [33.6745, 73.0594];
+    var driverName = '${driverName}';
     var currentBusCoord = [currentLat, currentLng];
 
-    // Initialize Map with zoom
+    // Initialize Map centered on the Driver's coordinates
     var map = L.map('map', {
       zoomControl: true,
       attributionControl: false
-    }).setView(currentBusCoord, 14);
+    }).setView(currentBusCoord, 15);
 
-    // 1. OpenStreetMap standard tile provider with full global road and location names
-    var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      detectRetina: true
+    // 1. Google Maps Streets Tile Layer (Direct Google Tile Server)
+    var googleRoads = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
     }).addTo(map);
 
-    // 2. Esri Satellite Imagery Layer (Free, no API key needed)
-    var satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    // 2. Google Maps Hybrid Satellite Tile Layer (Satellite with roads & labels)
+    var googleSat = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+    });
+
+    // 3. OpenStreetMap standard fallback layer
+    var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19
     });
 
-    // Layer switcher control
+    // Layer switcher control (Roads, Satellite, OpenStreetMap)
     var baseMaps = {
-      "🗺️ Street Names": osmLayer,
-      "🛰️ Satellite": satLayer
+      "🗺️ Google Streets": googleRoads,
+      "🛰️ Google Satellite": googleSat,
+      "📍 Street Names": osmLayer
     };
     L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
 
-    // Route Polyline connecting Depot -> Van -> Home
-    var routePoints = [
-      schoolCoord,
-      [33.6895, 73.0402],
-      currentBusCoord,
-      [33.6801, 73.0532],
-      homeCoord
-    ];
+    var busMarker = null;
 
-    var polyline = L.polyline(routePoints, {
-      color: '#007AFF',
-      weight: 5,
-      opacity: 0.85,
-      smoothFactor: 1
-    }).addTo(map);
-
-    // 1. School Campus Marker
-    var schoolIcon = L.divIcon({
-      className: '',
-      html: '<div class="stop-marker-school">🏫</div>',
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
-    });
-    L.marker(schoolCoord, { icon: schoolIcon }).addTo(map)
-      .bindPopup('<b>${schoolName}</b><br/>Depot & Morning Campus Gate');
-
-    // 2. Student Home Stop Marker
-    var homeIcon = L.divIcon({
-      className: '',
-      html: '<div class="stop-marker-home">🏠</div>',
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
-    });
-    L.marker(homeCoord, { icon: homeIcon }).addTo(map)
-      .bindPopup('<b>Designated Home Stop</b><br/>${homeAddress}');
-
-    // 3. Dynamic Moving Bus Marker
-    function createBusHtml(name, spd) {
+    // Dynamic Moving Bus Marker (ONLY driver live location, no school/home markers)
+    function createBusHtml(name) {
       return '<div class="bus-marker-wrap">' +
              '  <div class="bus-pulse"></div>' +
              '  <div class="bus-pin-circle">🚐</div>' +
-             '  <div class="bus-badge">' + name + ' • ' + spd + ' km/h</div>' +
+             '  <div class="bus-badge">' + name + '</div>' +
              '</div>';
     }
 
-    var busIcon = L.divIcon({
-      className: '',
-      html: createBusHtml(vanName, speed),
-      iconSize: [80, 80],
-      iconAnchor: [40, 40]
-    });
-
-    var busMarker = L.marker(currentBusCoord, { icon: busIcon }).addTo(map)
-      .bindPopup('<b>' + vanName + '</b><br/>Driver: ${driverName}<br/>Live Speed: ' + speed + ' km/h');
-
-    // Smooth update function called by React Native injection
-    window.updateBusPosition = function(newLat, newLng, newSpeed, newName) {
-      var newPos = [newLat, newLng];
-      busMarker.setLatLng(newPos);
-      busMarker.setIcon(L.divIcon({
+    function initBusMarker(latLng, name) {
+      var busIcon = L.divIcon({
         className: '',
-        html: createBusHtml(newName || vanName, newSpeed),
+        html: createBusHtml(name || vanName),
         iconSize: [80, 80],
         iconAnchor: [40, 40]
-      }));
+      });
+      busMarker = L.marker(latLng, { icon: busIcon }).addTo(map)
+        .bindPopup('<b>' + (name || vanName) + '</b><br/>Driver: ' + driverName);
+    }
 
-      // Update route polyline middle position
-      routePoints[2] = newPos;
-      polyline.setLatLngs(routePoints);
+    // Only create and show pointer if trip is currently active
+    if (isTripActive && typeof currentLat === 'number' && typeof currentLng === 'number') {
+      initBusMarker(currentBusCoord, vanName);
+    }
+
+    // Dynamically toggle trip active state
+    window.setTripActiveStatus = function(active, newLat, newLng, newName) {
+      isTripActive = Boolean(active);
+      if (isTripActive && typeof newLat === 'number' && typeof newLng === 'number') {
+        var pos = [newLat, newLng];
+        if (!busMarker) {
+          initBusMarker(pos, newName);
+          map.setView(pos, 17, { animate: true, duration: 0.8 });
+        } else {
+          busMarker.setLatLng(pos);
+          map.panTo(pos, { animate: true, duration: 0.8 });
+        }
+      } else {
+        if (busMarker) {
+          map.removeLayer(busMarker);
+          busMarker = null;
+        }
+      }
     };
 
+    // Smooth update function called from React Native
+    window.updateBusPosition = function(newLat, newLng, newName) {
+      if (!isTripActive) return;
+      if (typeof newLat !== 'number' || typeof newLng !== 'number') return;
+      var newPos = [newLat, newLng];
+      if (!busMarker) {
+        initBusMarker(newPos, newName);
+      } else {
+        busMarker.setLatLng(newPos);
+        busMarker.setIcon(L.divIcon({
+          className: '',
+          html: createBusHtml(newName || vanName),
+          iconSize: [80, 80],
+          iconAnchor: [40, 40]
+        }));
+      }
+      map.panTo(newPos, { animate: true, duration: 0.8 });
+    };
+
+    // Recenter vehicle and zoom in to street level (zoom 17)
     window.recenterOnBus = function() {
-      map.panTo(busMarker.getLatLng(), { animate: true, duration: 0.8 });
+      if (busMarker) {
+        map.setView(busMarker.getLatLng(), 17, { animate: true, duration: 0.8 });
+      }
     };
   </script>
 </body>
@@ -322,15 +296,17 @@ export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
         scrollEnabled={false}
       />
 
-      {/* Recenter Button Overlay */}
-      <TouchableOpacity
-        style={styles.recenterBtn}
-        onPress={recenterMap}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="navigate" size={17} color="#007AFF" />
-        <Text style={styles.recenterText}>Recenter Van</Text>
-      </TouchableOpacity>
+      {/* Recenter Button Overlay - only visible when trip is active */}
+      {isTripActive && (
+        <TouchableOpacity
+          style={styles.recenterBtn}
+          onPress={recenterMap}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="navigate" size={17} color="#007AFF" />
+          <Text style={styles.recenterText}>Recenter Vehicle</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -367,3 +343,4 @@ const styles = StyleSheet.create({
     color: '#0F172A',
   },
 });
+

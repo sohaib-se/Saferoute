@@ -57,23 +57,19 @@ const OtherLiveUnits = ({
                 {isDelayed ? (
                   <>
                     <span className="inline-block px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-bold text-[10px] border border-amber-200">
-                      Delay +8m
+                      Delay
                     </span>
                     <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                      {unit.speed}{' '}
-                      <span className="font-normal text-slate-400">km/h</span>
+                      En Route
                     </p>
                   </>
                 ) : (
                   <>
-                    <span className="font-bold text-slate-800">
-                      {unit.speed}{' '}
-                      <span className="text-[10px] text-slate-500 font-normal">
-                        km/h
-                      </span>
+                    <span className="inline-block px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold text-[10px] border border-emerald-200">
+                      Active
                     </span>
-                    <p className="text-[10px] text-slate-400">
-                      ETA: {unit.timeline?.[2]?.time?.split(' ')?.[0] || '08:35 AM'}
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {unit.status || 'Live'}
                     </p>
                   </>
                 )}

@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { Alert } from 'react-native';
+import * as Location from 'expo-location';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabase';
 import {
   getDriverRoster,
   getDriverVehicleInfo,
   broadcastDriverLocationToDb,
+  stopDriverLocationBroadcast,
 } from '../services/driverService';
 import {
   TripRecord,
@@ -291,10 +293,12 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
           setIsTripActive(true);
         } else {
           setIsTripActive(false);
+          stopDriverLocationBroadcast(vehicleName);
         }
       } else {
         setTripAttendance([]);
         setIsTripActive(false);
+        stopDriverLocationBroadcast(vehicleName);
       }
     } catch (err) {
       console.warn('refreshTripData error:', err);
@@ -353,59 +357,164 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     return () => clearInterval(timer);
   }, [isTripActive]);
 
-  // 6. GPS telemetry interval
+  // 6. GPS telemetry (Device Hardware GPS via expo-location with fallback simulation)
   useEffect(() => {
-    let gpsInterval: any;
+    let locationSubscription: Location.LocationSubscription | null = null;
+    let fallbackInterval: any = null;
+    let isCancelled = false;
 
-    if (isTripActive) {
-      gpsInterval = setInterval(() => {
-        setGpsState((prev) => {
-          const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const setupLiveGps = async () => {
+      if (!isTripActive) {
+        setGpsState((prev) => ({
+          ...prev,
+          isBroadcasting: false,
+          speedKmh: 0,
+          lastPingTime: 'Broadcast Inactive',
+          queuedPings: 0,
+        }));
+        return;
+      }
 
-          if (!prev.isOnline) {
-            return {
-              ...prev,
-              queuedPings: prev.queuedPings + 1,
-              lastPingTime: `${now} (Buffered offline)`,
-            };
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (status === 'granted' && !isCancelled) {
+          // 1. Immediately obtain and broadcast the initial exact satellite GPS fix
+          try {
+            const initialPos = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.High,
+            });
+
+            if (!isCancelled && initialPos) {
+              const { latitude, longitude, speed } = initialPos.coords;
+              const speedVal = speed != null && speed > 0 ? Math.round(speed * 3.6) : 0;
+              const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+              broadcastDriverLocationToDb(
+                user?.schoolId,
+                user?.userId,
+                vehicleName,
+                latitude,
+                longitude,
+                speedVal
+              );
+
+              setGpsState((prev) => ({
+                ...prev,
+                isBroadcasting: true,
+                latitude,
+                longitude,
+                speedKmh: speedVal,
+                lastPingTime: now,
+                queuedPings: 0,
+              }));
+            }
+          } catch (posErr) {
+            console.warn('Initial getCurrentPositionAsync failed, continuing to watchPositionAsync:', posErr);
           }
 
-          const wasQueued = prev.queuedPings > 0;
-          const nextLat = prev.latitude + (Math.random() - 0.48) * 0.0006;
-          const nextLng = prev.longitude + (Math.random() - 0.48) * 0.0006;
-          const nextSpeed = Math.floor(28 + Math.random() * 15);
+          // 2. Hardware GPS live watcher
+          locationSubscription = await Location.watchPositionAsync(
+            {
+              accuracy: Location.Accuracy.High,
+              timeInterval: 3000,
+              distanceInterval: 2,
+            },
+            (location) => {
+              if (isCancelled) return;
+              const { latitude, longitude, speed } = location.coords;
+              const speedVal = speed != null && speed > 0 ? Math.round(speed * 3.6) : 0;
+              const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-          broadcastDriverLocationToDb(
-            user?.schoolId,
-            user?.userId,
-            vehicleName,
-            nextLat,
-            nextLng,
-            nextSpeed
+              setGpsState((prev) => {
+                if (!prev.isOnline) {
+                  return {
+                    ...prev,
+                    queuedPings: prev.queuedPings + 1,
+                    lastPingTime: `${now} (Buffered offline)`,
+                  };
+                }
+
+                broadcastDriverLocationToDb(
+                  user?.schoolId,
+                  user?.userId,
+                  vehicleName,
+                  latitude,
+                  longitude,
+                  speedVal
+                );
+
+                return {
+                  ...prev,
+                  isBroadcasting: true,
+                  latitude,
+                  longitude,
+                  speedKmh: speedVal,
+                  lastPingTime: now,
+                  queuedPings: 0,
+                };
+              });
+            }
           );
+          return;
+        }
+      } catch (err) {
+        console.warn('Location watchPositionAsync unavailable, using simulation fallback:', err);
+      }
 
-          return {
-            ...prev,
-            isBroadcasting: true,
-            latitude: nextLat,
-            longitude: nextLng,
-            speedKmh: nextSpeed,
-            lastPingTime: wasQueued ? `${now} (Flushed ${prev.queuedPings} pings)` : now,
-            queuedPings: 0,
-          };
-        });
-      }, 5000);
-    } else {
-      setGpsState((prev) => ({
-        ...prev,
-        isBroadcasting: false,
-        speedKmh: 0,
-        lastPingTime: 'Broadcast Inactive',
-        queuedPings: 0,
-      }));
-    }
+      // Fallback simulation if device permissions denied or running in simulator without GPS
+      if (!isCancelled) {
+        fallbackInterval = setInterval(() => {
+          setGpsState((prev) => {
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-    return () => clearInterval(gpsInterval);
+            if (!prev.isOnline) {
+              return {
+                ...prev,
+                queuedPings: prev.queuedPings + 1,
+                lastPingTime: `${now} (Buffered offline)`,
+              };
+            }
+
+            const wasQueued = prev.queuedPings > 0;
+            const nextLat = prev.latitude + (Math.random() - 0.48) * 0.0006;
+            const nextLng = prev.longitude + (Math.random() - 0.48) * 0.0006;
+            const nextSpeed = Math.floor(28 + Math.random() * 15);
+
+            broadcastDriverLocationToDb(
+              user?.schoolId,
+              user?.userId,
+              vehicleName,
+              nextLat,
+              nextLng,
+              nextSpeed
+            );
+
+            return {
+              ...prev,
+              isBroadcasting: true,
+              latitude: nextLat,
+              longitude: nextLng,
+              speedKmh: nextSpeed,
+              lastPingTime: wasQueued ? `${now} (Flushed ${prev.queuedPings} pings)` : now,
+              queuedPings: 0,
+            };
+          });
+        }, 5000);
+      }
+    };
+
+    setupLiveGps();
+
+    return () => {
+      isCancelled = true;
+      if (locationSubscription) {
+        locationSubscription.remove();
+      }
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
+      }
+    };
   }, [isTripActive, user, vehicleName]);
 
   // ─── Real Supabase Trip Actions ──────────────────────────────────────────
@@ -563,6 +672,7 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
 
     setCurrentTrip(updated);
     setIsTripActive(false);
+    await stopDriverLocationBroadcast(vehicleName);
 
     // Refresh attendance records from DB
     const attRecords = await getTripAttendanceRecords(currentTrip.id);
@@ -669,6 +779,7 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
       setCurrentTrip(res.trip);
     }
     setIsTripActive(false);
+    await stopDriverLocationBroadcast(vehicleName);
 
     const attRecords = await getTripAttendanceRecords(currentTrip.id);
     setTripAttendance(attRecords);
@@ -695,6 +806,7 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // Reset Trip Day (local clean state)
   const resetTripDay = () => {
+    stopDriverLocationBroadcast(vehicleName);
     setCurrentTrip(null);
     setTripAttendance([]);
     setIsTripActive(false);

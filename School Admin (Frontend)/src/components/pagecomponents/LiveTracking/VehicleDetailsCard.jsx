@@ -18,9 +18,8 @@ const VehicleDetailsCard = ({
   if (!vehicle) return null;
 
   const isDelayed = vehicle.statusType === 'delayed';
-  const fuelPercent = vehicle.fuel || 76;
   const studentsPercent = Math.round(
-    ((vehicle.studentsOnboard || 28) / (vehicle.totalCapacity || 32)) * 100
+    ((vehicle.studentsOnboard || 1) / (vehicle.totalCapacity || 30)) * 100
   );
 
   return (
@@ -78,70 +77,44 @@ const VehicleDetailsCard = ({
               </button>
             </p>
             <p>
-              Speed:{' '}
-              <span
-                className={`font-bold ${
-                  isDelayed ? 'text-amber-600' : 'text-emerald-600'
-                }`}
-              >
-                {vehicle.speed} km/h
-              </span>{' '}
-              <span className="text-slate-400 font-normal">
-                (Limit: {vehicle.speedLimit || 50})
+              Route:{' '}
+              <span className="font-semibold text-slate-700">
+                {vehicle.route}
               </span>
             </p>
             <p className="text-[11px] text-slate-400">
-              Last Update: {vehicle.lastUpdate}
+              Status: {vehicle.lastUpdate}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Telematics Metrics (Fuel & Students onboard) */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Fuel Card */}
-        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-          <span className="text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">
-            FUEL LEVEL
-          </span>
-          <div className="flex items-baseline justify-between mt-1 mb-2">
-            <span className="text-lg font-bold text-slate-800">
-              {fuelPercent}%
-            </span>
-            <span className="text-[11px] font-medium text-emerald-600">
-              {vehicle.fuelKm}
-            </span>
-          </div>
-          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-            <div
-              className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500"
-              style={{ width: `${fuelPercent}%` }}
-            ></div>
-          </div>
-        </div>
-
-        {/* Students Card */}
-        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+      {/* Students onboard metric */}
+      <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+        <div className="flex items-center justify-between">
           <span className="text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">
             STUDENTS ONBOARD
           </span>
-          <div className="flex items-baseline justify-between mt-1 mb-2">
-            <span className="text-lg font-bold text-slate-800">
-              {vehicle.studentsOnboard}{' '}
-              <span className="text-xs font-normal text-slate-400">
-                / {vehicle.totalCapacity}
-              </span>
+          <span className="text-[11px] font-medium text-blue-600">
+            {studentsPercent}% Capacity
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between mt-1 mb-2">
+          <span className="text-lg font-bold text-slate-800">
+            {vehicle.studentsOnboard}{' '}
+            <span className="text-xs font-normal text-slate-400">
+              / {vehicle.totalCapacity} seats
             </span>
-            <span className="text-[11px] font-medium text-blue-600">
-              {studentsPercent}%
-            </span>
-          </div>
-          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-            <div
-              className="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
-              style={{ width: `${studentsPercent}%` }}
-            ></div>
-          </div>
+          </span>
+          <span className="text-xs font-semibold text-slate-500">
+            Active Shift
+          </span>
+        </div>
+        <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+          <div
+            className="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
+            style={{ width: `${studentsPercent}%` }}
+          ></div>
         </div>
       </div>
 

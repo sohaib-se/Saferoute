@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import LiveTrackingHeader from '../components/pagecomponents/LiveTracking/LiveTrackingHeader';
 import LiveTrackingMap from '../components/pagecomponents/LiveTracking/LiveTrackingMap';
-import VehicleDetailsCard from '../components/pagecomponents/LiveTracking/VehicleDetailsCard';
-import OtherLiveUnits from '../components/pagecomponents/LiveTracking/OtherLiveUnits';
+import RunningVehiclesCard from '../components/pagecomponents/LiveTracking/RunningVehiclesCard';
 import LiveTrackingFooter from '../components/pagecomponents/LiveTracking/LiveTrackingFooter';
 import {
   CallDriverModal,
@@ -12,20 +11,174 @@ import {
   SOSAlertModal,
   VehicleDetailsModal,
 } from '../components/pagecomponents/LiveTracking/LiveTrackingModals';
-import { initialVehiclesTelemetry } from '../components/pagecomponents/LiveTracking/telemetryData';
+import {
+  fetchActiveVehicleLocations,
+  subscribeToAllVehicleLocations,
+} from '../services/liveTrackingService';
+import { getVehicles } from '../services/vehiclesService';
+import { getDrivers } from '../services/driversService';
+import { supabase } from '../lib/supabaseClient';
 
 const LiveTracking = ({
   onLogout,
   onNavigate,
   currentPage = 'Live Tracking',
 }) => {
-  const [vehicles, setVehicles] = useState(initialVehiclesTelemetry);
-  const [selectedVehicle, setSelectedVehicle] = useState(initialVehiclesTelemetry[0]);
+  const [vehicles, setVehicles] = useState([]);
+  const [runningTrips, setRunningTrips] = useState([]);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [mapViewMode, setMapViewMode] = useState('Roads');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+  const [liveLocationsMap, setLiveLocationsMap] = useState({});
+
+  // 1. Fetch real registered vehicles and drivers from Supabase
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadRealFleet = async () => {
+      try {
+        let vehiclesData = [];
+        let driversData = [];
+
+        try {
+          vehiclesData = await getVehicles(true);
+        } catch {
+          const { data } = await supabase.from('vehicles').select('*');
+          vehiclesData = data || [];
+        }
+
+        try {
+          driversData = await getDrivers(true);
+        } catch {
+          const { data } = await supabase.from('drivers').select('*');
+          driversData = data || [];
+        }
+
+        if (isMounted && vehiclesData && vehiclesData.length > 0) {
+          const formatted = vehiclesData.map((v) => {
+            const matchedDriver = (driversData || []).find(
+              (d) =>
+                (d.vehicle && d.vehicle.toLowerCase() === v.name.toLowerCase()) ||
+                (d.name && v.driver_name && d.name.toLowerCase() === v.driver_name.toLowerCase())
+            );
+
+            return {
+              id: v.id,
+              name: v.name,
+              plate: v.reg_no || '12312',
+              driver: v.driver_name || matchedDriver?.name || 'Farhan Khan',
+              driverPhone: matchedDriver?.phone || '213124',
+              route: v.route || 'Ring Road',
+              status: v.status || 'Active',
+            };
+          });
+
+          setVehicles(formatted);
+        }
+      } catch (err) {
+        console.warn('loadRealFleet exception:', err);
+      }
+    };
+
+    loadRealFleet();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 2. Fetch and subscribe to running trips (pickup_active or dropoff_active)
+  const loadRunningTrips = useCallback(async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('trips')
+        .select('*')
+        .eq('trip_date', today)
+        .in('overall_status', ['pickup_active', 'dropoff_active']);
+
+      if (!error && data) {
+        setRunningTrips(data);
+      } else {
+        setRunningTrips([]);
+      }
+    } catch (err) {
+      console.warn('loadRunningTrips error:', err);
+      setRunningTrips([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRunningTrips();
+
+    // Realtime subscription to trips table
+    const tripChannel = supabase
+      .channel('admin:realtime_trips')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'trips',
+        },
+        () => {
+          loadRunningTrips();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tripChannel);
+    };
+  }, [loadRunningTrips]);
+
+  // 3. Fetch active vehicle locations and subscribe to Realtime updates
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadLiveLocations = async () => {
+      const activeRows = await fetchActiveVehicleLocations();
+      if (isMounted) {
+        const map = {};
+        activeRows.forEach((row) => {
+          if (row.vehicle_name && row.is_active !== false) {
+            map[row.vehicle_name] = row;
+          }
+        });
+        setLiveLocationsMap(map);
+      }
+    };
+
+    loadLiveLocations();
+
+    const unsubscribe = subscribeToAllVehicleLocations(null, (updatedRow, eventType) => {
+      if (!isMounted) return;
+
+      setLiveLocationsMap((prev) => {
+        if (eventType === 'DELETE' || (updatedRow && updatedRow.is_active === false)) {
+          const next = { ...prev };
+          delete next[updatedRow.vehicle_name];
+          return next;
+        }
+
+        if (updatedRow && updatedRow.vehicle_name && updatedRow.is_active !== false) {
+          return {
+            ...prev,
+            [updatedRow.vehicle_name]: updatedRow,
+          };
+        }
+        return prev;
+      });
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   // Modals state
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -41,49 +194,70 @@ const LiveTracking = ({
     }, 4000);
   };
 
-  // Filter vehicles based on active filter controls
-  const filteredVehicles = vehicles.filter((v) => {
-    if (selectedRoute !== 'All' && v.route !== selectedRoute) {
-      return false;
-    }
-    if (selectedStatus === 'Active' && v.statusType === 'delayed') {
-      return false;
-    }
-    if (selectedStatus === 'Delayed' && v.statusType !== 'delayed') {
-      return false;
-    }
-    return true;
-  });
+  // Construct runningVehicles list: ONLY vehicles with an active running trip AND live coordinates
+  const runningVehicles = runningTrips
+    .map((trip) => {
+      const loc = liveLocationsMap[trip.vehicle_name];
+      const matchedVehicle = vehicles.find(
+        (v) => v.name?.toLowerCase() === trip.vehicle_name?.toLowerCase()
+      );
+
+      const lat = loc && typeof loc.latitude === 'number' ? Number(loc.latitude) : null;
+      const lng = loc && typeof loc.longitude === 'number' ? Number(loc.longitude) : null;
+
+      return {
+        id: trip.id,
+        tripId: trip.id,
+        name: trip.vehicle_name,
+        plate: matchedVehicle?.plate || '12312',
+        driver: trip.driver_name || matchedVehicle?.driver || 'Farhan Khan',
+        driverPhone: matchedVehicle?.driverPhone || '213124',
+        route: trip.route || matchedVehicle?.route || 'Ring Road',
+        tripPhase: trip.overall_status,
+        tripType: trip.overall_status === 'dropoff_active' ? 'dropoff' : 'pickup',
+        latitude: lat,
+        longitude: lng,
+        status: 'In Transit',
+        lastUpdate: 'Live GPS',
+      };
+    })
+    .filter(
+      (v) =>
+        typeof v.latitude === 'number' &&
+        typeof v.longitude === 'number' &&
+        !isNaN(v.latitude) &&
+        !isNaN(v.longitude)
+    );
+
+  // Focus vehicle
+  const currentVehicle =
+    (selectedVehicle && runningVehicles.find((v) => v.name === selectedVehicle.name)) ||
+    runningVehicles[0] ||
+    null;
 
   const handleSelectVehicle = (vehicle) => {
     setSelectedVehicle(vehicle);
   };
 
   const handleCenterFleet = () => {
-    setSelectedVehicle(vehicles[0]);
-    showToast('Fleet view centered on primary transit zone.');
+    if (runningVehicles.length > 0) {
+      setSelectedVehicle(runningVehicles[0]);
+      showToast(`Fleet view focused on ${runningVehicles[0].name}.`);
+    } else {
+      showToast('No active vehicles currently in transit.');
+    }
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-      // Small simulated updates
-      setVehicles((prev) =>
-        prev.map((v) => ({
-          ...v,
-          lastUpdate: 'Just now',
-          speed: Math.max(15, Math.min(48, v.speed + Math.floor(Math.random() * 5) - 2)),
-        }))
-      );
-      showToast('Live GPS telematics synchronized across 18 vehicles.');
-    }, 600);
+    await Promise.all([loadRunningTrips(), fetchActiveVehicleLocations()]);
+    setIsRefreshing(false);
+    showToast(`Telemetry synchronized (${runningVehicles.length} active in transit).`);
   };
 
   const handleCycleViewMode = () => {
     setMapViewMode((prev) => {
-      if (prev === 'Roads') return 'Traffic';
-      if (prev === 'Traffic') return 'Satellite';
+      if (prev === 'Roads') return 'Satellite';
       return 'Roads';
     });
   };
@@ -107,6 +281,10 @@ const LiveTracking = ({
     setTargetVehicle(vehicle);
     setIsSOSModalOpen(true);
   };
+
+  const routeOptions = Array.from(
+    new Set(vehicles.map((v) => v.route).filter(Boolean))
+  );
 
   return (
     <div className="h-screen flex bg-[#F8FAFC] antialiased text-slate-800 overflow-hidden font-sans">
@@ -142,40 +320,33 @@ const LiveTracking = ({
             onCenterFleet={handleCenterFleet}
             onRefresh={handleRefresh}
             isRefreshing={isRefreshing}
-            activeCount={18}
-            idleCount={5}
-            garageCount={2}
+            activeCount={runningVehicles.length}
+            idleCount={Math.max(0, vehicles.length - runningVehicles.length)}
+            garageCount={0}
+            routeOptions={routeOptions}
           />
 
-          {/* Main Two-Column Layout (Interactive Vector Map & Details Sidebar) */}
+          {/* Main Two-Column Layout (Interactive Google Tiles Map & Running Vehicles Panel) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pb-6">
-            {/* Left Vector Map Container (8 Cols) */}
+            {/* Left Google Tiles Leaflet Map Container (8 Cols) */}
             <LiveTrackingMap
-              vehicles={filteredVehicles.length > 0 ? filteredVehicles : vehicles}
-              selectedVehicle={selectedVehicle}
+              vehicles={runningVehicles}
+              selectedVehicle={currentVehicle}
               onSelectVehicle={handleSelectVehicle}
               mapViewMode={mapViewMode}
               onCycleViewMode={handleCycleViewMode}
               onResetView={handleCenterFleet}
             />
 
-            {/* Right Telematics Panels Container (4 Cols) */}
-            <div className="lg:col-span-4 space-y-5" data-purpose="vehicle-telematics-panel">
-              {/* Focus Vehicle Details Card */}
-              <VehicleDetailsCard
-                vehicle={selectedVehicle}
-                onViewDetails={openViewModal}
+            {/* Right Running Vehicles Panel Container (4 Cols) */}
+            <div className="lg:col-span-4 space-y-5" data-purpose="running-vehicles-container">
+              <RunningVehiclesCard
+                runningVehicles={runningVehicles}
+                selectedVehicle={currentVehicle}
+                onSelectVehicle={handleSelectVehicle}
                 onCallDriver={openCallModal}
                 onSendMessage={openMessageModal}
                 onTriggerSOS={openSOSModal}
-              />
-
-              {/* Other Live Units List */}
-              <OtherLiveUnits
-                vehicles={filteredVehicles.length > 0 ? filteredVehicles : vehicles}
-                selectedVehicle={selectedVehicle}
-                onSelectVehicle={handleSelectVehicle}
-                onViewAll={() => showToast('Displaying all 18 active vehicles in fleet.')}
               />
             </div>
           </div>
@@ -190,21 +361,21 @@ const LiveTracking = ({
       <CallDriverModal
         isOpen={isCallModalOpen}
         onClose={() => setIsCallModalOpen(false)}
-        vehicle={targetVehicle || selectedVehicle}
+        vehicle={targetVehicle || currentVehicle}
         onCallSuccess={showToast}
       />
 
       <SendMessageModal
         isOpen={isMessageModalOpen}
         onClose={() => setIsMessageModalOpen(false)}
-        vehicle={targetVehicle || selectedVehicle}
+        vehicle={targetVehicle || currentVehicle}
         onSendSuccess={showToast}
       />
 
       <SOSAlertModal
         isOpen={isSOSModalOpen}
         onClose={() => setIsSOSModalOpen(false)}
-        vehicle={targetVehicle || selectedVehicle}
+        vehicle={targetVehicle || currentVehicle}
         onConfirmSOS={(veh) =>
           showToast(`EMERGENCY: Distress signal sent to Depot for ${veh.name}!`)
         }
@@ -213,7 +384,7 @@ const LiveTracking = ({
       <VehicleDetailsModal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
-        vehicle={targetVehicle || selectedVehicle}
+        vehicle={targetVehicle || currentVehicle}
       />
     </div>
   );

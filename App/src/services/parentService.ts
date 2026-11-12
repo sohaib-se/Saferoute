@@ -347,11 +347,59 @@ export const subscribeToStudentStatusChanges = (
 };
 
 /**
+ * Fetches the current live vehicle location record from Supabase for a vehicle.
+ */
+export const getLiveVehicleLocation = async (vehicleName: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('vehicle_locations')
+      .select('*')
+      .eq('vehicle_name', vehicleName)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return {
+      latitude: Number(data.latitude),
+      longitude: Number(data.longitude),
+      speedKmh: Number(data.speed_kmh || 0),
+      isActive: Boolean(data.is_active),
+      updatedAt: data.updated_at,
+    };
+  } catch (err) {
+    console.warn('getLiveVehicleLocation exception:', err);
+    return null;
+  }
+};
+
+/**
+ * Checks if a vehicle currently has an active running trip today.
+ */
+export const isVehicleTripRunning = async (vehicleName: string): Promise<boolean> => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase
+      .from('trips')
+      .select('overall_status')
+      .eq('vehicle_name', vehicleName)
+      .eq('trip_date', today)
+      .in('overall_status', ['pickup_active', 'dropoff_active'])
+      .maybeSingle();
+
+    return Boolean(data);
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Subscribes to driver live location updates for the assigned vehicle
  */
 export const subscribeToLiveVehicleLocation = (
   vehicleName: string,
-  onLocationUpdate: (location: { latitude: number; longitude: number; speedKmh: number }) => void
+  onLocationUpdate: (location: { latitude: number; longitude: number; speedKmh: number } | null) => void
 ) => {
   const channel = supabase
     .channel(`realtime:vehicle_location_${vehicleName}`)
@@ -364,13 +412,20 @@ export const subscribeToLiveVehicleLocation = (
         filter: `vehicle_name=eq.${vehicleName}`,
       },
       (payload) => {
+        if (payload.eventType === 'DELETE') {
+          onLocationUpdate(null);
+          return;
+        }
+
         const item = payload.new as any;
-        if (item) {
+        if (item && item.is_active !== false && item.latitude && item.longitude) {
           onLocationUpdate({
             latitude: Number(item.latitude),
             longitude: Number(item.longitude),
-            speedKmh: Number(item.speed_kmh || 35),
+            speedKmh: Number(item.speed_kmh || 0),
           });
+        } else {
+          onLocationUpdate(null);
         }
       }
     )
