@@ -59,6 +59,7 @@ export interface StudentRosterItem {
   milestone: TransitMilestone;
   parentName: string;
   parentPhone: string;
+  parentUserId?: string;
   avatarInitials: string;
   pickedUpAt?: string;
   droppedOffAt?: string;

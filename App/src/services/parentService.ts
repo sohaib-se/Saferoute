@@ -15,6 +15,7 @@ export interface ParentProfileData {
 
 export interface AssignedDriverDetails {
   driverName: string;
+  driverUserId?: string;
   phone: string;
   vehicleName: string;
   plateNumber: string;
@@ -158,34 +159,160 @@ export const getParentProfileData = async (
 };
 
 /**
- * Fetches assigned driver details for the child.
+ * Fetches the exact assigned driver and vehicle details for a logged-in parent
+ * by querying students, parents, drivers, and vehicles tables.
  */
-export const getAssignedDriverDetails = async (
-  driverName: string = 'Hilal',
-  vehicleName: string = 'Bus 1'
+export const getAssignedDriverDetailsForParent = async (
+  parentId?: string,
+  parentName?: string,
+  schoolId?: string,
+  fallbackBus?: string
 ): Promise<AssignedDriverDetails> => {
   try {
-    const [dRes, vRes] = await Promise.all([
-      supabase.from('drivers').select('*').eq('name', driverName).maybeSingle(),
-      supabase.from('vehicles').select('*').eq('name', vehicleName).maybeSingle(),
-    ]);
+    let resolvedDriverName = '';
+    let resolvedVehicleName = fallbackBus || '';
+    let route = '';
+
+    // Step 1: Query students table for this parent's enrolled child
+    if (parentId || parentName) {
+      let studentQuery = supabase.from('students').select('*');
+      if (schoolId) {
+        studentQuery = studentQuery.eq('school_id', schoolId);
+      }
+      if (parentId && parentName) {
+        studentQuery = studentQuery.or(`parent_id.eq.${parentId},parent_name.ilike.%${parentName}%`);
+      } else if (parentId) {
+        studentQuery = studentQuery.eq('parent_id', parentId);
+      } else if (parentName) {
+        studentQuery = studentQuery.ilike('parent_name', `%${parentName}%`);
+      }
+
+      const { data: students } = await studentQuery;
+      if (students && students.length > 0) {
+        const student = students[0];
+        if (student.driver) resolvedDriverName = student.driver;
+        if (student.vehicle) resolvedVehicleName = student.vehicle;
+        if (student.route) route = student.route;
+      }
+    }
+
+    // Step 2: If vehicle or driver still unknown, query parents table
+    if ((!resolvedVehicleName || !resolvedDriverName) && parentId) {
+      const { data: parent } = await supabase
+        .from('parents')
+        .select('*')
+        .eq('id', parentId)
+        .maybeSingle();
+
+      if (parent) {
+        if (!resolvedVehicleName && parent.bus) {
+          resolvedVehicleName = parent.bus;
+        }
+        if (!resolvedDriverName && parent.route && parent.route.includes('Driver:')) {
+          resolvedDriverName = parent.route.replace('Driver:', '').trim();
+        }
+      }
+    }
+
+    // Step 3: Lookup driver record
+    let driverData: any = null;
+    if (resolvedDriverName) {
+      let dQuery = supabase.from('drivers').select('*').ilike('name', resolvedDriverName);
+      if (schoolId) dQuery = dQuery.eq('school_id', schoolId);
+      const { data } = await dQuery.maybeSingle();
+      driverData = data;
+    }
+    // If not found by name, try lookup by assigned vehicle
+    if (!driverData && resolvedVehicleName) {
+      let dQuery = supabase.from('drivers').select('*').ilike('vehicle', resolvedVehicleName);
+      if (schoolId) dQuery = dQuery.eq('school_id', schoolId);
+      const { data } = await dQuery.maybeSingle();
+      driverData = data;
+    }
+
+    // If driver record has vehicle, prefer that vehicle name
+    if (!resolvedVehicleName && driverData?.vehicle) {
+      resolvedVehicleName = driverData.vehicle;
+    }
+
+    // Step 4: Lookup vehicle record for registration plate & model
+    let vehicleData: any = null;
+    const targetVehicle = resolvedVehicleName || driverData?.vehicle;
+    if (targetVehicle) {
+      let vQuery = supabase.from('vehicles').select('*').ilike('name', targetVehicle);
+      if (schoolId) vQuery = vQuery.eq('school_id', schoolId);
+      const { data } = await vQuery.maybeSingle();
+      vehicleData = data;
+    }
+
+    // If driver was still not found, check if vehicle has driver_name
+    if (!driverData && vehicleData?.driver_name) {
+      let dQuery = supabase.from('drivers').select('*').ilike('name', vehicleData.driver_name);
+      if (schoolId) dQuery = dQuery.eq('school_id', schoolId);
+      const { data } = await dQuery.maybeSingle();
+      driverData = data;
+    }
 
     return {
-      driverName: dRes.data?.name || driverName,
-      phone: dRes.data?.phone || '03124124',
-      vehicleName: vRes.data?.name || vehicleName,
-      plateNumber: vRes.data?.reg_no || 'ICT-4921',
-      licenseNumber: dRes.data?.license ? `DL-${dRes.data.license}` : 'DL-32412',
-      route: dRes.data?.route || 'Morning Route - Sector G-10',
+      driverName: driverData?.name || resolvedDriverName || 'Assigned Driver',
+      driverUserId: driverData?.id || undefined,
+      phone: driverData?.phone || 'N/A',
+      vehicleName: vehicleData?.name || targetVehicle || 'Assigned Van',
+      plateNumber: vehicleData?.reg_no || 'N/A',
+      licenseNumber: driverData?.license ? `DL-${driverData.license}` : 'N/A',
+      route: route || driverData?.route || vehicleData?.route || 'Assigned Route',
+    };
+  } catch (err) {
+    console.error('Error fetching assigned driver details for parent:', err);
+    return {
+      driverName: 'Assigned Driver',
+      phone: 'N/A',
+      vehicleName: fallbackBus || 'Assigned Van',
+      plateNumber: 'N/A',
+      licenseNumber: 'N/A',
+      route: 'Assigned Route',
+    };
+  }
+};
+
+/**
+ * Fetches assigned driver details by driver and/or vehicle name.
+ */
+export const getAssignedDriverDetails = async (
+  driverName?: string,
+  vehicleName?: string
+): Promise<AssignedDriverDetails> => {
+  try {
+    let dRes: any = { data: null };
+    let vRes: any = { data: null };
+
+    if (driverName) {
+      dRes = await supabase.from('drivers').select('*').ilike('name', driverName).maybeSingle();
+    }
+    if (vehicleName) {
+      vRes = await supabase.from('vehicles').select('*').ilike('name', vehicleName).maybeSingle();
+    }
+    if (!dRes.data && vRes.data?.driver_name) {
+      dRes = await supabase.from('drivers').select('*').ilike('name', vRes.data.driver_name).maybeSingle();
+    }
+
+    return {
+      driverName: dRes.data?.name || driverName || 'Assigned Driver',
+      driverUserId: dRes.data?.id || undefined,
+      phone: dRes.data?.phone || 'N/A',
+      vehicleName: vRes.data?.name || vehicleName || 'Assigned Van',
+      plateNumber: vRes.data?.reg_no || 'N/A',
+      licenseNumber: dRes.data?.license ? `DL-${dRes.data.license}` : 'N/A',
+      route: dRes.data?.route || vRes.data?.route || 'Assigned Route',
     };
   } catch {
     return {
-      driverName,
-      phone: '03124124',
-      vehicleName,
-      plateNumber: 'ICT-4921',
-      licenseNumber: 'DL-32412',
-      route: 'Morning Route - Sector G-10',
+      driverName: driverName || 'Assigned Driver',
+      phone: 'N/A',
+      vehicleName: vehicleName || 'Assigned Van',
+      plateNumber: 'N/A',
+      licenseNumber: 'N/A',
+      route: 'Assigned Route',
     };
   }
 };

@@ -16,14 +16,15 @@ interface CurrentTripStatusCardProps {
 }
 
 export const CurrentTripStatusCard: React.FC<CurrentTripStatusCardProps> = ({
-  vehicleName = 'Bus 1',
-  vehiclePlate = '12312',
-  driverName = 'Farhan Khan',
-  driverPhone = '213124',
+  vehicleName = 'Assigned Van',
+  vehiclePlate = 'N/A',
+  driverName = 'Assigned Driver',
+  driverPhone = 'N/A',
+  speedKmh = 38,
   distanceKm = 2.1,
   etaMins = 7,
-  currentSector = 'Ring Road',
-  childrenStatusText = 'Enrolled: Sohaib Khan (Grade 5 - Sec A)',
+  currentSector = 'Assigned Sector',
+  childrenStatusText = 'Enrolled student status',
   onCallDriver,
 }) => {
   return (

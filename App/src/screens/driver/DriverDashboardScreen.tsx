@@ -7,9 +7,9 @@ import { DriverMetrics } from '../../components/screencomponents/driver/dashboar
 import { DriverTransitRadarCard } from '../../components/screencomponents/driver/dashboard/DriverTransitRadarCard';
 import { DriverRosterPreview } from '../../components/screencomponents/driver/dashboard/DriverRosterPreview';
 import { AttendanceModal } from '../../components/screencomponents/driver/roster/AttendanceModal';
-import { InAppCallModal } from '../../components/screencomponents/driver/call/InAppCallModal';
 import { useAuth } from '../../context/AuthContext';
 import { useDriverTrip, StudentRosterItem } from '../../context/DriverTripContext';
+import { useCall } from '../../context/CallContext';
 import { colors } from '../../lib/theme';
 
 interface DriverDashboardScreenProps {
@@ -22,13 +22,13 @@ export const DriverDashboardScreen: React.FC<DriverDashboardScreenProps> = ({
   onOpenSOS,
 }) => {
   const { user } = useAuth();
+  const { startCall } = useCall();
   const {
     vehicleName,
     isTripActive,
     gpsState,
     students,
     markAttendance,
-    startInAppCall,
     adminNoticeCount,
     tripNotifications,
     toggleConnectivitySimulation,
@@ -50,7 +50,13 @@ export const DriverDashboardScreen: React.FC<DriverDashboardScreenProps> = ({
   };
 
   const handleCallParent = (student: StudentRosterItem) => {
-    startInAppCall(student.parentName, student.name, student.parentPhone);
+    startCall({
+      calleeId: student.parentUserId || '87ac2bf4-700b-4fec-9ec0-1fd83f3bb448',
+      calleeRole: 'parent',
+      calleeName: student.parentName,
+      studentName: student.name,
+      vehicleName,
+    });
   };
 
   const pickedCount = students.filter(
@@ -121,9 +127,6 @@ export const DriverDashboardScreen: React.FC<DriverDashboardScreenProps> = ({
           onClose={() => setSelectedStudentForModal(null)}
         />
       )}
-
-      {/* In-App Calling Function Modal (REQ-D7.2) */}
-      <InAppCallModal />
     </View>
   );
 };

@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, Alert, Linking } from 'react-native';
 import { Header } from '../../components/common/Header';
 import { DriverDetailsCard } from '../../components/screencomponents/parent/calldriver/DriverDetailsCard';
-import { SchoolDirectoryCard } from '../../components/screencomponents/parent/calldriver/SchoolDirectoryCard';
-import {
-  ParentInAppCallModal,
-  ParentActiveCall,
-} from '../../components/screencomponents/parent/calldriver/ParentInAppCallModal';
 import { useAuth } from '../../context/AuthContext';
-import { getAssignedDriverDetails, AssignedDriverDetails } from '../../services/parentService';
+import { useCall } from '../../context/CallContext';
+import { getAssignedDriverDetailsForParent, AssignedDriverDetails } from '../../services/parentService';
 
 interface ParentCallDriverScreenProps {
   onBack?: () => void;
@@ -20,49 +16,62 @@ export const ParentCallDriverScreen: React.FC<ParentCallDriverScreenProps> = ({
   onOpenNotifications,
 }) => {
   const { user } = useAuth();
-  const [activeCall, setActiveCall] = useState<ParentActiveCall | null>(null);
+  const { startCall } = useCall();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [driverInfo, setDriverInfo] = useState<AssignedDriverDetails>({
-    driverName: 'Hilal',
-    phone: '03124124',
-    vehicleName: 'Bus 1',
-    plateNumber: 'ICT-4921',
-    licenseNumber: 'DL-32412',
-    route: 'Morning Route - Sector G-10',
+    driverName: 'Loading Driver...',
+    phone: '...',
+    vehicleName: '...',
+    plateNumber: '...',
+    licenseNumber: '...',
+    route: '...',
   });
 
   useEffect(() => {
     let isMounted = true;
     const loadDetails = async () => {
-      const res = await getAssignedDriverDetails('Hilal', 'Bus 1');
+      setIsLoading(true);
+      const res = await getAssignedDriverDetailsForParent(
+        user?.userId,
+        user?.name,
+        user?.schoolId,
+        user?.profile?.bus
+      );
       if (isMounted) {
         setDriverInfo(res);
+        setIsLoading(false);
       }
     };
     loadDetails();
     return () => {
       isMounted = false;
     };
-  }, []);
-
-  const schoolName = user?.profile?.schoolName || 'School Transport Desk';
-  const schoolPhone = user?.profile?.schoolPhone || '03001234567';
+  }, [user]);
 
   const handleCallDriver = () => {
-    setActiveCall({
-      name: driverInfo.driverName,
-      role: `Assigned Route Driver • ${driverInfo.vehicleName}`,
-      phone: driverInfo.phone,
-      avatarIcon: 'person',
-    });
-  };
+    if (!driverInfo.driverUserId) {
+      if (driverInfo.phone && driverInfo.phone !== 'N/A') {
+        Alert.alert(
+          'Driver Call',
+          `Direct in-app VoIP connection is unavailable. Would you like to place a cellular phone call to ${driverInfo.phone}?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Call Driver', onPress: () => Linking.openURL(`tel:${driverInfo.phone}`) },
+          ]
+        );
+      } else {
+        Alert.alert('No Driver Contact', 'No assigned driver phone or VoIP ID found for your student.');
+      }
+      return;
+    }
 
-  const handleCallAdmin = () => {
-    setActiveCall({
-      name: schoolName,
-      role: 'Official Transport Desk • Head Office',
-      phone: schoolPhone,
-      avatarIcon: 'business',
+    startCall({
+      calleeId: driverInfo.driverUserId,
+      calleeRole: 'driver',
+      calleeName: driverInfo.driverName,
+      studentName: user?.name ? `${user.name}'s child` : 'Child',
+      vehicleName: driverInfo.vehicleName,
     });
   };
 
@@ -70,33 +79,28 @@ export const ParentCallDriverScreen: React.FC<ParentCallDriverScreenProps> = ({
     <View style={styles.container}>
       <Header
         title="Contact Directory"
-        subtitle="Call assigned driver or school administration"
+        subtitle="Call assigned route driver"
         onBack={onBack}
         onNotificationPress={onOpenNotifications}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Card 1: Call Driver */}
-        <DriverDetailsCard
-          driverName={driverInfo.driverName}
-          phone={driverInfo.phone}
-          vehicleName={driverInfo.vehicleName}
-          plateNumber={driverInfo.plateNumber}
-          licenseNumber={driverInfo.licenseNumber}
-          onCallDriver={handleCallDriver}
-        />
-
-        {/* Card 2: Contact Admin */}
-        <SchoolDirectoryCard
-          onCallAdmin={handleCallAdmin}
-        />
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+          </View>
+        ) : (
+          /* Card 1: Call Driver */
+          <DriverDetailsCard
+            driverName={driverInfo.driverName}
+            phone={driverInfo.phone}
+            vehicleName={driverInfo.vehicleName}
+            plateNumber={driverInfo.plateNumber}
+            licenseNumber={driverInfo.licenseNumber}
+            onCallDriver={handleCallDriver}
+          />
+        )}
       </ScrollView>
-
-      {/* In-App VoIP Call Modal Popup (Identical to Driver Portal) */}
-      <ParentInAppCallModal
-        call={activeCall}
-        onEndCall={() => setActiveCall(null)}
-      />
     </View>
   );
 };
@@ -110,6 +114,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 110, // Dock clearance
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

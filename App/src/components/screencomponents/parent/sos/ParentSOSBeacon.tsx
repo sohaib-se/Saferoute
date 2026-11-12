@@ -6,13 +6,12 @@ import { shadows } from '../../../../lib/theme';
 interface ParentSOSBeaconProps {
   isTriggered: boolean;
   onTrigger: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
 }
 
 export const ParentSOSBeacon: React.FC<ParentSOSBeaconProps> = ({
   isTriggered,
   onTrigger,
-  onCancel,
 }) => {
   if (isTriggered) {
     return (
@@ -28,14 +27,20 @@ export const ParentSOSBeacon: React.FC<ParentSOSBeaconProps> = ({
           School administration, transport desk, and campus safety have received your distress alert with live device telemetry. Stay on this screen until school authorities respond.
         </Text>
 
-        <TouchableOpacity
-          style={styles.cancelAlertBtn}
-          onPress={onCancel}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="close-circle-outline" size={18} color="#EF4444" />
-          <Text style={styles.cancelAlertText}>Resolve & Cancel Emergency</Text>
-        </TouchableOpacity>
+        {/* SOS Sent Confirmation Card - Admin Only Resolution */}
+        <View style={styles.sentStatusBox}>
+          <View style={styles.sentStatusHeader}>
+            <Ionicons name="checkmark-circle" size={20} color="#16A34A" />
+            <Text style={styles.sentStatusTitle}>SOS HAS BEEN SENT</Text>
+          </View>
+          <Text style={styles.sentStatusDesc}>
+            Distress alert transmitted to School Administration. Campus response officers have received this notification.
+          </Text>
+          <View style={styles.adminOnlyBadge}>
+            <Ionicons name="shield-checkmark" size={14} color="#991B1B" />
+            <Text style={styles.adminOnlyText}>Only School Admin can resolve this emergency</Text>
+          </View>
+        </View>
       </View>
     );
   }
@@ -209,21 +214,56 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
   },
-  cancelAlertBtn: {
+  sentStatusBox: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#86EFAC',
+    marginTop: 4,
+    shadowColor: '#16A34A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  sentStatusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#EF4444',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 16,
+    gap: 8,
+    marginBottom: 6,
+  },
+  sentStatusTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#15803D',
+    letterSpacing: 0.5,
+  },
+  sentStatusDesc: {
+    fontSize: 12,
+    color: '#334155',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 10,
+    fontWeight: '500',
+  },
+  adminOnlyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
     gap: 6,
   },
-  cancelAlertText: {
-    color: '#EF4444',
-    fontWeight: '800',
-    fontSize: 13,
+  adminOnlyText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#991B1B',
   },
 });
 

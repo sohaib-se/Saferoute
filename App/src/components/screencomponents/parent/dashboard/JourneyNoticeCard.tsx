@@ -10,9 +10,9 @@ interface JourneyNoticeCardProps {
 }
 
 export const JourneyNoticeCard: React.FC<JourneyNoticeCardProps> = ({
-  vehicleName = 'Bus 1',
+  vehicleName = 'Assigned Bus',
   sectorName = 'Sector G-10',
-  driverName = 'Hilal',
+  driverName = 'Assigned Driver',
 }) => {
   return (
     <View style={styles.card}>

@@ -28,13 +28,10 @@ export const ParentProfileHeader: React.FC<ParentProfileHeaderProps> = ({
 
       {/* Main Profile Info Row */}
       <View style={styles.contentRow}>
-        {/* Avatar with Camera badge */}
+        {/* Avatar without Camera badge */}
         <View style={styles.avatarWrapper}>
           <View style={styles.avatarCircle}>
             <Ionicons name="person" size={46} color="#94A3B8" />
-          </View>
-          <View style={styles.cameraBadge}>
-            <Ionicons name="camera" size={12} color="#FFFFFF" />
           </View>
         </View>
 
@@ -132,19 +129,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 3,
-  },
-  cameraBadge: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#007AFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
   },
   detailsCol: {
     flex: 1,

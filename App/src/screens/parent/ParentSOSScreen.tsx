@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Header } from '../../components/common/Header';
 import { ParentSOSBeacon } from '../../components/screencomponents/parent/sos/ParentSOSBeacon';
 import { useAuth } from '../../context/AuthContext';
-import { dispatchSOSAlert } from '../../services/sosService';
+import { dispatchSOSAlert, getActiveSOSAlert, subscribeToSOSResolution } from '../../services/sosService';
 
 interface ParentSOSScreenProps {
   onBack?: () => void;
@@ -16,11 +16,46 @@ export const ParentSOSScreen: React.FC<ParentSOSScreenProps> = ({
 }) => {
   const { user } = useAuth();
   const [sosTriggered, setSosTriggered] = useState(false);
+  const [activeAlertId, setActiveAlertId] = useState<string | null>(null);
+
+  // Check if an active distress beacon already exists on mount
+  useEffect(() => {
+    let isMounted = true;
+    const checkActiveSOS = async () => {
+      const active = await getActiveSOSAlert('parent', user?.userId);
+      if (isMounted && active) {
+        setSosTriggered(true);
+        setActiveAlertId(active.id);
+      }
+    };
+    checkActiveSOS();
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.userId]);
+
+  // Subscribe to real-time resolution by School Administration
+  useEffect(() => {
+    if (!sosTriggered) return;
+
+    const unsubscribe = subscribeToSOSResolution(activeAlertId || undefined, () => {
+      setSosTriggered(false);
+      setActiveAlertId(null);
+      Alert.alert(
+        'Emergency Resolved',
+        'School Administration has verified safety and marked your SOS alert as resolved.'
+      );
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [sosTriggered, activeAlertId]);
 
   const handleTriggerSOS = () => {
     Alert.alert(
       'EMERGENCY SOS ALERT',
-      'Are you sure you want to trigger SOS? This will capture your current location and send an immediate high-priority safety alert to the School Administration and Transport Team.',
+      'Are you sure you want to trigger SOS? This will send an immediate high-priority emergency safety alert to the School Administration.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -28,27 +63,28 @@ export const ParentSOSScreen: React.FC<ParentSOSScreenProps> = ({
           style: 'destructive',
           onPress: async () => {
             setSosTriggered(true);
-            await dispatchSOSAlert({
+            const result = await dispatchSOSAlert({
               schoolId: user?.schoolId,
               senderType: 'parent',
-              senderId: user?.userId || 'parent-1',
+              senderId: user?.userId || '87ac2bf4-700b-4fec-9ec0-1fd83f3bb448',
               senderName: user?.name || 'Zeeshan Malik',
+              vehicleName: user?.profile?.bus || 'Bus 1',
               latitude: 33.6844,
               longitude: 73.0479,
             });
+
+            if (result.alertId) {
+              setActiveAlertId(result.alertId);
+            }
+
             Alert.alert(
-              'Alert Transmitted',
-              'School Admin has received your SOS beacon with your GPS coordinates. School security and transport teams are notified.'
+              'SOS Alert Sent',
+              'SOS has been sent! School administration and campus safety officers have received your distress alert. Only School Admin can resolve this emergency.'
             );
           },
         },
       ]
     );
-  };
-
-  const handleClearSOS = () => {
-    setSosTriggered(false);
-    Alert.alert('SOS Cleared', 'Your emergency alert has been resolved.');
   };
 
   return (
@@ -65,7 +101,6 @@ export const ParentSOSScreen: React.FC<ParentSOSScreenProps> = ({
         <ParentSOSBeacon
           isTriggered={sosTriggered}
           onTrigger={handleTriggerSOS}
-          onCancel={handleClearSOS}
         />
       </ScrollView>
     </View>

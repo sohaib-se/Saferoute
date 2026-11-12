@@ -11,8 +11,8 @@ interface TrackingMapCanvasProps {
 }
 
 export const TrackingMapCanvas: React.FC<TrackingMapCanvasProps> = ({
-  vehicleName = 'Bus 1',
-  driverName = 'Hilal',
+  vehicleName = 'Assigned Van',
+  driverName = 'Assigned Driver',
   speedKmh = 38,
 }) => {
   return (

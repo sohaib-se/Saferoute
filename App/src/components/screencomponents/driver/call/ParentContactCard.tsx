@@ -6,7 +6,7 @@ import { StudentRosterItem } from '../../../../context/DriverTripContext';
 
 interface ParentContactCardProps {
   student: StudentRosterItem;
-  onStartInAppCall: (parentName: string, studentName: string, phone: string) => void;
+  onStartInAppCall: (parentName: string, studentName: string, phone: string, parentUserId?: string) => void;
 }
 
 export const ParentContactCard: React.FC<ParentContactCardProps> = ({
@@ -43,7 +43,7 @@ export const ParentContactCard: React.FC<ParentContactCardProps> = ({
         {/* In-App VoIP Call Button */}
         <TouchableOpacity
           style={styles.inAppCallBtn}
-          onPress={() => onStartInAppCall(student.parentName, student.name, student.parentPhone)}
+          onPress={() => onStartInAppCall(student.parentName, student.name, student.parentPhone, student.parentUserId)}
           activeOpacity={0.8}
         >
           <Ionicons name="call" size={15} color="#FFFFFF" />

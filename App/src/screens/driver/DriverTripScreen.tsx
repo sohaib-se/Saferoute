@@ -16,8 +16,8 @@ import { StudentPickupCard } from '../../components/screencomponents/driver/trip
 import { StudentDropoffCard } from '../../components/screencomponents/driver/trip/StudentDropoffCard';
 import { TripProgressBar } from '../../components/screencomponents/driver/trip/TripProgressBar';
 import { TripCompleteSummary } from '../../components/screencomponents/driver/trip/TripCompleteSummary';
-import { InAppCallModal } from '../../components/screencomponents/driver/call/InAppCallModal';
 import { useDriverTrip, StudentRosterItem } from '../../context/DriverTripContext';
+import { useCall } from '../../context/CallContext';
 
 interface DriverTripScreenProps {
   onBack?: () => void;
@@ -45,9 +45,9 @@ export const DriverTripScreen: React.FC<DriverTripScreenProps> = ({
     dropStudent,
     completeDropoffTrip,
     resetTripDay,
-    startInAppCall,
     tripNotifications,
   } = useDriverTrip();
+  const { startCall } = useCall();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -232,7 +232,13 @@ export const DriverTripScreen: React.FC<DriverTripScreenProps> = ({
   };
 
   const handleCallParent = (student: StudentRosterItem) => {
-    startInAppCall(student.parentName, student.name, student.parentPhone);
+    startCall({
+      calleeId: student.parentUserId || '87ac2bf4-700b-4fec-9ec0-1fd83f3bb448',
+      calleeRole: 'parent',
+      calleeName: student.parentName,
+      studentName: student.name,
+      vehicleName,
+    });
   };
 
   // Filter students by search
@@ -563,9 +569,6 @@ export const DriverTripScreen: React.FC<DriverTripScreenProps> = ({
           )}
         </ScrollView>
       )}
-
-      {/* In-App Calling Function Modal */}
-      <InAppCallModal />
     </View>
   );
 };
