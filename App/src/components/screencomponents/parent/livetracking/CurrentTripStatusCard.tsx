@@ -8,7 +8,6 @@ interface CurrentTripStatusCardProps {
   vehiclePlate?: string;
   driverName?: string;
   driverPhone?: string;
-  speedKmh?: number;
   distanceKm?: number;
   etaMins?: number;
   currentSector?: string;
@@ -18,13 +17,12 @@ interface CurrentTripStatusCardProps {
 
 export const CurrentTripStatusCard: React.FC<CurrentTripStatusCardProps> = ({
   vehicleName = 'Bus 1',
-  vehiclePlate = 'ICT-4921',
-  driverName = 'Hilal',
-  driverPhone = '031241242',
-  speedKmh = 38,
+  vehiclePlate = '12312',
+  driverName = 'Farhan Khan',
+  driverPhone = '213124',
   distanceKm = 2.1,
   etaMins = 7,
-  currentSector = 'Sector G-10',
+  currentSector = 'Ring Road',
   childrenStatusText = 'Enrolled: Sohaib Khan (Grade 5 - Sec A)',
   onCallDriver,
 }) => {
@@ -59,15 +57,8 @@ export const CurrentTripStatusCard: React.FC<CurrentTripStatusCardProps> = ({
         </Text>
       </View>
 
-      {/* 3. Realtime Telemetry Stats Row */}
+      {/* 3. Realtime Transit Stats Row */}
       <View style={styles.statsRow}>
-        <View style={styles.statCol}>
-          <Text style={styles.statLabel}>SPEED</Text>
-          <Text style={styles.statValue}>{speedKmh} km/h</Text>
-        </View>
-
-        <View style={styles.statDivider} />
-
         <View style={styles.statCol}>
           <Text style={styles.statLabel}>DISTANCE</Text>
           <Text style={styles.statValue}>{distanceKm} km</Text>

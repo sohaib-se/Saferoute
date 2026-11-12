@@ -37,7 +37,7 @@ export const CallDriverModal = ({ isOpen, onClose, vehicle, onCallSuccess }) => 
             <h4 className="font-bold text-base text-slate-900">{vehicle.driver}</h4>
             <p className="text-xs text-slate-500 font-mono mt-0.5">{vehicle.driverPhone}</p>
             <p className="text-[11px] text-emerald-600 font-medium mt-1">
-              Currently driving {vehicle.name} • {vehicle.speed} km/h
+              Currently driving {vehicle.name} • Live GPS Active
             </p>
           </div>
         </div>
@@ -219,17 +219,13 @@ export const VehicleDetailsModal = ({ isOpen, onClose, vehicle }) => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-            <span className="text-[10px] uppercase font-bold text-slate-400">SPEED</span>
-            <p className="text-base font-extrabold text-slate-800 mt-0.5">{vehicle.speed} km/h</p>
+            <span className="text-[10px] uppercase font-bold text-slate-400">STATUS</span>
+            <p className="text-base font-extrabold text-emerald-600 mt-0.5">{vehicle.status || 'Active'}</p>
           </div>
           <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-            <span className="text-[10px] uppercase font-bold text-slate-400">FUEL</span>
-            <p className="text-base font-extrabold text-emerald-600 mt-0.5">{vehicle.fuel}%</p>
-          </div>
-          <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-            <span className="text-[10px] uppercase font-bold text-slate-400">STUDENTS</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400">STUDENTS ONBOARD</span>
             <p className="text-base font-extrabold text-blue-600 mt-0.5">{vehicle.studentsOnboard} / {vehicle.totalCapacity}</p>
           </div>
         </div>
