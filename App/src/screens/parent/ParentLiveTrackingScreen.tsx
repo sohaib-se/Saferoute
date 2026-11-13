@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Linking } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Linking } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/common/Header';
 import { OpenStreetMapLiveView } from '../../components/screencomponents/parent/livetracking/OpenStreetMapLiveView';
-import { CurrentTripStatusCard } from '../../components/screencomponents/parent/livetracking/CurrentTripStatusCard';
+import {
+  ChildSelectorPills,
+  ChildRouteOption,
+} from '../../components/screencomponents/parent/livetracking/ChildSelectorPills';
 import { useAuth } from '../../context/AuthContext';
 import { useCall } from '../../context/CallContext';
+import { supabase } from '../../lib/supabase';
 import {
   getAssignedDriverDetailsForParent,
+  getLiveVehicleLocation,
+  isVehicleTripRunning,
   subscribeToLiveVehicleLocation,
   getParentChildren,
   AssignedDriverDetails,
@@ -33,12 +40,12 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
 
   // Live driver & vehicle details from Supabase
   const [driverInfo, setDriverInfo] = useState<AssignedDriverDetails>({
-    driverName: 'Loading Driver...',
-    phone: '',
-    vehicleName: '',
-    plateNumber: '',
-    licenseNumber: '',
-    route: '',
+    driverName: 'Farhan Khan',
+    phone: '213124',
+    vehicleName: 'Bus 1',
+    plateNumber: '12312',
+    licenseNumber: 'DL-0312',
+    route: 'Ring Road',
   });
 
   // Live coordinates streamed from driver's broadcast (initial null to avoid dummy display)
@@ -50,69 +57,136 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
   // 1. Initial fetch of parent's children
   useEffect(() => {
     let isMounted = true;
-    let unsubscribeLocation: (() => void) | null = null;
-
-    const fetchDriverAndChildren = async () => {
-      const details = await getAssignedDriverDetailsForParent(
-        user?.userId,
-        user?.name,
-        user?.schoolId,
-        user?.profile?.bus
-      );
+    const fetchChildren = async () => {
       const childList = await getParentChildren(user?.userId, user?.name, user?.schoolId);
       if (isMounted) {
         setChildren(childList);
+        if (childList.length > 0 && !selectedChildId) {
+          setSelectedChildId(childList[0].id);
+        }
+      }
+    };
+    fetchChildren();
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
-        const targetVehicle = details.vehicleName || 'Bus 1';
-        unsubscribeLocation = subscribeToLiveVehicleLocation(targetVehicle, (newLoc) => {
-          if (isMounted) {
-            setLocation(newLoc);
-          }
-        });
+  // 2. Active child and corresponding vehicle name
+  const activeChild = children.find((c) => c.id === selectedChildId) || children[0];
+  const targetVehicleName = activeChild?.vehicle
+    ? activeChild.vehicle.split(' (')[0].trim()
+    : driverInfo.vehicleName || 'Bus 1';
+
+  // 3. Dynamic fetch and subscription to driver, vehicle location and trip status
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchDriverAndLocation = async () => {
+      const [details, initialLoc, tripRunning] = await Promise.all([
+        getAssignedDriverDetailsForParent(
+          user?.userId,
+          user?.name,
+          user?.schoolId,
+          targetVehicleName
+        ),
+        getLiveVehicleLocation(targetVehicleName),
+        isVehicleTripRunning(targetVehicleName),
+      ]);
+
+      if (isMounted) {
+        setDriverInfo(details);
+        const active = Boolean(tripRunning && initialLoc && initialLoc.latitude && initialLoc.longitude);
+        setIsTripActive(active);
+
+        if (active && initialLoc) {
+          setLocation({
+            latitude: initialLoc.latitude,
+            longitude: initialLoc.longitude,
+          });
+        } else {
+          setLocation(null);
+        }
       }
     };
     fetchDriverAndLocation();
 
+    // Subscribe to real-time vehicle location changes
+    const unsubscribeLocation = subscribeToLiveVehicleLocation(targetVehicleName, (newLoc) => {
+      if (isMounted) {
+        if (newLoc && newLoc.latitude && newLoc.longitude) {
+          setLocation(newLoc);
+          setIsTripActive(true);
+        } else {
+          setLocation(null);
+          setIsTripActive(false);
+        }
+      }
+    });
+
+    // Subscribe to trip lifecycle changes
+    const tripChannel = supabase
+      .channel(`parent:trips_${targetVehicleName}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'trips',
+          filter: `vehicle_name=eq.${targetVehicleName}`,
+        },
+        (payload) => {
+          if (!isMounted) return;
+          const trip = payload.new as any;
+          if (trip) {
+            const running = trip.overall_status === 'pickup_active' || trip.overall_status === 'dropoff_active';
+            setIsTripActive(running);
+            if (!running) {
+              setLocation(null);
+            }
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       isMounted = false;
-      if (unsubscribeLocation) {
-        unsubscribeLocation();
-      }
+      unsubscribeLocation();
+      supabase.removeChannel(tripChannel);
     };
-  }, [targetVehicleName, targetDriverName]);
+  }, [targetVehicleName, user]);
 
   const handleStartDriverCall = () => {
-    if (!driverInfo.driverUserId) {
-      if (driverInfo.phone && driverInfo.phone !== 'N/A') {
-        Linking.openURL(`tel:${driverInfo.phone}`);
-      }
+    if (onCallDriver) {
+      onCallDriver();
       return;
     }
-    startCall({
-      calleeId: driverInfo.driverUserId,
-      calleeRole: 'driver',
-      calleeName: driverInfo.driverName,
-      studentName: user?.name ? `${user.name}'s child` : 'Child',
-      vehicleName: driverInfo.vehicleName,
-    });
+    if (driverInfo.driverUserId) {
+      startCall({
+        calleeId: driverInfo.driverUserId,
+        calleeRole: 'driver',
+        calleeName: driverInfo.driverName,
+        studentName: user?.name ? `${user.name}'s child` : 'Child',
+        vehicleName: driverInfo.vehicleName,
+      });
+    } else if (driverInfo.phone && driverInfo.phone !== 'N/A') {
+      Linking.openURL(`tel:${driverInfo.phone}`);
+    }
   };
 
-  const childrenStatusText =
-    children.length > 0
-      ? children.map((c) => `${c.name} (${c.grade}) • ${c.status}`).join(' | ')
-      : driverInfo.driverName && driverInfo.driverName !== 'Loading Driver...'
-      ? `Assigned: ${driverInfo.driverName} • ${driverInfo.vehicleName}`
-      : 'Fetching enrolled student status...';
-
-  const firstChildAddress =
-    children[0]?.stopAddress || 'Khatme Nabuwat Chowk';
+  const childOptions: ChildRouteOption[] = children.map((c) => ({
+    id: c.id,
+    name: c.name,
+    initials: c.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase(),
+    busLabel: c.vehicle || 'Bus 1',
+  }));
 
   return (
     <View style={styles.container}>
       {/* 1. Screen Header */}
       <Header
         title="Live Van Tracking"
-        subtitle={`${driverInfo.vehicleName} • ${isTripActive ? 'In Transit' : 'Trip Not Started'}`}
+        subtitle={`${driverInfo.vehicleName || 'Bus 1'} • ${isTripActive ? 'In Transit' : 'Trip Not Started'}`}
         onBack={onBack}
         onNotificationPress={onOpenNotifications}
       />
@@ -120,27 +194,48 @@ export const ParentLiveTrackingScreen: React.FC<ParentLiveTrackingScreenProps> =
       {/* 2. Full Width and Full Height Google-Tile Leaflet Map */}
       <View style={styles.mapSection}>
         <OpenStreetMapLiveView
-          vehicleName={driverInfo.vehicleName}
-          driverName={driverInfo.driverName}
+          vehicleName={driverInfo.vehicleName || 'Bus 1'}
+          driverName={driverInfo.driverName || 'Farhan Khan'}
           latitude={location?.latitude ?? 34.0100649}
           longitude={location?.longitude ?? 71.6738585}
           isTripActive={isTripActive}
         />
 
-      {/* 3. Current Status of Trip Card */}
-      <View style={styles.statusSection}>
-        <CurrentTripStatusCard
-          vehicleName={driverInfo.vehicleName}
-          vehiclePlate={driverInfo.plateNumber}
-          driverName={driverInfo.driverName}
-          driverPhone={driverInfo.phone}
-          speedKmh={location.speedKmh}
-          distanceKm={1.8}
-          etaMins={6}
-          currentSector="Sector G-10"
-          childrenStatusText={childrenStatusText}
-          onCallDriver={onCallDriver || handleStartDriverCall}
-        />
+        {/* Top Overlay: Child Selector Pills (if multiple children) */}
+        {childOptions.length > 1 && (
+          <View style={styles.topSelectorOverlay}>
+            <ChildSelectorPills
+              options={childOptions}
+              selectedId={selectedChildId}
+              onSelect={setSelectedChildId}
+            />
+          </View>
+        )}
+
+        {/* Top Status Pill: Indicates Trip Status */}
+        <View style={styles.tripStatusPill}>
+          <View
+            style={[
+              styles.statusDot,
+              { backgroundColor: isTripActive ? '#10B981' : '#94A3B8' },
+            ]}
+          />
+          <Text style={styles.tripStatusText}>
+            {isTripActive
+              ? `${driverInfo.vehicleName || 'Bus 1'} is currently in transit`
+              : 'Trip not started yet • Waiting for driver'}
+          </Text>
+        </View>
+
+        {/* Floating Call Driver Button */}
+        <TouchableOpacity
+          style={styles.floatingCallBtn}
+          onPress={handleStartDriverCall}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="call" size={16} color="#FFFFFF" />
+          <Text style={styles.floatingCallText}>Call Driver</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );

@@ -20,7 +20,6 @@ export const CurrentTripStatusCard: React.FC<CurrentTripStatusCardProps> = ({
   vehiclePlate = 'N/A',
   driverName = 'Assigned Driver',
   driverPhone = 'N/A',
-  speedKmh = 38,
   distanceKm = 2.1,
   etaMins = 7,
   currentSector = 'Assigned Sector',
