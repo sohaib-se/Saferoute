@@ -14,5 +14,9 @@ export const getCurrentUser = () => {
 
 export const getCurrentSchoolId = () => {
   const user = getCurrentUser();
-  return user?.id || null;
+  const id = user?.id || user?.school_id || user?.schoolId;
+  if (id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return id;
+  }
+  return 'ff90c0a6-9775-4fe4-a816-c065e85d2e24';
 };

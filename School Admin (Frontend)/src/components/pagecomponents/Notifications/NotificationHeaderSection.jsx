@@ -15,21 +15,23 @@ const NotificationHeaderSection = ({
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Notifications</h2>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
-              {totalCount} Total • {unreadCount} Unread
+              {unreadCount > 0 ? `${totalCount} Total • ${unreadCount} Unread` : `${totalCount} Total Alerts`}
             </span>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={onMarkAllAsRead}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-white text-slate-700 border border-slate-200 rounded-xl shadow-2xs hover:bg-slate-50 transition cursor-pointer"
-          >
-            <MdCheck size={16} className="text-slate-500" />
-            <span>Mark All as Read</span>
-          </button>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={onMarkAllAsRead}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-white text-slate-700 border border-slate-200 rounded-xl shadow-2xs hover:bg-slate-50 transition cursor-pointer"
+            >
+              <MdCheck size={16} className="text-slate-500" />
+              <span>Mark All as Read</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={onOpenSendModal}

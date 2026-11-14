@@ -7,6 +7,12 @@ import {
   getDriverVehicleInfo,
   broadcastDriverLocationToDb,
 } from '../services/driverService';
+import { updateUserPassword } from '../services/authService';
+import {
+  fetchNotificationsFromDb,
+  markNotificationsAsReadInDb,
+  subscribeToNotifications,
+} from '../services/notificationService';
 import {
   TripRecord,
   TripAttendanceRecord,
@@ -106,7 +112,7 @@ export interface TripNotificationItem {
   title: string;
   body: string;
   time: string;
-  type: 'trip_start' | 'attendance' | 'sos' | 'admin_notice';
+  type: string;
   isRead: boolean;
 }
 
@@ -172,7 +178,7 @@ interface DriverTripContextType {
 
   // Password change
   mustChangePassword: boolean;
-  completePasswordChange: (newPass: string) => void;
+  completePasswordChange: (newPass: string, currentPass?: string) => Promise<void> | void;
 
   // Notifications
   tripNotifications: TripNotificationItem[];
@@ -219,17 +225,8 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
   const [activeCall, setActiveCall] = useState<ActiveCallState | null>(null);
   const [mustChangePassword, setMustChangePassword] = useState<boolean>(false);
 
-  // Notifications
-  const [tripNotifications, setTripNotifications] = useState<TripNotificationItem[]>([
-    {
-      id: 'tn-welcome',
-      title: 'Vehicle & Route Synced',
-      body: 'Welcome to SafeRoute Driver Portal. Ready for daily transport shifts.',
-      time: 'Today',
-      type: 'trip_start',
-      isRead: false,
-    },
-  ]);
+  // Notifications from Admin / System
+  const [tripNotifications, setTripNotifications] = useState<TripNotificationItem[]>([]);
 
   // Derive Trip Phase
   const tripPhase: TripPhase = !currentTrip
@@ -307,6 +304,42 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     loadAssignedStudents();
     refreshTripData();
   }, [loadAssignedStudents, refreshTripData]);
+
+  // Fetch real notifications from Admin for Driver and subscribe to real-time updates
+  useEffect(() => {
+    let isMounted = true;
+    const loadNotifs = async () => {
+      const items = await fetchNotificationsFromDb('driver', user?.userId, user?.schoolId);
+      if (isMounted) {
+        setTripNotifications(items);
+      }
+    };
+    loadNotifs();
+
+    const unsubscribe = subscribeToNotifications(
+      'driver',
+      user?.userId,
+      user?.schoolId,
+      (newNotif) => {
+        if (isMounted) {
+          setTripNotifications((prev) => [
+            newNotif,
+            ...prev.filter((item) => item.id !== newNotif.id),
+          ]);
+        }
+      },
+      (deletedId) => {
+        if (isMounted) {
+          setTripNotifications((prev) => prev.filter((item) => item.id !== deletedId));
+        }
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [user]);
 
   // 4. Merge base students with trip attendance state
   const students: StudentRosterItem[] = baseStudents.map((st) => {
@@ -433,16 +466,6 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
       const attRecords = await getTripAttendanceRecords(newTrip.id);
       setTripAttendance(attRecords);
 
-      const notif: TripNotificationItem = {
-        id: `tn-${Date.now()}`,
-        title: 'New Trip Created',
-        body: `Trip for ${vehicleName} created successfully. Ready to start pickup route.`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        type: 'trip_start',
-        isRead: false,
-      };
-      setTripNotifications((prev) => [notif, ...prev]);
-
       return true;
     } catch (err: any) {
       console.error('Error creating trip:', err);
@@ -473,19 +496,6 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     setTripStartTime(new Date());
     setTripDurationSeconds(0);
 
-    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setTripNotifications((prev) => [
-      {
-        id: `tn-${Date.now()}`,
-        title: 'Morning Pickup Started',
-        body: `Live GPS broadcasting is active for ${vehicleName}. Assigned parents notified.`,
-        time: nowStr,
-        type: 'trip_start',
-        isRead: false,
-      },
-      ...prev,
-    ]);
-
     return true;
   };
 
@@ -496,7 +506,16 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     const st = students.find((s) => s.id === studentId);
     const studentName = st?.name || 'Student';
 
-    const ok = await markStudentPickedUpInDb(currentTrip.id, studentId, studentName, user?.schoolId);
+    const ok = await markStudentPickedUpInDb({
+      tripId: currentTrip.id,
+      studentId,
+      studentName,
+      parentId: st?.parentUserId,
+      driverName: user?.name || currentTrip.driver_name || 'Driver',
+      vehicleName,
+      routeTitle,
+      schoolId: user?.schoolId || currentTrip.school_id,
+    });
     if (!ok) {
       return { success: false, message: 'Failed to update student status' };
     }
@@ -509,22 +528,9 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
       )
     );
 
-    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setTripNotifications((prev) => [
-      {
-        id: `tn-${Date.now()}`,
-        title: `Picked Up: ${studentName}`,
-        body: `${studentName} safely boarded ${vehicleName} at ${nowStr}.`,
-        time: nowStr,
-        type: 'attendance',
-        isRead: false,
-      },
-      ...prev,
-    ]);
-
     return {
       success: true,
-      message: `${studentName} marked as Picked Up. Parent notified.`,
+      message: `${studentName} marked as Picked Up. Parent & School Admin notified.`,
     };
   };
 
@@ -535,7 +541,16 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     const st = students.find((s) => s.id === studentId);
     const studentName = st?.name || 'Student';
 
-    const ok = await markStudentAbsentInDb(currentTrip.id, studentId, studentName, user?.schoolId);
+    const ok = await markStudentAbsentInDb({
+      tripId: currentTrip.id,
+      studentId,
+      studentName,
+      parentId: st?.parentUserId,
+      driverName: user?.name || currentTrip.driver_name || 'Driver',
+      vehicleName,
+      routeTitle,
+      schoolId: user?.schoolId || currentTrip.school_id,
+    });
     if (!ok) {
       return { success: false, message: 'Failed to mark student as absent' };
     }
@@ -556,7 +571,12 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
   const completePickupTrip = async (): Promise<{ success: boolean; message: string }> => {
     if (!currentTrip) return { success: false, message: 'No active trip' };
 
-    const updated = await completePickupSubTrip(currentTrip.id, user?.schoolId);
+    const updated = await completePickupSubTrip(
+      currentTrip.id,
+      user?.schoolId || currentTrip.school_id,
+      vehicleName,
+      user?.name || currentTrip.driver_name
+    );
     if (!updated) {
       return { success: false, message: 'Could not complete pickup trip' };
     }
@@ -568,19 +588,6 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     const attRecords = await getTripAttendanceRecords(currentTrip.id);
     setTripAttendance(attRecords);
 
-    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setTripNotifications((prev) => [
-      {
-        id: `tn-${Date.now()}`,
-        title: 'Morning Pickup Complete',
-        body: 'Students dropped off at school. Afternoon drop-off trip is now unlocked.',
-        time: nowStr,
-        type: 'attendance',
-        isRead: false,
-      },
-      ...prev,
-    ]);
-
     return {
       success: true,
       message: 'Morning pickup completed at school! Afternoon drop-off trip is now unlocked.',
@@ -591,7 +598,12 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
   const startDropoffTrip = async (): Promise<boolean> => {
     if (!currentTrip) return false;
 
-    const updated = await startDropoffSubTrip(currentTrip.id);
+    const updated = await startDropoffSubTrip(currentTrip.id, {
+      driverName: user?.name || currentTrip.driver_name,
+      vehicleName,
+      routeTitle,
+      schoolId: user?.schoolId || currentTrip.school_id,
+    });
     if (!updated) {
       Alert.alert('Error', 'Could not start dropoff trip.');
       return false;
@@ -601,19 +613,6 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     setIsTripActive(true);
     setTripStartTime(new Date());
     setTripDurationSeconds(0);
-
-    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setTripNotifications((prev) => [
-      {
-        id: `tn-${Date.now()}`,
-        title: 'Afternoon Drop-off Started',
-        body: `Students boarded from school. Live GPS active for ${vehicleName}.`,
-        time: nowStr,
-        type: 'trip_start',
-        isRead: false,
-      },
-      ...prev,
-    ]);
 
     return true;
   };
@@ -625,7 +624,16 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     const st = students.find((s) => s.id === studentId);
     const studentName = st?.name || 'Student';
 
-    const ok = await markStudentDroppedInDb(currentTrip.id, studentId, studentName, user?.schoolId);
+    const ok = await markStudentDroppedInDb({
+      tripId: currentTrip.id,
+      studentId,
+      studentName,
+      parentId: st?.parentUserId,
+      driverName: user?.name || currentTrip.driver_name || 'Driver',
+      vehicleName,
+      routeTitle,
+      schoolId: user?.schoolId || currentTrip.school_id,
+    });
     if (!ok) {
       return { success: false, message: 'Failed to record drop off' };
     }
@@ -637,22 +645,9 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
       )
     );
 
-    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setTripNotifications((prev) => [
-      {
-        id: `tn-${Date.now()}`,
-        title: `Dropped Home: ${studentName}`,
-        body: `${studentName} safely arrived at home at ${nowStr}.`,
-        time: nowStr,
-        type: 'attendance',
-        isRead: false,
-      },
-      ...prev,
-    ]);
-
     return {
       success: true,
-      message: `${studentName} safely dropped off at home.`,
+      message: `${studentName} safely dropped off at home. Parent & School Admin notified.`,
     };
   };
 
@@ -660,7 +655,13 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
   const completeDropoffTrip = async (force: boolean = false): Promise<{ success: boolean; message: string }> => {
     if (!currentTrip) return { success: false, message: 'No active trip' };
 
-    const res = await completeDropoffSubTrip(currentTrip.id, force, user?.schoolId);
+    const res = await completeDropoffSubTrip(
+      currentTrip.id,
+      force,
+      user?.schoolId || currentTrip.school_id,
+      vehicleName,
+      user?.name || currentTrip.driver_name
+    );
     if (!res.success) {
       return res;
     }
@@ -815,11 +816,25 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     setActiveCall((prev) => (prev ? { ...prev, isSpeaker: !prev.isSpeaker } : null));
   };
 
-  const completePasswordChange = (newPass: string) => {
+  const completePasswordChange = async (newPass: string, currentPass?: string) => {
     setMustChangePassword(false);
+    await updateUserPassword({
+      userId: user?.userId,
+      userType: 'driver',
+      loginId: user?.loginId,
+      phone: user?.phone,
+      schoolId: user?.schoolId,
+      name: user?.name,
+      currentPassword: currentPass,
+      newPassword: newPass,
+    });
   };
 
   const markNotificationsAsRead = () => {
+    const unreadIds = tripNotifications.filter((n) => !n.isRead).map((n) => n.id);
+    if (unreadIds.length > 0) {
+      markNotificationsAsReadInDb(unreadIds);
+    }
     setTripNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 

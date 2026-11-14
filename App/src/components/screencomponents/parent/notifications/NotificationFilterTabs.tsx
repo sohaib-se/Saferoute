@@ -45,10 +45,12 @@ export const NotificationFilterTabs: React.FC<NotificationFilterTabsProps> = ({
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity onPress={onMarkAllRead} style={styles.markReadPill} activeOpacity={0.75}>
-        <Ionicons name="checkmark" size={15} color="#007AFF" />
-        <Text style={styles.markReadText}>Mark all read</Text>
-      </TouchableOpacity>
+      {unreadCount > 0 && (
+        <TouchableOpacity onPress={onMarkAllRead} style={styles.markReadPill} activeOpacity={0.75}>
+          <Ionicons name="checkmark" size={15} color="#007AFF" />
+          <Text style={styles.markReadText}>Mark all read</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

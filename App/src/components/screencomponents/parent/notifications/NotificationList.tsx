@@ -99,7 +99,6 @@ export const NotificationList: React.FC<NotificationListProps> = ({ notification
                 <View style={styles.titleRow}>
                   <Text
                     style={[styles.itemTitle, isEmergency && styles.emergencyTitle]}
-                    numberOfLines={1}
                   >
                     {item.title}
                   </Text>
@@ -126,20 +125,6 @@ export const NotificationList: React.FC<NotificationListProps> = ({ notification
                     {item.time}
                   </Text>
                 </View>
-              </View>
-
-              {/* Right Chevron Button */}
-              <View
-                style={[
-                  styles.chevronButton,
-                  isEmergency && { backgroundColor: '#FEE2E2' },
-                ]}
-              >
-                <Ionicons
-                  name="chevron-forward"
-                  size={16}
-                  color={isEmergency ? '#DC2626' : '#94A3B8'}
-                />
               </View>
             </TouchableOpacity>
 
@@ -193,7 +178,6 @@ const styles = StyleSheet.create({
   },
   contentCol: {
     flex: 1,
-    marginRight: 10,
   },
   titleRow: {
     flexDirection: 'row',
@@ -202,9 +186,10 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   itemTitle: {
-    fontSize: 14.5,
+    fontSize: 15,
     fontWeight: '700',
     color: '#0F172A',
+    lineHeight: 21,
     flex: 1,
   },
   emergencyTitle: {
@@ -232,9 +217,10 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   itemBody: {
-    fontSize: 12,
-    color: '#64748B',
-    lineHeight: 17,
+    fontSize: 13.5,
+    color: '#334155',
+    lineHeight: 19,
+    marginTop: 3,
     marginBottom: 6,
   },
   emergencyBody: {
@@ -247,21 +233,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   timeText: {
-    fontSize: 11.5,
+    fontSize: 12,
     color: '#64748B',
     fontWeight: '500',
   },
   emergencyTimeText: {
     color: '#DC2626',
     fontWeight: '600',
-  },
-  chevronButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#F8FAFC',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   connectorLine: {
     position: 'absolute',

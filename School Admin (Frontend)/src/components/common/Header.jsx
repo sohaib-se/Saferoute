@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 import {
   MdSearch,
   MdNotificationsNone,
@@ -227,10 +228,40 @@ const Header = ({ onNavigate }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
 
   const dropdownRef = useRef(null);
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
+
+  // Check unread notifications for bell badge
+  useEffect(() => {
+    const checkUnread = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_read', false)
+          .in('recipient_type', ['admin', 'all']);
+        if (!error && typeof count === 'number') {
+          setHasUnread(count > 0);
+        }
+      } catch {}
+    };
+
+    checkUnread();
+
+    const channel = supabase
+      .channel('header:notif_badge_dot')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+        checkUnread();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -439,7 +470,9 @@ const Header = ({ onNavigate }) => {
           className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 flex items-center justify-center relative text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
         >
           <MdNotificationsNone size={18} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white" />
+          {hasUnread && (
+            <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white" />
+          )}
         </button>
 
         {/* Divider */}

@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radii, shadows } from '../../../../lib/theme';
 
 interface ForcePasswordChangeModalProps {
   visible: boolean;
   isFirstLogin?: boolean;
+  userType?: 'driver' | 'parent';
   onClose: () => void;
-  onSubmit: (newPassword: string) => void;
+  onSubmit: (newPassword: string, currentPassword?: string) => Promise<boolean | void> | boolean | void;
 }
 
 export const ForcePasswordChangeModal: React.FC<ForcePasswordChangeModalProps> = ({
   visible,
   isFirstLogin = false,
+  userType = 'driver',
   onClose,
   onSubmit,
 }) => {
@@ -20,28 +22,55 @@ export const ForcePasswordChangeModal: React.FC<ForcePasswordChangeModalProps> =
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = () => {
+  const handleClose = () => {
+    if (isSubmitting) return;
     setError('');
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    onClose();
+  };
+
+  const handleSubmit = async () => {
+    setError('');
+    if (!isFirstLogin && !currentPassword.trim()) {
+      setError('Please enter your current password.');
+      return;
+    }
     if (!newPassword.trim() || !confirmPassword.trim()) {
       setError('Please fill in both new password fields.');
       return;
     }
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters.');
+    if (newPassword.length < 4) {
+      setError('New password must be at least 4 characters.');
       return;
     }
     if (newPassword !== confirmPassword) {
       setError('New passwords do not match.');
       return;
     }
-    onSubmit(newPassword);
-    onClose();
+
+    setIsSubmitting(true);
+    try {
+      const res = await onSubmit(newPassword, currentPassword);
+      if (res !== false) {
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        onClose();
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to update password.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={isFirstLogin ? undefined : onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={isFirstLogin ? undefined : handleClose}>
       <View style={styles.overlay}>
         <View style={styles.modalCard}>
           <View style={styles.iconCircle}>
@@ -53,8 +82,8 @@ export const ForcePasswordChangeModal: React.FC<ForcePasswordChangeModalProps> =
           </Text>
           <Text style={styles.subtitle}>
             {isFirstLogin
-              ? 'As per school administration safety regulations (REQ-D1.2), you must replace your admin-issued temporary credential with a private password.'
-              : 'Enter your new secure password to update your driver account.'}
+              ? 'As per school administration safety regulations, you must replace your temporary credential with a private password.'
+              : `Enter your current and new password to update your ${userType === 'parent' ? 'guardian' : 'driver'} account.`}
           </Text>
 
           {error ? (
@@ -66,7 +95,7 @@ export const ForcePasswordChangeModal: React.FC<ForcePasswordChangeModalProps> =
 
           {!isFirstLogin && (
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Current Admin-Issued Password</Text>
+              <Text style={styles.inputLabel}>Current Password</Text>
               <TextInput
                 style={styles.input}
                 secureTextEntry={!showPassword}
@@ -74,6 +103,7 @@ export const ForcePasswordChangeModal: React.FC<ForcePasswordChangeModalProps> =
                 placeholderTextColor="#94A3B8"
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
+                editable={!isSubmitting}
               />
             </View>
           )}
@@ -83,10 +113,11 @@ export const ForcePasswordChangeModal: React.FC<ForcePasswordChangeModalProps> =
             <TextInput
               style={styles.input}
               secureTextEntry={!showPassword}
-              placeholder="At least 6 characters"
+              placeholder="At least 4 characters"
               placeholderTextColor="#94A3B8"
               value={newPassword}
               onChangeText={setNewPassword}
+              editable={!isSubmitting}
             />
           </View>
 
@@ -99,6 +130,7 @@ export const ForcePasswordChangeModal: React.FC<ForcePasswordChangeModalProps> =
               placeholderTextColor="#94A3B8"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
+              editable={!isSubmitting}
             />
           </View>
 
@@ -106,6 +138,7 @@ export const ForcePasswordChangeModal: React.FC<ForcePasswordChangeModalProps> =
             style={styles.showPassRow}
             onPress={() => setShowPassword(!showPassword)}
             activeOpacity={0.7}
+            disabled={isSubmitting}
           >
             <Ionicons
               name={showPassword ? 'checkbox' : 'square-outline'}
@@ -117,12 +150,26 @@ export const ForcePasswordChangeModal: React.FC<ForcePasswordChangeModalProps> =
 
           <View style={styles.buttonRow}>
             {!isFirstLogin && (
-              <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.75}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={handleClose}
+                activeOpacity={0.75}
+                disabled={isSubmitting}
+              >
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} activeOpacity={0.85}>
-              <Text style={styles.submitBtnText}>Update Password</Text>
+            <TouchableOpacity
+              style={[styles.submitBtn, isSubmitting && { opacity: 0.7 }]}
+              onPress={handleSubmit}
+              activeOpacity={0.85}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.submitBtnText}>Update Password</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

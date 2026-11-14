@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/common/Header';
@@ -13,6 +13,11 @@ export const DriverNotificationsScreen: React.FC<DriverNotificationsScreenProps>
   const { tripNotifications, markNotificationsAsRead } = useDriverTrip();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
+  // Automatically mark all notifications as read upon visiting the screen
+  useEffect(() => {
+    markNotificationsAsRead();
+  }, []);
+
   const unreadCount = tripNotifications.filter((n) => !n.isRead).length;
   const displayed = filter === 'unread' ? tripNotifications.filter((n) => !n.isRead) : tripNotifications;
 
@@ -21,8 +26,11 @@ export const DriverNotificationsScreen: React.FC<DriverNotificationsScreenProps>
       case 'trip_start':
         return { name: 'navigate-circle' as const, bg: '#EFF6FF', color: '#007AFF' };
       case 'attendance':
+      case 'picked_up':
+      case 'dropped_off':
         return { name: 'checkmark-done-circle' as const, bg: '#ECFDF5', color: '#059669' };
       case 'sos':
+      case 'emergency':
         return { name: 'alert-circle' as const, bg: '#FEF2F2', color: '#DC2626' };
       default:
         return { name: 'information-circle' as const, bg: '#FFFBEB', color: '#D97706' };
@@ -32,8 +40,8 @@ export const DriverNotificationsScreen: React.FC<DriverNotificationsScreenProps>
   return (
     <View style={styles.container}>
       <Header
-        title="Driver Alerts & Logs"
-        subtitle="Real-time transit telemetry logs"
+        title="Notifications"
+        subtitle="Admin notices & announcements"
         onBack={onBack}
         showNotification={false}
       />
@@ -193,9 +201,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   itemTitle: {
-    fontSize: 13.5,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '700',
     color: '#0F172A',
+    lineHeight: 21,
     flex: 1,
   },
   unreadDot: {
@@ -205,14 +214,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
   },
   itemBody: {
-    fontSize: 12,
-    color: '#475569',
+    fontSize: 13.5,
+    color: '#334155',
     marginTop: 3,
-    lineHeight: 17,
+    lineHeight: 19,
   },
   itemTime: {
-    fontSize: 11,
-    color: '#94A3B8',
+    fontSize: 12,
+    color: '#64748B',
     fontWeight: '500',
     marginTop: 6,
   },

@@ -227,3 +227,99 @@ export const authenticateUser = async ({
     };
   }
 };
+
+export interface ChangePasswordParams {
+  userId?: string;
+  userType: 'driver' | 'parent';
+  loginId?: string;
+  phone?: string;
+  name?: string;
+  schoolId?: string;
+  currentPassword?: string;
+  newPassword: string;
+}
+
+/**
+ * Updates the password in the database (app_credentials table)
+ * and verifies current password if provided.
+ */
+export const updateUserPassword = async (
+  params: ChangePasswordParams
+): Promise<{ success: boolean; error?: string }> => {
+  const cleanNew = params.newPassword ? params.newPassword.trim() : '';
+  const cleanCurrent = params.currentPassword ? params.currentPassword.trim() : null;
+
+  if (!cleanNew || cleanNew.length < 4) {
+    return { success: false, error: 'Password must be at least 4 characters.' };
+  }
+
+  try {
+    // 1. Locate the credential record by userId, loginId, or phone
+    let query = supabase.from('app_credentials').select('*');
+
+    if (params.userId) {
+      query = query.or(`user_id.eq.${params.userId},id.eq.${params.userId}`);
+    } else if (params.loginId) {
+      query = query.eq('login_id', params.loginId);
+    } else if (params.phone) {
+      query = query.eq('phone', params.phone);
+    }
+
+    if (params.userType) {
+      query = query.eq('user_type', params.userType);
+    }
+
+    const { data: records, error: fetchErr } = await query;
+
+    if (fetchErr) {
+      console.warn('Could not query app_credentials:', fetchErr.message);
+    }
+
+    if (records && records.length > 0) {
+      const cred = records[0];
+
+      // If current password was provided, verify it matches the current DB password
+      if (cleanCurrent && cred.password && cred.password !== cleanCurrent) {
+        return { success: false, error: 'Current password is incorrect.' };
+      }
+
+      // Update password in app_credentials
+      const { error: updateErr } = await supabase
+        .from('app_credentials')
+        .update({
+          password: cleanNew,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', cred.id);
+
+      if (updateErr) {
+        return { success: false, error: updateErr.message };
+      }
+
+      return { success: true };
+    } else {
+      // If no row exists yet (e.g. offline/demo user), insert new credential
+      const { error: insertErr } = await supabase.from('app_credentials').insert([
+        {
+          school_id: params.schoolId || null,
+          user_type: params.userType,
+          user_id: params.userId || null,
+          name: params.name || (params.userType === 'driver' ? 'Driver' : 'Parent'),
+          phone: params.phone || '',
+          login_id: params.loginId || '0000',
+          password: cleanNew,
+          is_active: true,
+        },
+      ]);
+
+      if (insertErr) {
+        return { success: false, error: insertErr.message };
+      }
+
+      return { success: true };
+    }
+  } catch (err: any) {
+    console.error('updateUserPassword exception:', err);
+    return { success: false, error: err?.message || 'Failed to update password.' };
+  }
+};
