@@ -23,7 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   showLogout = false,
   showNotification = true,
   onNotificationPress,
-  notificationBadgeCount = 2,
+  notificationBadgeCount = 0,
 }) => {
   const { user, logout } = useAuth();
 
@@ -76,9 +76,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Ionicons name="notifications-outline" size={19} color="#0F172A" />
               {notificationBadgeCount > 0 ? (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{notificationBadgeCount}</Text>
-                </View>
+                <View style={styles.badgeDot} />
               ) : null}
             </TouchableOpacity>
           )}
@@ -194,24 +192,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-  badge: {
+  badgeDot: {
     position: 'absolute',
-    top: -2,
-    right: -2,
+    top: 6,
+    right: 6,
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
     backgroundColor: '#EF4444',
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
     borderWidth: 1.5,
     borderColor: '#FFFFFF',
-  },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '900',
   },
   logoutButton: {
     flexDirection: 'row',

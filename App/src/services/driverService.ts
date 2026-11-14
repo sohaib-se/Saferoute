@@ -182,24 +182,6 @@ export const updateStudentStatusInDb = async (
       .eq('id', studentId);
 
     if (error) throw error;
-
-    // Insert real-time notification for the parent
-    try {
-      await supabase.from('notifications').insert([
-        {
-          school_id: schoolId || null,
-          recipient_type: 'parent',
-          student_id: studentId,
-          title: `Student Transit Update: ${status}`,
-          body: `${studentName || 'Student'} has been marked as ${status} by Driver.`,
-          type: status === 'Picked up' ? 'picked_up' : status === 'Dropped off' ? 'dropped_off' : 'notice',
-          is_read: false,
-        },
-      ]);
-    } catch {
-      // Notifications table might not be migrated yet
-    }
-
     return true;
   } catch (err) {
     console.error('Error updating student status in Supabase:', err);
@@ -223,22 +205,6 @@ export const batchDropAllAtSchoolInDb = async (
       .in('id', studentIds);
 
     if (error) throw error;
-
-    try {
-      await supabase.from('notifications').insert([
-        {
-          school_id: schoolId || null,
-          recipient_type: 'parent',
-          title: 'School Gate Arrival',
-          body: `${vehicleName} has safely dropped off students at school.`,
-          type: 'dropped_off',
-          is_read: false,
-        },
-      ]);
-    } catch {
-      // Optional table migration
-    }
-
     return studentIds.length;
   } catch (err) {
     console.error('Batch drop all failed:', err);

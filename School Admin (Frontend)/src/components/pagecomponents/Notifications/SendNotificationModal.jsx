@@ -5,9 +5,8 @@ import Modal from '../../common/Modal';
 const SendNotificationModal = ({ isOpen, onClose, onSendNotification }) => {
   const [formData, setFormData] = useState({
     title: '',
-    category: 'Pickup',
+    category: 'System',
     recipients: 'All Parents',
-    route: 'All Routes',
     message: '',
     sendSms: true,
     sendPush: true,
@@ -24,10 +23,10 @@ const SendNotificationModal = ({ isOpen, onClose, onSendNotification }) => {
       Drop: { border: 'border-l-emerald-500', iconBg: 'bg-emerald-50 text-emerald-600', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
       Delay: { border: 'border-l-amber-500', iconBg: 'bg-amber-50 text-amber-600', badge: 'bg-amber-100/70 text-amber-800 border-amber-200' },
       Emergency: { border: 'border-l-rose-500', iconBg: 'bg-rose-50 text-rose-500', badge: 'bg-rose-100 text-rose-800 border-rose-200' },
-      'System & Fee': { border: 'border-l-indigo-400', iconBg: 'bg-indigo-50 text-indigo-600', badge: 'bg-slate-100 text-slate-700 border-slate-200' },
+      System: { border: 'border-l-indigo-400', iconBg: 'bg-indigo-50 text-indigo-600', badge: 'bg-slate-100 text-slate-700 border-slate-200' },
     };
 
-    const style = categoryStyles[formData.category] || categoryStyles['Pickup'];
+    const style = categoryStyles[formData.category] || categoryStyles['System'];
 
     const newNotification = {
       id: Date.now(),
@@ -38,12 +37,13 @@ const SendNotificationModal = ({ isOpen, onClose, onSendNotification }) => {
       badgeText: 'Delivered',
       badgeStyle: style.badge,
       content: formData.message,
-      subInfo: `${formData.route} • ${formData.recipients}`,
+      subInfo: `Target: ${formData.recipients}`,
       timestamp: 'Just now',
       actionType: 'links',
       link1: 'View Details',
       link2: 'Resend',
       unread: true,
+      recipients: formData.recipients,
     };
 
     if (onSendNotification) {
@@ -52,9 +52,8 @@ const SendNotificationModal = ({ isOpen, onClose, onSendNotification }) => {
 
     setFormData({
       title: '',
-      category: 'Pickup',
+      category: 'System',
       recipients: 'All Parents',
-      route: 'All Routes',
       message: '',
       sendSms: true,
       sendPush: true,
@@ -68,7 +67,7 @@ const SendNotificationModal = ({ isOpen, onClose, onSendNotification }) => {
       onClose={onClose}
       icon={<MdNotifications size={20} />}
       title="Send New Notification"
-      subtitle="Broadcast announcement to parents, drivers, or route groups"
+      subtitle="Broadcast announcement to parents, drivers, or all school participants"
       maxWidth="max-w-lg"
     >
       <form onSubmit={handleSubmit}>
@@ -101,7 +100,7 @@ const SendNotificationModal = ({ isOpen, onClose, onSendNotification }) => {
                 <option value="Drop">Drop</option>
                 <option value="Delay">Delay</option>
                 <option value="Emergency">Emergency</option>
-                <option value="System & Fee">System & Fee</option>
+                <option value="System">System</option>
               </select>
             </div>
             <div>
@@ -114,9 +113,8 @@ const SendNotificationModal = ({ isOpen, onClose, onSendNotification }) => {
                 onChange={(e) => setFormData({ ...formData, recipients: e.target.value })}
               >
                 <option value="All Parents">All Parents</option>
-                <option value="Route 1 Parents">Route 1 Parents</option>
-                <option value="Route 2 Parents">Route 2 Parents</option>
                 <option value="All Drivers">All Drivers</option>
+                <option value="All Participants (Drivers & Parents)">All Participants (Drivers & Parents)</option>
               </select>
             </div>
           </div>

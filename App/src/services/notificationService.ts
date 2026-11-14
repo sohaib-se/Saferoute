@@ -20,7 +20,7 @@ export const fetchNotificationsFromDb = async (
       .limit(30);
 
     if (schoolId && isValidUUID(schoolId)) {
-      query = query.eq('school_id', schoolId);
+      query = query.or(`school_id.eq.${schoolId},school_id.is.null`);
     }
 
     if (recipientId && isValidUUID(recipientId)) {
@@ -35,12 +35,15 @@ export const fetchNotificationsFromDb = async (
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      return getFallbackNotifications(recipientType);
+      return [];
     }
 
     return data.map((n) => {
       const createdDate = new Date(n.created_at);
-      const timeStr = `${createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Today`;
+      const isToday = new Date().toDateString() === createdDate.toDateString();
+      const timeStr = isToday
+        ? `${createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Today`
+        : `${createdDate.toLocaleDateString([], { month: 'short', day: 'numeric' })} • ${createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
       return {
         id: n.id,
@@ -52,8 +55,8 @@ export const fetchNotificationsFromDb = async (
       };
     });
   } catch (err) {
-    console.warn('fetchNotificationsFromDb error, using fallback:', err);
-    return getFallbackNotifications(recipientType);
+    console.warn('fetchNotificationsFromDb error:', err);
+    return [];
   }
 };
 
@@ -79,7 +82,8 @@ export const subscribeToNotifications = (
   recipientType: 'parent' | 'driver',
   recipientId: string | undefined,
   schoolId: string | undefined,
-  onNewNotification: (notif: NotificationItemData) => void
+  onNewNotification: (notif: NotificationItemData) => void,
+  onDeleteNotification?: (deletedId: string) => void
 ) => {
   const channel = supabase
     .channel(`realtime:notifications:${recipientType}_${recipientId || 'all'}`)
@@ -113,43 +117,23 @@ export const subscribeToNotifications = (
         }
       }
     )
+    .on(
+      'postgres_changes',
+      {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'notifications',
+      },
+      (payload) => {
+        const oldRow = payload.old as any;
+        if (oldRow?.id && onDeleteNotification) {
+          onDeleteNotification(oldRow.id);
+        }
+      }
+    )
     .subscribe();
 
   return () => {
     supabase.removeChannel(channel);
   };
-};
-
-const getFallbackNotifications = (role: 'parent' | 'driver'): NotificationItemData[] => {
-  if (role === 'parent') {
-    return [
-      {
-        id: 'n-1',
-        title: 'Morning Route Commenced',
-        body: 'Driver Hilal has started the morning pickup route for Bus 1.',
-        time: '07:05 AM • Today',
-        type: 'trip_start',
-        isRead: false,
-      },
-      {
-        id: 'n-2',
-        title: 'Safe Arrival Notice',
-        body: 'Bus 1 is operating on schedule with active telemetry enabled.',
-        time: '07:15 AM • Today',
-        type: 'notice',
-        isRead: true,
-      },
-    ];
-  } else {
-    return [
-      {
-        id: 'dn-1',
-        title: 'Roster Ready for Morning Shift',
-        body: 'Morning Route - Sector G-10 is assigned with all stops updated.',
-        time: '07:00 AM • Today',
-        type: 'trip_start',
-        isRead: false,
-      },
-    ];
-  }
 };

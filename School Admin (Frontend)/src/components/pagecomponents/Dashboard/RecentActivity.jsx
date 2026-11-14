@@ -22,6 +22,7 @@ const RecentActivity = ({ onNavigate }) => {
           .from('notifications')
           .select('*')
           .eq('school_id', schoolId)
+          .in('recipient_type', ['admin', 'all'])
           .order('created_at', { ascending: false })
           .limit(5);
 

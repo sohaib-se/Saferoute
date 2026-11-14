@@ -103,7 +103,7 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
     {
       label: 'Notifications',
       icon: MdNotifications,
-      badge: unreadNotifCount > 0 ? unreadNotifCount : null,
+      hasDot: unreadNotifCount > 0,
     },
     {
       label: 'SOS Alerts',
@@ -136,7 +136,7 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
 
         {/* Navigation items */}
         <nav className="px-3 pt-4 pb-2 space-y-1 flex-1 overflow-y-auto custom-scrollbar">
-          {navItems.map(({ label, icon: Icon, badge, danger, liveDot }) => {
+          {navItems.map(({ label, icon: Icon, badge, danger, liveDot, hasDot }) => {
             const active =
               currentPage === label || (label === 'Students' && currentPage === 'AddStudent');
 
@@ -176,10 +176,12 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
                   />
                   <span className="truncate">{label}</span>
                 </div>
-                {liveDot && !badge && (
+                {liveDot && !badge && !hasDot && (
                   <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 animate-pulse shrink-0" />
                 )}
-                {badge ? (
+                {hasDot ? (
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-600 ring-2 ring-blue-100 shrink-0" />
+                ) : badge ? (
                   <span
                     className={`w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs ${
                       danger ? 'bg-rose-500 animate-pulse' : 'bg-blue-600'

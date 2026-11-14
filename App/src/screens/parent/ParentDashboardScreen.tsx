@@ -14,6 +14,10 @@ import {
   subscribeToStudentStatusChanges,
   getAssignedDriverDetailsForParent,
 } from '../../services/parentService';
+import {
+  fetchNotificationsFromDb,
+  subscribeToNotifications,
+} from '../../services/notificationService';
 import { colors, radii } from '../../lib/theme';
 
 interface ParentDashboardScreenProps {
@@ -28,6 +32,7 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
   const { user } = useAuth();
   const [children, setChildren] = useState<ChildData[]>([]);
   const [isLoadingChildren, setIsLoadingChildren] = useState(true);
+  const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
 
   const [assignedDriverInfo, setAssignedDriverInfo] = useState<any>(null);
 
@@ -47,13 +52,37 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
     };
     fetchChildren();
 
+    // Fetch initial unread notifications count
+    fetchNotificationsFromDb('parent', user?.userId, user?.schoolId).then((notifs) => {
+      if (isMounted) {
+        setUnreadNotifCount(notifs.filter((n) => !n.isRead).length);
+      }
+    });
+
     const unsubscribe = subscribeToStudentStatusChanges(user?.schoolId, () => {
       fetchChildren();
     });
 
+    const unsubNotifs = subscribeToNotifications(
+      'parent',
+      user?.userId,
+      user?.schoolId,
+      (newNotif) => {
+        if (isMounted) {
+          setUnreadNotifCount((prev) => prev + 1);
+        }
+      },
+      () => {
+        if (isMounted) {
+          setUnreadNotifCount((prev) => Math.max(0, prev - 1));
+        }
+      }
+    );
+
     return () => {
       isMounted = false;
       unsubscribe();
+      unsubNotifs();
     };
   }, [user]);
 
@@ -77,7 +106,7 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
         title="Parent Portal"
         subtitle={`Welcome, ${user?.name || 'Parent'}`}
         onNotificationPress={() => onNavigateTab('notifications')}
-        notificationBadgeCount={2}
+        notificationBadgeCount={unreadNotifCount}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

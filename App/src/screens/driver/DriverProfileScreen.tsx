@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/common/Header';
-import { DriverProfileHero } from '../../components/screencomponents/driver/profile/DriverProfileHero';
 import { DriverPersonalInfoCard } from '../../components/screencomponents/driver/profile/DriverPersonalInfoCard';
 import { DriverAssignmentsList } from '../../components/screencomponents/driver/profile/DriverAssignmentsList';
 import { ProfileSettingsSection } from '../../components/screencomponents/parent/profile/ProfileSettingsSection';
 import { ForcePasswordChangeModal } from '../../components/screencomponents/driver/profile/ForcePasswordChangeModal';
 import { useAuth } from '../../context/AuthContext';
 import { useDriverTrip } from '../../context/DriverTripContext';
+import { updateUserPassword } from '../../services/authService';
 import { colors, radii, shadows } from '../../lib/theme';
 
 interface DriverProfileScreenProps {
@@ -47,11 +47,26 @@ export const DriverProfileScreen: React.FC<DriverProfileScreenProps> = ({
     );
   };
 
-  const handleEditProfile = () => {
-    Alert.alert(
-      'Administrative Scoping',
-      'Driver credentials, route assignments, and vehicle registrations are managed strictly by School Administration (REQ-D1.3).'
-    );
+  const handlePasswordSubmit = async (newPass: string, currentPass?: string) => {
+    const res = await updateUserPassword({
+      userId: user?.userId,
+      userType: 'driver',
+      loginId: user?.loginId,
+      phone: user?.phone,
+      schoolId: user?.schoolId,
+      name: user?.name,
+      currentPassword: currentPass,
+      newPassword: newPass,
+    });
+
+    if (res.success) {
+      await completePasswordChange(newPass, currentPass);
+      Alert.alert('Password Updated', 'Your driver password has been successfully updated in the database.');
+      return true;
+    } else {
+      Alert.alert('Update Failed', res.error || 'Could not update password in database.');
+      return false;
+    }
   };
 
   return (
@@ -66,12 +81,18 @@ export const DriverProfileScreen: React.FC<DriverProfileScreenProps> = ({
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* 1. Profile Hero with Galaxy Banner, Avatar & Name */}
-        <DriverProfileHero
-          name={user?.name || 'Hilal'}
-          phone={user?.phone || '03124124'}
-          onEdit={handleEditProfile}
-        />
+        {/* 1. Clean Name & Identity Card (No profile or Bg image area) */}
+        <View style={styles.nameCard}>
+          <View style={styles.roleTag}>
+            <Ionicons name="shield-checkmark" size={14} color="#0284C7" />
+            <Text style={styles.roleTagText}>Certified School Driver</Text>
+          </View>
+          <Text style={styles.userNameText}>{user?.name || 'Hilal'}</Text>
+          <Text style={styles.userSubText}>
+            Assigned Vehicle: <Text style={styles.boldSubText}>{vehicleName} ({vehiclePlate})</Text>
+          </Text>
+          <Text style={styles.userPhoneText}>Phone: {user?.phone || '03124124'}</Text>
+        </View>
 
         {/* 2. REQ-D1.3: Personal Info 2-Column Grid Card Scoped to Assigned Vehicle */}
         <DriverPersonalInfoCard
@@ -92,7 +113,7 @@ export const DriverProfileScreen: React.FC<DriverProfileScreenProps> = ({
             <View style={styles.securityTextCol}>
               <Text style={styles.securityTitle}>Admin-Issued Credentials</Text>
               <Text style={styles.securitySub}>
-                Change temporary password issued by transport office (REQ-D1.2).
+                Change password to secure your driver account.
               </Text>
             </View>
           </View>
@@ -117,8 +138,9 @@ export const DriverProfileScreen: React.FC<DriverProfileScreenProps> = ({
       <ForcePasswordChangeModal
         visible={showPasswordModal}
         isFirstLogin={mustChangePassword}
+        userType="driver"
         onClose={() => setShowPasswordModal(false)}
-        onSubmit={(newPass) => completePasswordChange(newPass)}
+        onSubmit={handlePasswordSubmit}
       />
     </View>
   );
@@ -133,6 +155,55 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 4,
     paddingBottom: 110,
+  },
+  nameCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: radii.xl,
+    padding: 18,
+    borderWidth: 1.5,
+    borderColor: '#E6EFF7',
+    marginBottom: 14,
+    ...shadows.card,
+  },
+  roleTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radii.full,
+    gap: 5,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  roleTagText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0284C7',
+  },
+  userNameText: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.4,
+    marginBottom: 4,
+  },
+  userSubText: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 2,
+    fontWeight: '500',
+  },
+  boldSubText: {
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  userPhoneText: {
+    fontSize: 12.5,
+    color: '#64748B',
+    fontWeight: '500',
   },
   securityCard: {
     backgroundColor: '#FFFFFF',

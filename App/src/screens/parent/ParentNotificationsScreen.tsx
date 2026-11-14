@@ -27,7 +27,11 @@ export const ParentNotificationsScreen: React.FC<ParentNotificationsScreenProps>
     const loadNotifs = async () => {
       const items = await fetchNotificationsFromDb('parent', user?.userId, user?.schoolId);
       if (isMounted) {
-        setNotifications(items);
+        setNotifications(items.map((n) => ({ ...n, isRead: true })));
+        const unreadIds = items.filter((n) => !n.isRead).map((n) => n.id);
+        if (unreadIds.length > 0) {
+          markNotificationsAsReadInDb(unreadIds);
+        }
       }
     };
     loadNotifs();
@@ -38,10 +42,16 @@ export const ParentNotificationsScreen: React.FC<ParentNotificationsScreenProps>
       user?.schoolId,
       (newNotif) => {
         if (isMounted) {
+          markNotificationsAsReadInDb([newNotif.id]);
           setNotifications((prev) => [
-            newNotif,
+            { ...newNotif, isRead: true },
             ...prev.filter((item) => item.id !== newNotif.id),
           ]);
+        }
+      },
+      (deletedId) => {
+        if (isMounted) {
+          setNotifications((prev) => prev.filter((item) => item.id !== deletedId));
         }
       }
     );
