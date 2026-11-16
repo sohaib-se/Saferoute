@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MdSchool,
   MdLocationOn,
@@ -8,32 +8,60 @@ import {
   MdSchedule,
   MdCheckCircle,
   MdSave,
+  MdErrorOutline,
+  MdPerson,
 } from 'react-icons/md';
 
-const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile }) => {
+const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile, isLoading = false }) => {
   const [formData, setFormData] = useState({
-    schoolName: schoolData?.schoolName || 'SafeRoute International Academy',
-    campusName: schoolData?.campusName || 'Main Campus - Gulberg III',
-    registrationNo: schoolData?.registrationNo || 'REG-PK-2024-9912',
-    schoolEmail: schoolData?.schoolEmail || 'admin@saferoute.edu.pk',
-    phone: schoolData?.phone || '+92 42 3578 9000',
-    emergencyPhone: schoolData?.emergencyPhone || '+92 300 1112233',
-    address: schoolData?.address || 'Plot 44-A, Block H, Gulberg III, Lahore, Pakistan',
-    website: schoolData?.website || 'https://saferoute.school.edu',
-    morningStartTime: schoolData?.morningStartTime || '07:30 AM',
-    afternoonDismissal: schoolData?.afternoonDismissal || '02:15 PM',
-    principalName: schoolData?.principalName || 'Dr. Tariq Mansoor',
+    schoolName: '',
+    campusName: '',
+    schoolEmail: '',
+    phone: '',
+    principalName: '',
+    website: '',
+    address: '',
+    morningStartTime: '',
+    afternoonDismissal: '',
   });
 
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (onSaveSchoolProfile) {
-      onSaveSchoolProfile(formData);
+  // Sync state whenever schoolData loads from Supabase
+  useEffect(() => {
+    if (schoolData) {
+      setFormData({
+        schoolName: schoolData.schoolName || '',
+        campusName: schoolData.campusName || '',
+        schoolEmail: schoolData.schoolEmail || '',
+        phone: schoolData.phone || '',
+        principalName: schoolData.principalName || '',
+        website: schoolData.website || '',
+        address: schoolData.address || '',
+        morningStartTime: schoolData.morningStartTime || '',
+        afternoonDismissal: schoolData.afternoonDismissal || '',
+      });
     }
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+  }, [schoolData]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setIsSaving(true);
+
+    try {
+      if (onSaveSchoolProfile) {
+        await onSaveSchoolProfile(formData);
+      }
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3500);
+    } catch (err) {
+      setErrorMessage(err.message || 'Failed to update school profile in database.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -52,7 +80,7 @@ const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile }) => {
               School Institution Profile
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Official school records, accreditation, and fleet dispatch contact information
+              Official school records, location, and administrative contact information
             </p>
           </div>
         </div>
@@ -60,10 +88,17 @@ const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile }) => {
         {savedSuccess && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-xs font-semibold animate-in fade-in">
             <MdCheckCircle size={15} />
-            <span>Profile Saved</span>
+            <span>Saved to Database</span>
           </span>
         )}
       </div>
+
+      {errorMessage && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium animate-in fade-in">
+          <MdErrorOutline className="w-4 h-4 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Row 1: School Name & Campus */}
@@ -75,10 +110,11 @@ const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile }) => {
             <input
               type="text"
               required
+              disabled={isLoading || isSaving}
               value={formData.schoolName}
               onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
-              placeholder="e.g. SafeRoute International Academy"
-              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+              placeholder="e.g. Jhagra Model School"
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
             />
           </div>
 
@@ -89,45 +125,17 @@ const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile }) => {
             <input
               type="text"
               required
+              disabled={isLoading || isSaving}
               value={formData.campusName}
               onChange={(e) => setFormData({ ...formData, campusName: e.target.value })}
-              placeholder="e.g. Main Campus - Gulberg III"
-              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+              placeholder="e.g. Main Campus - Khatme Nabuwat"
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
             />
           </div>
         </div>
 
-        {/* Row 2: Reg No & Principal Name */}
+        {/* Row 2: Official Email & Phone */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              School Registration / ID Code
-            </label>
-            <input
-              type="text"
-              value={formData.registrationNo}
-              onChange={(e) => setFormData({ ...formData, registrationNo: e.target.value })}
-              placeholder="e.g. REG-PK-2024-9912"
-              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Principal / Head Director
-            </label>
-            <input
-              type="text"
-              value={formData.principalName}
-              onChange={(e) => setFormData({ ...formData, principalName: e.target.value })}
-              placeholder="e.g. Dr. Tariq Mansoor"
-              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Row 3: Official Email & Phone */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Official School Email <span className="text-rose-500">*</span>
@@ -137,10 +145,11 @@ const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile }) => {
               <input
                 type="email"
                 required
+                disabled={isLoading || isSaving}
                 value={formData.schoolEmail}
                 onChange={(e) => setFormData({ ...formData, schoolEmail: e.target.value })}
-                placeholder="admin@school.edu.pk"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                placeholder="jhagra@gmail.com"
+                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
             </div>
           </div>
@@ -154,46 +163,31 @@ const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile }) => {
               <input
                 type="text"
                 required
+                disabled={isLoading || isSaving}
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+92 42 3578 9000"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Emergency SOS Hotline
-            </label>
-            <div className="relative">
-              <MdPhone className="w-4 h-4 text-rose-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={formData.emergencyPhone}
-                onChange={(e) => setFormData({ ...formData, emergencyPhone: e.target.value })}
-                placeholder="0300 1112233"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                placeholder="03198224949"
+                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
             </div>
           </div>
         </div>
 
-        {/* Row 4: Address & Website */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="sm:col-span-2">
+        {/* Row 3: Principal & Website */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Campus Physical Address <span className="text-rose-500">*</span>
+              Principal / Head Director
             </label>
             <div className="relative">
-              <MdLocationOn className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <textarea
-                rows={2}
-                required
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Plot 44-A, Block H, Gulberg III, Lahore, Pakistan"
-                className="w-full pl-9 pr-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all resize-none"
+              <MdPerson className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                disabled={isLoading || isSaving}
+                value={formData.principalName}
+                onChange={(e) => setFormData({ ...formData, principalName: e.target.value })}
+                placeholder="e.g. Dr. Tariq Mansoor"
+                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
             </div>
           </div>
@@ -206,12 +200,32 @@ const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile }) => {
               <MdLanguage className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="url"
+                disabled={isLoading || isSaving}
                 value={formData.website}
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                placeholder="https://saferoute.school.edu"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                placeholder="https://jhagramodel.edu.pk"
+                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Row 4: Physical Address */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            Campus Physical Address <span className="text-rose-500">*</span>
+          </label>
+          <div className="relative">
+            <MdLocationOn className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+            <textarea
+              rows={2}
+              required
+              disabled={isLoading || isSaving}
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Khatme Nabuwat Chowk, Ghari Rashida"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all resize-none disabled:opacity-60"
+            />
           </div>
         </div>
 
@@ -225,10 +239,11 @@ const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile }) => {
               <MdSchedule className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
+                disabled={isLoading || isSaving}
                 value={formData.morningStartTime}
                 onChange={(e) => setFormData({ ...formData, morningStartTime: e.target.value })}
                 placeholder="e.g. 07:30 AM"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
             </div>
           </div>
@@ -241,10 +256,11 @@ const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile }) => {
               <MdSchedule className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
+                disabled={isLoading || isSaving}
                 value={formData.afternoonDismissal}
                 onChange={(e) => setFormData({ ...formData, afternoonDismissal: e.target.value })}
                 placeholder="e.g. 02:15 PM"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
             </div>
           </div>
@@ -254,10 +270,20 @@ const SchoolProfileCard = ({ schoolData, onSaveSchoolProfile }) => {
         <div className="flex items-center justify-end pt-3 border-t border-slate-100 gap-3">
           <button
             type="submit"
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer"
+            disabled={isLoading || isSaving}
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <MdSave size={16} />
-            <span>Save School Profile</span>
+            {isSaving ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Saving to Database...</span>
+              </>
+            ) : (
+              <>
+                <MdSave size={16} />
+                <span>Save School Profile</span>
+              </>
+            )}
           </button>
         </div>
       </form>
