@@ -1,29 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MdNotificationsActive,
   MdWarning,
   MdSms,
   MdSave,
   MdCheckCircle,
+  MdErrorOutline,
+  MdSpeed,
 } from 'react-icons/md';
 
-const FleetPreferencesCard = ({ preferences, onSavePreferences }) => {
+const FleetPreferencesCard = ({ preferences, onSavePreferences, isLoading = false }) => {
   const [formData, setFormData] = useState({
-    parentSmsAlerts: preferences?.parentSmsAlerts ?? true,
-    sosEmergencyBroadcast: preferences?.sosEmergencyBroadcast ?? true,
-    autoExportManifest: preferences?.autoExportManifest ?? true,
-    telematicsInterval: preferences?.telematicsInterval || '10s',
+    parentSmsAlerts: true,
+    sosEmergencyBroadcast: true,
+    autoExportManifest: true,
+    telematicsInterval: '10s',
   });
 
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (onSavePreferences) {
-      onSavePreferences(formData);
+  // Sync state whenever preferences load
+  useEffect(() => {
+    if (preferences) {
+      setFormData({
+        parentSmsAlerts: preferences.parentSmsAlerts ?? true,
+        sosEmergencyBroadcast: preferences.sosEmergencyBroadcast ?? true,
+        autoExportManifest: preferences.autoExportManifest ?? true,
+        telematicsInterval: preferences.telematicsInterval || '10s',
+      });
     }
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+  }, [preferences]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setIsSaving(true);
+
+    try {
+      if (onSavePreferences) {
+        await onSavePreferences(formData);
+      }
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3500);
+    } catch (err) {
+      setErrorMessage(err.message || 'Failed to update preferences.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -55,6 +80,13 @@ const FleetPreferencesCard = ({ preferences, onSavePreferences }) => {
         )}
       </div>
 
+      {errorMessage && (
+        <div className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium animate-in fade-in">
+          <MdErrorOutline size={16} className="shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="divide-y divide-slate-100">
           {/* Toggle 1: Parent SMS Notifications */}
@@ -76,6 +108,7 @@ const FleetPreferencesCard = ({ preferences, onSavePreferences }) => {
             <label className="relative inline-flex items-center cursor-pointer shrink-0">
               <input
                 type="checkbox"
+                disabled={isLoading || isSaving}
                 checked={formData.parentSmsAlerts}
                 onChange={(e) =>
                   setFormData({ ...formData, parentSmsAlerts: e.target.checked })
@@ -105,6 +138,7 @@ const FleetPreferencesCard = ({ preferences, onSavePreferences }) => {
             <label className="relative inline-flex items-center cursor-pointer shrink-0">
               <input
                 type="checkbox"
+                disabled={isLoading || isSaving}
                 checked={formData.sosEmergencyBroadcast}
                 onChange={(e) =>
                   setFormData({ ...formData, sosEmergencyBroadcast: e.target.checked })
@@ -117,21 +151,27 @@ const FleetPreferencesCard = ({ preferences, onSavePreferences }) => {
 
           {/* Telemetry Interval */}
           <div className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold text-slate-800">
-                GPS Telematics Ping Frequency
-              </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Rate at which active buses transmit coordinates and speed telematics.
-              </p>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                <MdSpeed size={16} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-800">
+                  GPS Telematics Ping Frequency
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Rate at which active buses transmit coordinates and speed telematics.
+                </p>
+              </div>
             </div>
 
             <select
+              disabled={isLoading || isSaving}
               value={formData.telematicsInterval}
               onChange={(e) =>
                 setFormData({ ...formData, telematicsInterval: e.target.value })
               }
-              className="px-3.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white font-sans cursor-pointer"
+              className="px-3.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white font-sans cursor-pointer disabled:opacity-60"
             >
               <option value="5s">Real-time (Every 5 seconds)</option>
               <option value="10s">Standard (Every 10 seconds)</option>
@@ -144,10 +184,20 @@ const FleetPreferencesCard = ({ preferences, onSavePreferences }) => {
         <div className="flex items-center justify-end pt-3 border-t border-slate-100 gap-3">
           <button
             type="submit"
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer"
+            disabled={isLoading || isSaving}
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <MdSave size={16} />
-            <span>Save Preferences</span>
+            {isSaving ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Saving Preferences...</span>
+              </>
+            ) : (
+              <>
+                <MdSave size={16} />
+                <span>Save Preferences</span>
+              </>
+            )}
           </button>
         </div>
       </form>

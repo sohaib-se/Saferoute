@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MdPerson,
   MdEmail,
@@ -6,28 +6,53 @@ import {
   MdShield,
   MdCheckCircle,
   MdSave,
+  MdErrorOutline,
 } from 'react-icons/md';
 
-const AdminDetailsCard = ({ adminData, onSaveAdminProfile }) => {
+const AdminDetailsCard = ({ adminData, onSaveAdminProfile, isLoading = false }) => {
   const [formData, setFormData] = useState({
-    name: adminData?.name || 'Admin',
-    email: adminData?.email || 'admin@saferoute.com',
-    phone: adminData?.phone || '0300 1234567',
-    role: adminData?.role || 'Super Admin (Fleet Director)',
-    department: adminData?.department || 'Transport & Student Safety Department',
+    name: '',
+    email: '',
+    phone: '',
+    role: '',
+    department: '',
   });
 
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Sync state whenever adminData loads
+  useEffect(() => {
+    if (adminData) {
+      setFormData({
+        name: adminData.name || '',
+        email: adminData.email || '',
+        phone: adminData.phone || '',
+        role: adminData.role || 'Super Admin (Fleet Director)',
+        department: adminData.department || 'Transport & Student Safety Department',
+      });
+    }
+  }, [adminData]);
 
   const initial = formData.name?.charAt(0).toUpperCase() || 'A';
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (onSaveAdminProfile) {
-      onSaveAdminProfile(formData);
+    setErrorMessage('');
+    setIsSaving(true);
+
+    try {
+      if (onSaveAdminProfile) {
+        await onSaveAdminProfile(formData);
+      }
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3500);
+    } catch (err) {
+      setErrorMessage(err.message || 'Failed to update administrator details.');
+    } finally {
+      setIsSaving(false);
     }
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
   };
 
   return (
@@ -54,21 +79,28 @@ const AdminDetailsCard = ({ adminData, onSaveAdminProfile }) => {
         {savedSuccess && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-xs font-semibold animate-in fade-in">
             <MdCheckCircle size={15} />
-            <span>Details Updated</span>
+            <span>Details Saved</span>
           </span>
         )}
       </div>
 
+      {errorMessage && (
+        <div className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium animate-in fade-in">
+          <MdErrorOutline size={16} className="shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Avatar & Display Name Overview */}
         <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50/70 border border-slate-100">
-          <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white font-bold text-xl flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xl flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
             {initial}
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h4 className="text-sm font-bold text-slate-800 truncate">
-                {formData.name}
+                {formData.name || 'Admin'}
               </h4>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 shrink-0">
                 Primary Master Admin
@@ -90,10 +122,11 @@ const AdminDetailsCard = ({ adminData, onSaveAdminProfile }) => {
               <input
                 type="text"
                 required
+                disabled={isLoading || isSaving}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Zeeshan Malik"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
             </div>
           </div>
@@ -107,10 +140,11 @@ const AdminDetailsCard = ({ adminData, onSaveAdminProfile }) => {
               <input
                 type="email"
                 required
+                disabled={isLoading || isSaving}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="e.g. admin@saferoute.com"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
             </div>
           </div>
@@ -125,10 +159,11 @@ const AdminDetailsCard = ({ adminData, onSaveAdminProfile }) => {
               <MdPhone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
+                disabled={isLoading || isSaving}
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="e.g. 0300 1234567"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
             </div>
           </div>
@@ -141,22 +176,48 @@ const AdminDetailsCard = ({ adminData, onSaveAdminProfile }) => {
               <MdShield className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
+                disabled={isLoading || isSaving}
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                placeholder="e.g. Super Admin (Fleet Director)"
+                className="w-full pl-9 pr-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
             </div>
           </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            Operational Department
+          </label>
+          <input
+            type="text"
+            disabled={isLoading || isSaving}
+            value={formData.department}
+            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+            placeholder="e.g. Transport & Student Safety Department"
+            className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
+          />
         </div>
 
         {/* Actions */}
         <div className="flex items-center justify-end pt-3 border-t border-slate-100 gap-3">
           <button
             type="submit"
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer"
+            disabled={isLoading || isSaving}
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <MdSave size={16} />
-            <span>Save Personal Details</span>
+            {isSaving ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Saving Details...</span>
+              </>
+            ) : (
+              <>
+                <MdSave size={16} />
+                <span>Save Personal Details</span>
+              </>
+            )}
           </button>
         </div>
       </form>

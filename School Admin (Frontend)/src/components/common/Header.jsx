@@ -234,6 +234,28 @@ const Header = ({ onNavigate }) => {
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
 
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleUserSync = () => {
+      try {
+        setCurrentUser(JSON.parse(localStorage.getItem('user') || 'null'));
+      } catch {}
+    };
+    window.addEventListener('user-profile-updated', handleUserSync);
+    window.addEventListener('school-profile-updated', handleUserSync);
+    return () => {
+      window.removeEventListener('user-profile-updated', handleUserSync);
+      window.removeEventListener('school-profile-updated', handleUserSync);
+    };
+  }, []);
+
   // Check unread notifications for bell badge
   useEffect(() => {
     const checkUnread = async () => {
@@ -296,11 +318,7 @@ const Header = ({ onNavigate }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  let user = null;
-  try {
-    user = JSON.parse(localStorage.getItem('user') || 'null');
-  } catch (e) {}
-  const displayName = user?.name || 'Admin';
+  const displayName = currentUser?.name || 'Admin';
   const initial = displayName.charAt(0).toUpperCase() || 'A';
 
   const handleLogout = () => {
