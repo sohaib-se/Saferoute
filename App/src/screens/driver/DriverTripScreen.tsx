@@ -349,7 +349,21 @@ export const DriverTripScreen: React.FC<DriverTripScreenProps> = ({
           {/* ========================================================= */}
           {/* PHASE 4: PICKUP COMPLETE (AT SCHOOL - DROPOFF UNLOCKED)   */}
           {/* ========================================================= */}
-          {tripPhase === 'pickup_done' && (
+          {tripPhase === 'pickup_done' && pickedCount === 0 && (
+            <TripCompleteSummary
+              totalStudents={totalAssigned}
+              pickedCount={0}
+              droppedCount={0}
+              absentCount={absentCount || totalAssigned}
+              vehicleName={vehicleName}
+              routeTitle={routeTitle}
+              onReset={resetTripDay}
+              onCreateNewTrip={handleCreateTrip}
+              isCreatingNewTrip={isSubmitting}
+            />
+          )}
+
+          {tripPhase === 'pickup_done' && pickedCount > 0 && (
             <View>
               <TripPhaseCard
                 type="pickup"
@@ -465,6 +479,8 @@ export const DriverTripScreen: React.FC<DriverTripScreenProps> = ({
               vehicleName={vehicleName}
               routeTitle={routeTitle}
               onReset={resetTripDay}
+              onCreateNewTrip={handleCreateTrip}
+              isCreatingNewTrip={isSubmitting}
             />
           )}
         </ScrollView>

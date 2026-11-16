@@ -344,15 +344,22 @@ export const markStudentPickedUpInDb = async (
   }
 };
 
+export interface MarkAbsentResult {
+  success: boolean;
+  tripCompleted?: boolean;
+  trip?: TripRecord;
+}
+
 /**
  * Mark a single student as absent during pickup.
+ * If all students on this trip are now absent, the main trip is automatically completed.
  */
 export const markStudentAbsentInDb = async (
   tripIdOrParams: string | StudentTransitNotifyParams,
   studentIdArg?: string,
   studentNameArg?: string,
   schoolIdArg?: string
-): Promise<boolean> => {
+): Promise<MarkAbsentResult> => {
   try {
     const isObj = typeof tripIdOrParams === 'object';
     const tripId = isObj ? tripIdOrParams.tripId : tripIdOrParams;
@@ -430,18 +437,75 @@ export const markStudentAbsentInDb = async (
       ]);
     } catch {}
 
-    return true;
+    // Check if ALL students for this trip are now absent (no picked up students and no pending students)
+    const { data: allAttRows } = await supabase
+      .from('trip_attendance')
+      .select('pickup_status')
+      .eq('trip_id', tripId);
+
+    const isAllAbsent =
+      Boolean(
+        allAttRows &&
+        allAttRows.length > 0 &&
+        allAttRows.every((a) => a.pickup_status === 'absent')
+      );
+
+    let tripCompleted = false;
+    let completedTrip: TripRecord | undefined = undefined;
+
+    if (isAllAbsent) {
+      const nowIso = new Date().toISOString();
+      await supabase
+        .from('trip_attendance')
+        .update({ dropoff_status: 'skipped' })
+        .eq('trip_id', tripId);
+
+      const { data: updatedTrip, error: completeErr } = await supabase
+        .from('trips')
+        .update({
+          pickup_status: 'completed',
+          pickup_completed_at: nowIso,
+          dropoff_status: 'completed',
+          dropoff_completed_at: nowIso,
+          overall_status: 'completed',
+          updated_at: nowIso,
+        })
+        .eq('id', tripId)
+        .select()
+        .single();
+
+      if (!completeErr && updatedTrip) {
+        tripCompleted = true;
+        completedTrip = updatedTrip as TripRecord;
+
+        try {
+          await supabase.from('notifications').insert([
+            {
+              school_id: validSchoolId,
+              recipient_type: 'admin',
+              recipient_id: null,
+              title: `Trip Completed: ${vehicleName}`,
+              body: `All students were marked absent for ${vehicleName} (${routeTitle}). No drop-off trip required. Trip completed automatically.`,
+              type: 'notice',
+              is_read: false,
+            },
+          ]);
+        } catch {}
+      }
+    }
+
+    return { success: true, tripCompleted, trip: completedTrip };
   } catch (err) {
     console.error('markStudentAbsentInDb error:', err);
-    return false;
+    return { success: false };
   }
 };
 
 /**
  * Complete the pickup sub-trip ("Drop at School" button).
  * Any students still 'pending' are marked 'absent'.
- * Trips record: pickup_status = 'completed', pickup_completed_at = now,
- * dropoff_status = 'pending' (unlocked!), overall_status = 'pickup_done'.
+ * If 0 students were picked up, the entire trip is completed automatically.
+ * Otherwise: pickup_status = 'completed', dropoff_status = 'pending' (unlocked!), overall_status = 'pickup_done'.
  */
 export const completePickupSubTrip = async (
   tripId: string,
@@ -481,7 +545,9 @@ export const completePickupSubTrip = async (
       .eq('trip_id', tripId)
       .eq('pickup_status', 'picked_up');
 
-    if (pickedRows && pickedRows.length > 0) {
+    const hasPickedUp = Boolean(pickedRows && pickedRows.length > 0);
+
+    if (hasPickedUp && pickedRows) {
       const pickedIds = pickedRows.map((r) => r.student_id);
       await supabase
         .from('students')
@@ -489,64 +555,97 @@ export const completePickupSubTrip = async (
         .in('id', pickedIds);
     }
 
-    // 3. Update the trip record
+    // 3. Update the trip record:
+    // If NO students were picked up (0 students to drop in drop-off trip), complete the main trip automatically!
+    const tripUpdatePayload = !hasPickedUp
+      ? {
+          pickup_status: 'completed',
+          pickup_completed_at: nowIso,
+          dropoff_status: 'completed',
+          dropoff_completed_at: nowIso,
+          overall_status: 'completed',
+          updated_at: nowIso,
+        }
+      : {
+          pickup_status: 'completed',
+          pickup_completed_at: nowIso,
+          dropoff_status: 'pending', // Unlocked!
+          overall_status: 'pickup_done',
+          updated_at: nowIso,
+        };
+
     const { data, error } = await supabase
       .from('trips')
-      .update({
-        pickup_status: 'completed',
-        pickup_completed_at: nowIso,
-        dropoff_status: 'pending', // Unlocked!
-        overall_status: 'pickup_done',
-        updated_at: nowIso,
-      })
+      .update(tripUpdatePayload)
       .eq('id', tripId)
       .select()
       .single();
 
     if (error) throw error;
 
+    if (!hasPickedUp) {
+      await supabase
+        .from('trip_attendance')
+        .update({ dropoff_status: 'skipped' })
+        .eq('trip_id', tripId);
+    }
+
     const vName = vehicleName || data.vehicle_name || 'School Bus';
     const dName = driverName || data.driver_name || 'Driver';
 
     // Send notifications to school admin and respective parents of onboard students
     try {
-      // 1. Single notification for School Admin
-      await supabase.from('notifications').insert([
-        {
-          school_id: validSchoolId,
-          recipient_type: 'admin',
-          recipient_id: null,
-          title: `Dropped at School: ${vName}`,
-          body: `Driver ${dName} completed morning pickup for ${vName}. All students dropped at school.`,
-          type: 'dropped_off',
-          is_read: false,
-        },
-      ]);
+      if (!hasPickedUp) {
+        await supabase.from('notifications').insert([
+          {
+            school_id: validSchoolId,
+            recipient_type: 'admin',
+            recipient_id: null,
+            title: `Trip Completed: ${vName}`,
+            body: `Driver ${dName} finished morning pickup for ${vName}. All students were marked absent. Trip completed automatically.`,
+            type: 'notice',
+            is_read: false,
+          },
+        ]);
+      } else {
+        // 1. Single notification for School Admin
+        await supabase.from('notifications').insert([
+          {
+            school_id: validSchoolId,
+            recipient_type: 'admin',
+            recipient_id: null,
+            title: `Dropped at School: ${vName}`,
+            body: `Driver ${dName} completed morning pickup for ${vName}. All students dropped at school.`,
+            type: 'dropped_off',
+            is_read: false,
+          },
+        ]);
 
-      // 2. Respective parents ONLY of students who were picked up
-      if (pickedRows && pickedRows.length > 0) {
-        const pickedIds = pickedRows.map((r) => r.student_id);
-        const { data: stData } = await supabase
-          .from('students')
-          .select('id, name, parent_id')
-          .in('id', pickedIds);
+        // 2. Respective parents ONLY of students who were picked up
+        if (pickedRows && pickedRows.length > 0) {
+          const pickedIds = pickedRows.map((r) => r.student_id);
+          const { data: stData } = await supabase
+            .from('students')
+            .select('id, name, parent_id')
+            .in('id', pickedIds);
 
-        if (stData && stData.length > 0) {
-          const parentRows = stData
-            .filter((st) => isValidUUID(st.parent_id))
-            .map((st) => ({
-              school_id: validSchoolId,
-              recipient_type: 'parent',
-              recipient_id: st.parent_id,
-              student_id: st.id,
-              title: `Dropped at School: ${st.name}`,
-              body: `${st.name} arrived safely at school.`,
-              type: 'dropped_off',
-              is_read: false,
-            }));
+          if (stData && stData.length > 0) {
+            const parentRows = stData
+              .filter((st) => isValidUUID(st.parent_id))
+              .map((st) => ({
+                school_id: validSchoolId,
+                recipient_type: 'parent',
+                recipient_id: st.parent_id,
+                student_id: st.id,
+                title: `Dropped at School: ${st.name}`,
+                body: `${st.name} arrived safely at school.`,
+                type: 'dropped_off',
+                is_read: false,
+              }));
 
-          if (parentRows.length > 0) {
-            await supabase.from('notifications').insert(parentRows);
+            if (parentRows.length > 0) {
+              await supabase.from('notifications').insert(parentRows);
+            }
           }
         }
       }

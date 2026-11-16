@@ -283,6 +283,28 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
 
       if (trip) {
         const attRecords = await getTripAttendanceRecords(trip.id);
+
+        // If trip was somehow stuck in pickup_done with 0 picked up students, auto-complete it
+        if (
+          trip.overall_status === 'pickup_done' &&
+          attRecords.filter((a) => a.pickup_status === 'picked_up').length === 0
+        ) {
+          const nowIso = new Date().toISOString();
+          await supabase
+            .from('trips')
+            .update({
+              dropoff_status: 'completed',
+              dropoff_completed_at: nowIso,
+              overall_status: 'completed',
+              updated_at: nowIso,
+            })
+            .eq('id', trip.id);
+
+          trip.overall_status = 'completed';
+          trip.dropoff_status = 'completed';
+          trip.dropoff_completed_at = nowIso;
+        }
+
         setTripAttendance(attRecords);
 
         // Update active broadcast state based on trip status
@@ -571,9 +593,26 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
       const studentIds = currentStudents.map((s) => s.id);
       await initializeTripAttendance(newTrip.id, studentIds, user?.schoolId);
 
+      // Reset students status in students table to 'Waiting' for fresh new trip
+      if (studentIds.length > 0) {
+        try {
+          await supabase
+            .from('students')
+            .update({ status: 'Waiting' })
+            .in('id', studentIds);
+        } catch (stErr) {
+          console.warn('Error resetting students status to Waiting:', stErr);
+        }
+      }
+
       setCurrentTrip(newTrip);
       const attRecords = await getTripAttendanceRecords(newTrip.id);
       setTripAttendance(attRecords);
+      setIsTripActive(false);
+      setTripStartTime(null);
+      setTripDurationSeconds(0);
+      setLastCompletedTrip(null);
+      await loadAssignedStudents();
 
       return true;
     } catch (err: any) {
@@ -650,7 +689,7 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     const st = students.find((s) => s.id === studentId);
     const studentName = st?.name || 'Student';
 
-    const ok = await markStudentAbsentInDb({
+    const res = await markStudentAbsentInDb({
       tripId: currentTrip.id,
       studentId,
       studentName,
@@ -660,15 +699,48 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
       routeTitle,
       schoolId: user?.schoolId || currentTrip.school_id,
     });
-    if (!ok) {
+    if (!res || !res.success) {
       return { success: false, message: 'Failed to mark student as absent' };
     }
 
-    setTripAttendance((prev) =>
-      prev.map((a) =>
-        a.student_id === studentId ? { ...a, pickup_status: 'absent', dropoff_status: 'skipped' } : a
-      )
+    const updatedAttendance = tripAttendance.map((a) =>
+      a.student_id === studentId ? { ...a, pickup_status: 'absent' as const, dropoff_status: 'skipped' as const } : a
     );
+    setTripAttendance(updatedAttendance);
+
+    // If all students are now absent, the main trip is completed automatically
+    if (res.tripCompleted && res.trip) {
+      setCurrentTrip(res.trip);
+      setIsTripActive(false);
+      await stopDriverLocationBroadcast(vehicleName);
+
+      const now = new Date();
+      const durationMins = Math.max(1, Math.round(tripDurationSeconds / 60));
+      const archiveRecord: TripArchiveRecord = {
+        tripId: currentTrip.id.slice(0, 8).toUpperCase(),
+        vehicleName: `${vehicleName} (${vehiclePlate})`,
+        routeTitle,
+        startTime: tripStartTime ? tripStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '07:15 AM',
+        endTime: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        durationMinutes: durationMins,
+        totalStudents: students.length,
+        pickedCount: 0,
+        droppedCount: 0,
+        absentCount: students.length,
+        sampledPointsCount: Math.max(12, Math.floor(tripDurationSeconds / 5)),
+      };
+      setLastCompletedTrip(archiveRecord);
+
+      Alert.alert(
+        'Trip Completed Automatically',
+        'All students were marked absent for today\'s trip. Since there are 0 students to drop off, the trip has been completed automatically. You can now create a new trip.'
+      );
+
+      return {
+        success: true,
+        message: `${studentName} marked as Absent. All students absent; trip completed automatically.`,
+      };
+    }
 
     return {
       success: true,
@@ -697,6 +769,36 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
     // Refresh attendance records from DB
     const attRecords = await getTripAttendanceRecords(currentTrip.id);
     setTripAttendance(attRecords);
+
+    // If all students were absent and 0 picked up, trip is marked completed
+    if (updated.overall_status === 'completed') {
+      const now = new Date();
+      const durationMins = Math.max(1, Math.round(tripDurationSeconds / 60));
+      const archiveRecord: TripArchiveRecord = {
+        tripId: currentTrip.id.slice(0, 8).toUpperCase(),
+        vehicleName: `${vehicleName} (${vehiclePlate})`,
+        routeTitle,
+        startTime: tripStartTime ? tripStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '07:15 AM',
+        endTime: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        durationMinutes: durationMins,
+        totalStudents: students.length,
+        pickedCount: 0,
+        droppedCount: 0,
+        absentCount: students.length,
+        sampledPointsCount: Math.max(12, Math.floor(tripDurationSeconds / 5)),
+      };
+      setLastCompletedTrip(archiveRecord);
+
+      Alert.alert(
+        'Trip Completed Automatically',
+        'All students were marked absent during pickup. Since there are 0 students to drop off, the trip has been completed automatically. You can now create a new trip.'
+      );
+
+      return {
+        success: true,
+        message: 'All students marked absent. Trip completed automatically.',
+      };
+    }
 
     return {
       success: true,

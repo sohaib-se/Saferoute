@@ -30,22 +30,26 @@ export const DriverDashboardScreen: React.FC<DriverDashboardScreenProps> = ({
     isTripActive,
     rosterPhase,
     students,
-    startTrip,
+    tripPhase,
+    createTrip,
     tripNotifications,
     isLoadingTrip,
   } = useDriverTrip();
 
-  const [isStartingTrip, setIsStartingTrip] = useState(false);
+  const [isCreatingTrip, setIsCreatingTrip] = useState(false);
 
   const unreadCount = tripNotifications.filter((n) => !n.isRead).length;
   const previewStudents = students.slice(0, 3);
 
-  const handleStartTrip = () => {
-    setIsStartingTrip(true);
+  const handleCreateTrip = async () => {
+    setIsCreatingTrip(true);
     try {
-      startTrip();
+      const ok = await createTrip();
+      if (ok) {
+        onNavigateTab('trip');
+      }
     } finally {
-      setIsStartingTrip(false);
+      setIsCreatingTrip(false);
     }
   };
 
@@ -116,7 +120,7 @@ export const DriverDashboardScreen: React.FC<DriverDashboardScreenProps> = ({
             </View>
           </View>
 
-          {/* Action Button: Start Trip or Go to Trip */}
+          {/* Action Button: Create Today's Trip or Go to Trip */}
           {isLoadingTrip ? (
             <ActivityIndicator size="small" color={colors.primary} style={styles.loadingBtn} />
           ) : isTripActive ? (
@@ -128,19 +132,30 @@ export const DriverDashboardScreen: React.FC<DriverDashboardScreenProps> = ({
               <Ionicons name="navigate" size={18} color="#FFFFFF" />
               <Text style={styles.goToTripBtnText}>Go to Active Trip →</Text>
             </TouchableOpacity>
-          ) : (
+          ) : tripPhase === 'pending' || tripPhase === 'pickup_done' ? (
             <TouchableOpacity
-              style={styles.startTripBtn}
-              onPress={handleStartTrip}
-              disabled={isStartingTrip}
+              style={styles.goToTripBtn}
+              onPress={() => onNavigateTab('trip')}
               activeOpacity={0.8}
             >
-              {isStartingTrip ? (
+              <Ionicons name="navigate" size={18} color="#FFFFFF" />
+              <Text style={styles.goToTripBtnText}>
+                {tripPhase === 'pending' ? 'Go to Scheduled Trip →' : 'Go to Afternoon Drop-off →'}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.createTripBtn}
+              onPress={handleCreateTrip}
+              disabled={isCreatingTrip}
+              activeOpacity={0.8}
+            >
+              {isCreatingTrip ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <>
-                  <Ionicons name="play-circle" size={18} color="#FFFFFF" />
-                  <Text style={styles.startTripBtnText}>Start Trip</Text>
+                  <Ionicons name="add-circle" size={18} color="#FFFFFF" />
+                  <Text style={styles.createTripBtnText}>Create Today's Trip</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -324,6 +339,20 @@ const styles = StyleSheet.create({
   },
   loadingBtn: {
     marginTop: 4,
+  },
+  createTripBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: 13,
+    borderRadius: radii.md,
+    gap: 8,
+  },
+  createTripBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   startTripBtn: {
     flexDirection: 'row',

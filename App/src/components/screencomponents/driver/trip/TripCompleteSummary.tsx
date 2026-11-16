@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface TripCompleteSummaryProps {
@@ -10,6 +10,8 @@ interface TripCompleteSummaryProps {
   vehicleName: string;
   routeTitle: string;
   onReset: () => void;
+  onCreateNewTrip?: () => void;
+  isCreatingNewTrip?: boolean;
 }
 
 export const TripCompleteSummary: React.FC<TripCompleteSummaryProps> = ({
@@ -20,19 +22,31 @@ export const TripCompleteSummary: React.FC<TripCompleteSummaryProps> = ({
   vehicleName,
   routeTitle,
   onReset,
+  onCreateNewTrip,
+  isCreatingNewTrip,
 }) => {
+  const isAllAbsent = pickedCount === 0 && absentCount > 0;
+
   return (
     <View style={styles.card}>
-      <View style={styles.iconCircle}>
-        <Ionicons name="checkmark-done-circle" size={42} color="#059669" />
+      <View style={[styles.iconCircle, isAllAbsent && styles.iconCircleAmber]}>
+        <Ionicons
+          name={isAllAbsent ? 'alert-circle' : 'checkmark-done-circle'}
+          size={42}
+          color={isAllAbsent ? '#D97706' : '#059669'}
+        />
       </View>
 
-      <Text style={styles.heading}>Full Daily Trip Completed!</Text>
-      <Text style={styles.subheading}>
+      <Text style={styles.heading}>
+        {isAllAbsent ? 'Trip Completed (All Students Absent)' : 'Full Daily Trip Completed!'}
+      </Text>
+      <Text style={[styles.subheading, isAllAbsent && styles.subheadingAmber]}>
         {vehicleName} • {routeTitle}
       </Text>
       <Text style={styles.desc}>
-        Both pickup and drop-off shifts for today have concluded. All records have been safely synchronized to the school database.
+        {isAllAbsent
+          ? 'All students were marked absent during morning pickup. With 0 students to drop off, the trip has concluded automatically. You can create a new trip whenever needed.'
+          : 'Both pickup and drop-off shifts for today have concluded. All records have been safely synchronized to the school database.'}
       </Text>
 
       {/* Metrics Row */}
@@ -57,6 +71,24 @@ export const TripCompleteSummary: React.FC<TripCompleteSummaryProps> = ({
           <Text style={styles.statLbl}>Absent</Text>
         </View>
       </View>
+
+      {onCreateNewTrip ? (
+        <TouchableOpacity
+          style={styles.createTripBtn}
+          onPress={onCreateNewTrip}
+          disabled={isCreatingNewTrip}
+          activeOpacity={0.8}
+        >
+          {isCreatingNewTrip ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
+              <Ionicons name="add-circle" size={18} color="#FFFFFF" />
+              <Text style={styles.createTripBtnText}>Create Today's Trip</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      ) : null}
 
       <TouchableOpacity style={styles.resetBtn} onPress={onReset} activeOpacity={0.8}>
         <Ionicons name="refresh-outline" size={16} color="#007AFF" />
@@ -90,6 +122,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
+  iconCircleAmber: {
+    backgroundColor: '#FFFBEB',
+  },
   heading: {
     fontSize: 18,
     fontWeight: '800',
@@ -102,6 +137,9 @@ const styles = StyleSheet.create({
     color: '#059669',
     marginTop: 2,
     textAlign: 'center',
+  },
+  subheadingAmber: {
+    color: '#D97706',
   },
   desc: {
     fontSize: 12,
@@ -159,6 +197,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
   },
+  createTripBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
+    width: '100%',
+    marginBottom: 10,
+  },
+  createTripBtnText: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
   resetBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -178,4 +233,5 @@ const styles = StyleSheet.create({
     color: '#007AFF',
   },
 });
+
 
