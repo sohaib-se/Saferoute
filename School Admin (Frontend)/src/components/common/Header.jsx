@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { getCurrentSchoolId } from '../../lib/session';
 import {
   MdSearch,
   MdNotificationsNone,
@@ -242,6 +243,23 @@ const Header = ({ onNavigate }) => {
     }
   });
 
+  const [schoolLogo, setSchoolLogo] = useState(() => {
+    try {
+      return localStorage.getItem('schoolLogo') || null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [schoolName, setSchoolName] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('schoolProfile') || '{}');
+      return saved.schoolName || null;
+    } catch {
+      return null;
+    }
+  });
+
   useEffect(() => {
     const handleUserSync = () => {
       try {
@@ -253,6 +271,61 @@ const Header = ({ onNavigate }) => {
     return () => {
       window.removeEventListener('user-profile-updated', handleUserSync);
       window.removeEventListener('school-profile-updated', handleUserSync);
+    };
+  }, []);
+
+  // Fetch active school logo & name from database and sync with profile events
+  useEffect(() => {
+    const fetchSchoolInfo = async () => {
+      try {
+        const schoolId = getCurrentSchoolId();
+        if (schoolId) {
+          const { data } = await supabase
+            .from('schools')
+            .select('name, logo_url')
+            .eq('id', schoolId)
+            .maybeSingle();
+
+          if (data) {
+            if (data.logo_url) {
+              setSchoolLogo(data.logo_url);
+              localStorage.setItem('schoolLogo', data.logo_url);
+            }
+            if (data.name) {
+              setSchoolName(data.name);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch school info for header:', err);
+      }
+    };
+
+    fetchSchoolInfo();
+
+    const handleLogoUpdated = (e) => {
+      if (e.detail?.logoUrl !== undefined) {
+        setSchoolLogo(e.detail.logoUrl);
+      } else {
+        setSchoolLogo(localStorage.getItem('schoolLogo') || null);
+      }
+    };
+
+    const handleProfileUpdated = (e) => {
+      if (e.detail?.schoolName) {
+        setSchoolName(e.detail.schoolName);
+      }
+      if (e.detail?.logoUrl !== undefined) {
+        setSchoolLogo(e.detail.logoUrl);
+      }
+    };
+
+    window.addEventListener('school-logo-updated', handleLogoUpdated);
+    window.addEventListener('school-profile-updated', handleProfileUpdated);
+
+    return () => {
+      window.removeEventListener('school-logo-updated', handleLogoUpdated);
+      window.removeEventListener('school-profile-updated', handleProfileUpdated);
     };
   }, []);
 
@@ -502,14 +575,27 @@ const Header = ({ onNavigate }) => {
             className="flex items-center gap-2.5 px-2 py-1 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-              {initial}
-            </div>
+            {schoolLogo ? (
+              <div className="w-8 h-8 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shadow-xs shrink-0 p-0.5 overflow-hidden">
+                <img
+                  src={schoolLogo}
+                  alt={schoolName || 'School Logo'}
+                  className="w-full h-full object-contain rounded-lg"
+                  onError={() => setSchoolLogo(null)}
+                />
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                {initial}
+              </div>
+            )}
             <div className="text-left hidden sm:block">
-              <p className="text-xs font-semibold text-slate-800 leading-tight group-hover:text-blue-600 transition-colors">
+              <p className="text-xs font-semibold text-slate-800 leading-tight group-hover:text-blue-600 transition-colors truncate max-w-[140px]" title={displayName}>
                 {displayName}
               </p>
-              <p className="text-[11px] text-slate-400 leading-tight font-medium">School Admin</p>
+              <p className="text-[11px] text-slate-400 leading-tight font-medium truncate max-w-[140px]" title={schoolName || 'School Admin'}>
+                {schoolName || 'School Admin'}
+              </p>
             </div>
             <MdKeyboardArrowDown 
               size={16} 
@@ -520,13 +606,24 @@ const Header = ({ onNavigate }) => {
           {isDropdownOpen && (
             <div className="absolute -right-4 sm:-right-8 top-full mt-3.5 w-64 bg-white border border-slate-200 border-t-0 rounded-b-2xl rounded-t-none shadow-[0_12px_30px_rgba(0,0,0,0.12)] p-3 z-40 animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col gap-3">
               
-              {/* User Info / White Space at Top */}
-              <div className="flex flex-col items-center justify-center text-center space-y-1 mt-1">
-                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base mb-1 ring-2 ring-white shadow-sm border border-blue-100">
-                  {initial}
-                </div>
+              {/* User Info / School Logo at Top */}
+              <div className="flex flex-col items-center justify-center text-center space-y-1.5 mt-1">
+                {schoolLogo ? (
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center shadow-xs p-1 overflow-hidden mb-0.5">
+                    <img
+                      src={schoolLogo}
+                      alt={schoolName || 'School Logo'}
+                      className="w-full h-full object-contain rounded-xl"
+                      onError={() => setSchoolLogo(null)}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base mb-1 ring-2 ring-white shadow-sm border border-blue-100">
+                    {initial}
+                  </div>
+                )}
                 <h4 className="text-sm font-bold text-slate-800 leading-none">{displayName}</h4>
-                <p className="text-xs font-medium text-slate-500">School Admin</p>
+                <p className="text-xs font-medium text-slate-500">{schoolName || 'School Admin'}</p>
               </div>
 
               {/* Action Buttons Row */}

@@ -23,21 +23,6 @@ const isValidUUID = (val) =>
 const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
   const [activeSosCount, setActiveSosCount] = useState(0);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
-  const [logoUrl, setLogoUrl] = useState(() => {
-    try {
-      return localStorage.getItem('schoolLogo') || null;
-    } catch {
-      return null;
-    }
-  });
-  const [schoolName, setSchoolName] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('schoolProfile') || '{}');
-      return saved.schoolName || null;
-    } catch {
-      return null;
-    }
-  });
 
   const fetchBadgeCounts = async () => {
     try {
@@ -107,61 +92,6 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
     };
   }, []);
 
-  // Sync and fetch active school logo & name from database
-  useEffect(() => {
-    const fetchSchoolInfo = async () => {
-      try {
-        const schoolId = getCurrentSchoolId();
-        if (isValidUUID(schoolId)) {
-          const { data } = await supabase
-            .from('schools')
-            .select('name, logo_url')
-            .eq('id', schoolId)
-            .maybeSingle();
-
-          if (data) {
-            if (data.logo_url) {
-              setLogoUrl(data.logo_url);
-              localStorage.setItem('schoolLogo', data.logo_url);
-            }
-            if (data.name) {
-              setSchoolName(data.name);
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to fetch school logo for sidebar:', err);
-      }
-    };
-
-    fetchSchoolInfo();
-
-    const handleLogoUpdated = (e) => {
-      if (e.detail?.logoUrl !== undefined) {
-        setLogoUrl(e.detail.logoUrl);
-      } else {
-        setLogoUrl(localStorage.getItem('schoolLogo') || null);
-      }
-    };
-
-    const handleProfileUpdated = (e) => {
-      if (e.detail?.schoolName) {
-        setSchoolName(e.detail.schoolName);
-      }
-      if (e.detail?.logoUrl !== undefined) {
-        setLogoUrl(e.detail.logoUrl);
-      }
-    };
-
-    window.addEventListener('school-logo-updated', handleLogoUpdated);
-    window.addEventListener('school-profile-updated', handleProfileUpdated);
-
-    return () => {
-      window.removeEventListener('school-logo-updated', handleLogoUpdated);
-      window.removeEventListener('school-profile-updated', handleProfileUpdated);
-    };
-  }, []);
-
   const navItems = [
     { label: 'Dashboard', icon: MdDashboard },
     { label: 'Students', icon: MdPersonOutline },
@@ -192,20 +122,16 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
       <div className="flex flex-col flex-1 min-h-0">
         {/* Brand Header */}
         <div className="px-5 pt-6 pb-5 flex items-center gap-3 border-b border-slate-100/80">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0 overflow-hidden border border-slate-100">
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt={schoolName || 'School Logo'}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <MdDirectionsBus size={22} className="text-white" />
-            )}
+          <div className="w-10 h-10 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shadow-xs shrink-0 p-1 overflow-hidden">
+            <img
+              src={safeRouteLogo}
+              alt="SafeRoute Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div className="min-w-0">
-            <h1 className="text-sm font-bold text-slate-900 tracking-tight leading-snug truncate" title={schoolName || 'SafeRoute'}>
-              {schoolName || 'SafeRoute'}
+            <h1 className="text-sm font-bold text-slate-900 tracking-tight leading-snug">
+              SafeRoute
             </h1>
             <p className="text-[11px] font-medium text-slate-400 truncate">
               Admin Fleet Portal
