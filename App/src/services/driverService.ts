@@ -23,32 +23,36 @@ export const getDriverVehicleInfo = async (
 
     const assignedVehicleName = driverData?.vehicle && driverData.vehicle !== 'Unassigned'
       ? driverData.vehicle
-      : 'Bus 1';
+      : '';
 
     const assignedRoute = driverData?.route && driverData.route !== 'Unassigned'
       ? driverData.route
-      : 'Morning Route - Sector G-10';
+      : '';
 
     // Fetch matching vehicle record for registration plate number
-    const { data: vehicleData } = await supabase
-      .from('vehicles')
-      .select('*')
-      .eq('name', assignedVehicleName)
-      .maybeSingle();
+    let vehicleData = null;
+    if (assignedVehicleName) {
+      const { data } = await supabase
+        .from('vehicles')
+        .select('*')
+        .eq('name', assignedVehicleName)
+        .maybeSingle();
+      vehicleData = data;
+    }
 
     return {
-      name: assignedVehicleName,
-      plate: vehicleData?.reg_no || 'ICT-4921',
-      route: assignedRoute,
-      model: vehicleData?.model || '2025',
-      capacity: vehicleData?.capacity_seats || '30 Seats',
+      name: assignedVehicleName || 'Assigned Van',
+      plate: vehicleData?.reg_no || 'N/A',
+      route: assignedRoute || 'Assigned Route',
+      model: vehicleData?.model || '',
+      capacity: vehicleData?.capacity_seats || '',
     };
   } catch (err) {
     console.warn('Could not fetch driver vehicle info:', err);
     return {
-      name: 'Bus 1',
-      plate: 'ICT-4921',
-      route: 'Morning Route - Sector G-10',
+      name: '',
+      plate: 'N/A',
+      route: '',
     };
   }
 };

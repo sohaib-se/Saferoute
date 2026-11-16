@@ -1,11 +1,11 @@
-import { MdDirectionsBus } from 'react-icons/md';
+import safeRouteLogo from '../../../assets/logo.png';
 
 const LoginHeader = () => {
   return (
     <div className="flex flex-col items-center mb-6 text-center">
       {/* Brand Icon + Name */}
-      <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 mb-3.5">
-        <MdDirectionsBus size={22} />
+      <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center shadow-sm mb-3.5 p-2 overflow-hidden">
+        <img src={safeRouteLogo} alt="SafeRoute Logo" className="w-full h-full object-contain" />
       </div>
 
       <div className="flex items-center gap-1.5 mb-3">

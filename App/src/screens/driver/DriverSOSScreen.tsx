@@ -75,8 +75,8 @@ export const DriverSOSScreen: React.FC<DriverSOSScreenProps> = ({
             const result = await dispatchSOSAlert({
               schoolId: user?.schoolId,
               senderType: 'driver',
-              senderId: user?.userId || '07322545-3dfa-48d6-a4db-70c28158e431',
-              senderName: user?.name || 'Hilal',
+              senderId: user?.userId || '',
+              senderName: user?.name || '',
               vehicleName,
               latitude: gpsState.latitude,
               longitude: gpsState.longitude,

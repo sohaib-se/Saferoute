@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   TextInput,
   ActivityIndicator,
 } from 'react-native';
@@ -58,10 +57,7 @@ export const DriverTripScreen: React.FC<DriverTripScreenProps> = ({
   const handleCreateTrip = async () => {
     setIsSubmitting(true);
     try {
-      const ok = await createTrip();
-      if (ok) {
-        Alert.alert('Trip Created', `Trip record initialized for ${vehicleName}. You can now start the morning pickup.`);
-      }
+      await createTrip();
     } finally {
       setIsSubmitting(false);
     }
@@ -71,13 +67,7 @@ export const DriverTripScreen: React.FC<DriverTripScreenProps> = ({
   const handleStartPickup = async () => {
     setIsSubmitting(true);
     try {
-      const ok = await startPickupTrip();
-      if (ok) {
-        Alert.alert(
-          'Pickup Trip Started',
-          `Live GPS broadcasting is active for ${vehicleName}.\n\nYou can now pick up students one by one.`
-        );
-      }
+      await startPickupTrip();
     } finally {
       setIsSubmitting(false);
     }
@@ -85,150 +75,69 @@ export const DriverTripScreen: React.FC<DriverTripScreenProps> = ({
 
   // 3. One-tap Pick Up Student
   const handlePickUp = async (student: StudentRosterItem) => {
-    const res = await pickUpStudent(student.id);
-    Alert.alert('Student Picked Up', res.message);
+    await pickUpStudent(student.id);
   };
 
   // 4. Mark Absent
-  const handleMarkAbsent = (student: StudentRosterItem) => {
-    Alert.alert(
-      'Mark Student Absent',
-      `Mark ${student.name} as absent for today's morning pickup?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm Absent',
-          style: 'destructive',
-          onPress: async () => {
-            const res = await markAbsent(student.id);
-            Alert.alert('Status Updated', res.message);
-          },
-        },
-      ]
-    );
+  const handleMarkAbsent = async (student: StudentRosterItem) => {
+    await markAbsent(student.id);
   };
 
   // 5. Drop at School (Complete Pickup)
-  const handleDropAtSchool = () => {
-    const pickedCount = tripAttendance.filter((a) => a.pickup_status === 'picked_up').length;
-    const pendingCount = tripAttendance.filter((a) => a.pickup_status === 'pending').length;
-
-    Alert.alert(
-      'Arrived at School Gate?',
-      `This will complete the morning pickup trip.\n\n• ${pickedCount} students onboard safely dropped at school.\n• ${pendingCount} student(s) still pending will be marked absent.\n\nThe afternoon drop-off trip will then be unlocked.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Drop at School & Complete',
-          style: 'default',
-          onPress: async () => {
-            setIsSubmitting(true);
-            try {
-              const res = await completePickupTrip();
-              Alert.alert('School Arrival Complete', res.message);
-            } finally {
-              setIsSubmitting(false);
-            }
-          },
-        },
-      ]
-    );
+  const handleDropAtSchool = async () => {
+    setIsSubmitting(true);
+    try {
+      await completePickupTrip();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // 6. Start Drop-off Handler
   const handleStartDropoff = async () => {
     const presentCount = tripAttendance.filter((a) => a.pickup_status === 'picked_up').length;
     if (presentCount === 0) {
-      Alert.alert(
-        'No Present Students',
-        'No students were recorded as picked up this morning to board for the return trip.'
-      );
       return;
     }
-
-    Alert.alert(
-      'Start Afternoon Return Trip',
-      `Board ${presentCount} present students from school and start live navigation to their homes?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Start Drop-off Route',
-          style: 'default',
-          onPress: async () => {
-            setIsSubmitting(true);
-            try {
-              const ok = await startDropoffTrip();
-              if (ok) {
-                Alert.alert(
-                  'Afternoon Trip Active',
-                  `Live tracking is active. Drop off students at their home stops.`
-                );
-              }
-            } finally {
-              setIsSubmitting(false);
-            }
-          },
-        },
-      ]
-    );
+    setIsSubmitting(true);
+    try {
+      await startDropoffTrip();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // 7. Drop student at home
   const handleDropStudent = async (student: StudentRosterItem) => {
-    const res = await dropStudent(student.id);
-    Alert.alert('Dropped at Home', res.message);
+    await dropStudent(student.id);
   };
 
   // 8. Complete Dropoff Trip
   const handleCompleteDropoff = async () => {
-    // Check if any students remain pending
     const remainingCount = tripAttendance.filter(
       (a) => a.pickup_status === 'picked_up' && a.dropoff_status === 'pending'
     ).length;
 
     if (remainingCount > 0) {
-      Alert.alert(
-        'Students Still Onboard',
-        `There are still ${remainingCount} student(s) who haven't been dropped off yet.\n\nThe drop-off trip cannot be completed until all students are dropped.\n\n(Tip: Press and hold this button to Force Complete if necessary.)`
-      );
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const res = await completeDropoffTrip(false);
-      Alert.alert(res.success ? 'Success' : 'Notice', res.message);
+      await completeDropoffTrip(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // 9. Force Complete Dropoff Trip (on long press)
-  const handleForceCompleteDropoff = () => {
-    const remainingCount = tripAttendance.filter(
-      (a) => a.pickup_status === 'picked_up' && a.dropoff_status === 'pending'
-    ).length;
-
-    Alert.alert(
-      'Force Complete Trip?',
-      `Are you sure you want to force complete this trip?\n\n${remainingCount} remaining student(s) will be marked as skipped.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Force Complete',
-          style: 'destructive',
-          onPress: async () => {
-            setIsSubmitting(true);
-            try {
-              const res = await completeDropoffTrip(true);
-              Alert.alert('Trip Concluded', res.message);
-            } finally {
-              setIsSubmitting(false);
-            }
-          },
-        },
-      ]
-    );
+  const handleForceCompleteDropoff = async () => {
+    setIsSubmitting(true);
+    try {
+      await completeDropoffTrip(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCallParent = (student: StudentRosterItem) => {
@@ -555,16 +464,7 @@ export const DriverTripScreen: React.FC<DriverTripScreenProps> = ({
               absentCount={absentCount}
               vehicleName={vehicleName}
               routeTitle={routeTitle}
-              onReset={() => {
-                Alert.alert(
-                  'Reset Trip View',
-                  'Reset the current view for another shift run?',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Reset', onPress: resetTripDay },
-                  ]
-                );
-              }}
+              onReset={resetTripDay}
             />
           )}
         </ScrollView>

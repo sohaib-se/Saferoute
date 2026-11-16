@@ -193,9 +193,9 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
   const { user } = useAuth();
 
   // Dynamic driver info from session or DB
-  const [vehicleName, setVehicleName] = useState<string>(user?.profile?.assignedVan || 'Bus 1');
-  const [vehiclePlate, setVehiclePlate] = useState<string>(user?.profile?.plateNumber || 'ICT-4921');
-  const [routeTitle, setRouteTitle] = useState<string>('Morning Route - Sector G-10');
+  const [vehicleName, setVehicleName] = useState<string>(user?.profile?.assignedVan || 'Assigned Van');
+  const [vehiclePlate, setVehiclePlate] = useState<string>(user?.profile?.plateNumber || 'N/A');
+  const [routeTitle, setRouteTitle] = useState<string>('Assigned Route');
 
   // Supabase Trip state
   const [currentTrip, setCurrentTrip] = useState<TripRecord | null>(null);
@@ -251,7 +251,7 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
   useEffect(() => {
     let isMounted = true;
     const fetchInfo = async () => {
-      const driverName = user?.name || 'Hilal';
+      const driverName = user?.name || '';
       const info = await getDriverVehicleInfo(driverName, user?.schoolId);
       if (isMounted && info) {
         setVehicleName(info.name);
@@ -267,7 +267,7 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // 2. Fetch base students from Supabase
   const loadAssignedStudents = useCallback(async () => {
-    const driverName = user?.name || 'Hilal';
+    const driverName = user?.name || '';
     const studentsData = await getDriverRoster(driverName, vehicleName, user?.schoolId, user?.userId);
     setBaseStudents(studentsData);
     return studentsData;
@@ -277,7 +277,7 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
   const refreshTripData = useCallback(async () => {
     setIsLoadingTrip(true);
     try {
-      const driverName = user?.name || 'Hilal';
+      const driverName = user?.name || '';
       const trip = await getTodayTripForDriver(driverName, user?.userId, user?.schoolId);
       setCurrentTrip(trip);
 
@@ -555,7 +555,7 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
   // Create a new trip for today
   const createTrip = async (): Promise<boolean> => {
     try {
-      const driverName = user?.name || 'Hilal';
+      const driverName = user?.name || '';
       const newTrip = await createDriverTrip({
         schoolId: user?.schoolId,
         driverId: user?.userId,

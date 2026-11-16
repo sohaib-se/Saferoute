@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { colors, radii, shadows } from '../../lib/theme';
@@ -38,10 +38,10 @@ export const Header: React.FC<HeaderProps> = ({
             </TouchableOpacity>
           ) : (
             <View style={styles.brandIconWrapper}>
-              <Ionicons
-                name={user?.role === 'driver' ? 'bus' : 'shield-checkmark'}
-                size={20}
-                color={colors.primary}
+              <Image
+                source={require('../../../assets/images/logo.png')}
+                style={styles.brandLogoImage}
+                resizeMode="contain"
               />
             </View>
           )}
@@ -124,13 +124,19 @@ const styles = StyleSheet.create({
   brandIconWrapper: {
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: '#EBF4FF',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
     borderWidth: 1,
-    borderColor: '#D0E4FF',
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    padding: 3,
+  },
+  brandLogoImage: {
+    width: '100%',
+    height: '100%',
   },
   backButton: {
     width: 38,

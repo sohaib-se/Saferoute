@@ -10,11 +10,11 @@ interface DriverAssignmentsBoxProps {
 }
 
 export const DriverAssignmentsBox: React.FC<DriverAssignmentsBoxProps> = ({
-  vehicle = 'Bus 1 (ICT-4921)',
-  route = 'Morning Sector G-10',
-  license = '32412',
+  vehicle = 'N/A',
+  route = 'N/A',
+  license = 'N/A',
   licenseType = 'Heavy Transport',
-  loginId = '9584',
+  loginId = '',
 }) => {
   return (
     <View style={styles.container}>

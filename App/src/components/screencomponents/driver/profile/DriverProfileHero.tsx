@@ -10,11 +10,11 @@ interface DriverProfileHeroProps {
 }
 
 export const DriverProfileHero: React.FC<DriverProfileHeroProps> = ({
-  name = 'Hilal',
-  phone = '03124124',
+  name = '',
+  phone = 'N/A',
   onEdit,
 }) => {
-  const usernameHandle = `@${name.toLowerCase().replace(/\s+/g, '.')}.driver`;
+  const usernameHandle = name ? `@${name.toLowerCase().replace(/\s+/g, '.')}.driver` : '@driver';
 
   return (
     <View style={styles.container}>

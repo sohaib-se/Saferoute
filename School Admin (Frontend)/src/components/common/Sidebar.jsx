@@ -15,6 +15,7 @@ import {
 } from 'react-icons/md';
 import { supabase } from '../../lib/supabaseClient';
 import { getCurrentSchoolId } from '../../lib/session';
+import safeRouteLogo from '../../assets/logo.png';
 
 const isValidUUID = (val) =>
   Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
@@ -121,8 +122,8 @@ const Sidebar = ({ onLogout, currentPage = 'Dashboard', onNavigate }) => {
       <div className="flex flex-col flex-1 min-h-0">
         {/* Brand Header */}
         <div className="px-5 pt-6 pb-5 flex items-center gap-3 border-b border-slate-100/80">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
-            <MdDirectionsBus size={20} />
+          <div className="w-10 h-10 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shadow-xs shrink-0 p-1 overflow-hidden">
+            <img src={safeRouteLogo} alt="SafeRoute Logo" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
             <h1 className="text-sm font-bold text-slate-900 tracking-tight leading-snug">

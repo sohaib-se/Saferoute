@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { shadows } from '../../../lib/theme';
 
@@ -14,9 +14,13 @@ export const LoginHeader: React.FC<LoginHeaderProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      {/* 1. App Brand Logo Squircle */}
+      {/* 1. App Brand Logo */}
       <View style={styles.brandLogoWrapper}>
-        <Ionicons name="shield-checkmark" size={28} color="#FFFFFF" />
+        <Image
+          source={require('../../../../assets/images/logo.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
       </View>
 
       {/* 2. Brand Titles */}
@@ -133,18 +137,25 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
   },
   brandLogoWrapper: {
-    width: 50,
-    height: 50,
-    borderRadius: 16,
-    backgroundColor: '#007AFF',
+    width: 68,
+    height: 68,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
     shadowColor: '#007AFF',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.12,
     shadowRadius: 10,
-    elevation: 5,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 6,
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   brandTitle: {
     fontSize: 26,

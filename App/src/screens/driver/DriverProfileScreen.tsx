@@ -87,21 +87,21 @@ export const DriverProfileScreen: React.FC<DriverProfileScreenProps> = ({
             <Ionicons name="shield-checkmark" size={14} color="#0284C7" />
             <Text style={styles.roleTagText}>Certified School Driver</Text>
           </View>
-          <Text style={styles.userNameText}>{user?.name || 'Hilal'}</Text>
+          <Text style={styles.userNameText}>{user?.name || ''}</Text>
           <Text style={styles.userSubText}>
             Assigned Vehicle: <Text style={styles.boldSubText}>{vehicleName} ({vehiclePlate})</Text>
           </Text>
-          <Text style={styles.userPhoneText}>Phone: {user?.phone || '03124124'}</Text>
+          <Text style={styles.userPhoneText}>Phone: {user?.phone || 'N/A'}</Text>
         </View>
 
         {/* 2. REQ-D1.3: Personal Info 2-Column Grid Card Scoped to Assigned Vehicle */}
         <DriverPersonalInfoCard
           vehicle={`${vehicleName} (${vehiclePlate})`}
           route={routeTitle}
-          license={user?.profile?.licenseNumber || 'DL-32412'}
+          license={user?.profile?.licenseNumber || 'N/A'}
           licenseType="Heavy Transport (Commercial)"
-          loginId={user?.loginId || '9584'}
-          phone={user?.phone || '03124124'}
+          loginId={user?.loginId || ''}
+          phone={user?.phone || 'N/A'}
         />
 
         {/* REQ-D1.2: Password Security Card */}

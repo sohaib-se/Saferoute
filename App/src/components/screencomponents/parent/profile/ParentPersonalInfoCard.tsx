@@ -12,10 +12,10 @@ interface ParentPersonalInfoCardProps {
 }
 
 export const ParentPersonalInfoCard: React.FC<ParentPersonalInfoCardProps> = ({
-  email = 'zeeshan@gmail.com',
-  phone = '+92 312 412412',
-  address = 'Ghari Rashida',
-  joinedDate = '15 Sep 2024',
+  email = '',
+  phone = 'N/A',
+  address = 'N/A',
+  joinedDate = 'N/A',
   role = 'Primary Guardian',
 }) => {
   return (
