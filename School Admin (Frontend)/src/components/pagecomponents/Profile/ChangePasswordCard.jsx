@@ -39,7 +39,7 @@ const ChangePasswordCard = ({ onUpdatePassword }) => {
 
   const strength = calculateStrength(newPassword);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -66,20 +66,25 @@ const ChangePasswordCard = ({ onUpdatePassword }) => {
 
     setLoading(true);
 
-    // Simulate API call / save
-    setTimeout(() => {
-      setLoading(false);
-      setSuccess('Administrator password updated successfully! Please use this password for your next login.');
+    try {
+      if (onUpdatePassword) {
+        const result = await onUpdatePassword({ currentPassword, newPassword });
+        if (result && result.error) {
+          setError(result.error);
+          return;
+        }
+      }
+
+      setSuccess('Administrator password updated successfully in the database! Please use this password for your next login.');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-
-      if (onUpdatePassword) {
-        onUpdatePassword({ currentPassword, newPassword });
-      }
-
-      setTimeout(() => setSuccess(''), 5000);
-    }, 600);
+      setTimeout(() => setSuccess(''), 6000);
+    } catch (err) {
+      setError(err.message || 'Failed to update administrator password.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -102,11 +107,6 @@ const ChangePasswordCard = ({ onUpdatePassword }) => {
             </p>
           </div>
         </div>
-
-        <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 text-slate-600 border border-slate-200/80 rounded-full text-[11px] font-semibold">
-          <MdLock size={13} className="text-slate-400" />
-          <span>Encrypted Credentials</span>
-        </span>
       </div>
 
       {/* Alert Messages */}
@@ -135,10 +135,11 @@ const ChangePasswordCard = ({ onUpdatePassword }) => {
             <input
               type={showCurrent ? 'text' : 'password'}
               required
+              disabled={loading}
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Enter current password"
-              className="w-full pl-9 pr-10 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+              className="w-full pl-9 pr-10 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
             />
             <button
               type="button"
@@ -162,10 +163,11 @@ const ChangePasswordCard = ({ onUpdatePassword }) => {
               <input
                 type={showNew ? 'text' : 'password'}
                 required
+                disabled={loading}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Minimum 8 characters"
-                className="w-full pl-9 pr-10 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                className="w-full pl-9 pr-10 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
               <button
                 type="button"
@@ -187,10 +189,11 @@ const ChangePasswordCard = ({ onUpdatePassword }) => {
               <input
                 type={showConfirm ? 'text' : 'password'}
                 required
+                disabled={loading}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter new password"
-                className="w-full pl-9 pr-10 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all"
+                className="w-full pl-9 pr-10 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-sans transition-all disabled:opacity-60"
               />
               <button
                 type="button"
@@ -246,23 +249,33 @@ const ChangePasswordCard = ({ onUpdatePassword }) => {
         <div className="flex items-center justify-end pt-3 border-t border-slate-100 gap-3">
           <button
             type="button"
+            disabled={loading}
             onClick={() => {
               setCurrentPassword('');
               setNewPassword('');
               setConfirmPassword('');
               setError('');
             }}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer disabled:opacity-50"
           >
             Clear Fields
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <MdLock size={15} />
-            <span>{loading ? 'Updating Password...' : 'Update Password'}</span>
+            {loading ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Updating in Supabase...</span>
+              </>
+            ) : (
+              <>
+                <MdLock size={15} />
+                <span>Update Password</span>
+              </>
+            )}
           </button>
         </div>
       </form>

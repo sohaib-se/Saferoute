@@ -154,6 +154,116 @@ serve(async (req: Request) => {
       )
     }
 
+    // ==========================================
+    // 3. CHANGE PASSWORD
+    // ==========================================
+    else if (action === 'change-password') {
+      const { schoolId, currentPassword, newPassword } = body;
+
+      if (!schoolId || !newPassword) {
+        return new Response(
+          JSON.stringify({ error: 'School ID and new password are required.' }), 
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
+      }
+
+      // Fetch existing school to verify current password if provided
+      const { data: school, error: fetchErr } = await supabaseClient
+        .from('schools')
+        .select('id, password')
+        .eq('id', schoolId)
+        .maybeSingle();
+
+      if (fetchErr || !school) {
+        return new Response(
+          JSON.stringify({ error: 'School account not found.' }), 
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 404,
+          }
+        );
+      }
+
+      if (currentPassword && school.password && school.password !== currentPassword) {
+        return new Response(
+          JSON.stringify({ error: 'Current password is incorrect.' }), 
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
+      }
+
+      const { error: updateErr } = await supabaseClient
+        .from('schools')
+        .update({ password: newPassword })
+        .eq('id', schoolId);
+
+      if (updateErr) {
+        return new Response(
+          JSON.stringify({ error: updateErr.message || 'Failed to update password.' }), 
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ message: 'Password updated successfully' }), 
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    // ==========================================
+    // 4. UPDATE SCHOOL PROFILE
+    // ==========================================
+    else if (action === 'update-profile') {
+      const { schoolId, ...updates } = body;
+      delete updates.action;
+
+      if (!schoolId) {
+        return new Response(
+          JSON.stringify({ error: 'School ID is required.' }), 
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
+      }
+
+      const { data: updatedSchool, error: updateErr } = await supabaseClient
+        .from('schools')
+        .update(updates)
+        .eq('id', schoolId)
+        .select()
+        .single();
+
+      if (updateErr) {
+        return new Response(
+          JSON.stringify({ error: updateErr.message || 'Failed to update school profile.' }), 
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ message: 'Profile updated successfully', school: updatedSchool }), 
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
     // Invalid action
     return new Response(
       JSON.stringify({ error: 'Invalid action specified.' }), 

@@ -1,116 +1,114 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import {
   ProfileHeaderBanner,
   SchoolProfileCard,
   ChangePasswordCard,
-  AdminDetailsCard,
-  FleetPreferencesCard,
   ProfileFooter,
 } from '../components/pagecomponents/Profile';
-
-const defaultSchoolProfile = {
-  schoolName: 'SafeRoute International Academy',
-  campusName: 'Main Campus - Gulberg III',
-  registrationNo: 'REG-PK-2024-9912',
-  schoolEmail: 'admin@saferoute.edu.pk',
-  phone: '+92 42 3578 9000',
-  emergencyPhone: '+92 300 1112233',
-  address: 'Plot 44-A, Block H, Gulberg III, Lahore, Pakistan',
-  website: 'https://saferoute.school.edu',
-  morningStartTime: '07:30 AM',
-  afternoonDismissal: '02:15 PM',
-  principalName: 'Dr. Tariq Mansoor',
-};
-
-const defaultPreferences = {
-  parentSmsAlerts: true,
-  sosEmergencyBroadcast: true,
-  autoExportManifest: true,
-  telematicsInterval: '10s',
-};
+import {
+  getSchoolProfile,
+  updateSchoolProfile,
+  updateAdminPassword,
+  uploadSchoolLogo,
+  removeSchoolLogo,
+  DEFAULT_SCHOOL_PROFILE,
+} from '../services/schoolProfileService';
+import { MdErrorOutline } from 'react-icons/md';
 
 const Profile = ({
   onLogout,
   onNavigate,
   currentPage = 'Profile',
 }) => {
-  // Load initial data from localStorage if available
-  const [schoolData, setSchoolData] = useState(() => {
-    try {
-      const saved = localStorage.getItem('schoolProfile');
-      return saved ? JSON.parse(saved) : defaultSchoolProfile;
-    } catch {
-      return defaultSchoolProfile;
-    }
-  });
+  const [schoolData, setSchoolData] = useState(DEFAULT_SCHOOL_PROFILE);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
-  const [adminData, setAdminData] = useState(() => {
+  const [toast, setToast] = useState({ message: '', type: 'success' });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast({ message: '', type: 'success' }), 4000);
+  };
+
+  // Fetch initial profile data on mount
+  const fetchProfileData = useCallback(async () => {
     try {
-      const saved = localStorage.getItem('user');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          name: parsed.name || 'Admin',
-          email: parsed.email || 'admin@saferoute.com',
-          phone: parsed.phone || '0300 1234567',
-          role: parsed.role || 'Super Admin (Fleet Director)',
-          department: 'Transport & Fleet Safety',
-        };
+      setIsLoading(true);
+      const res = await getSchoolProfile();
+      if (res?.schoolData) {
+        setSchoolData(res.schoolData);
       }
-    } catch {}
-    return {
-      name: 'Admin',
-      email: 'admin@saferoute.com',
-      phone: '0300 1234567',
-      role: 'Super Admin (Fleet Director)',
-      department: 'Transport & Fleet Safety',
-    };
-  });
-
-  const [preferences, setPreferences] = useState(() => {
-    try {
-      const saved = localStorage.getItem('fleetPreferences');
-      return saved ? JSON.parse(saved) : defaultPreferences;
-    } catch {
-      return defaultPreferences;
+    } catch (err) {
+      console.error('Failed to load school profile:', err);
+      showToast('Could not fetch latest profile from database.', 'error');
+    } finally {
+      setIsLoading(false);
     }
-  });
+  }, []);
 
-  const [toastMessage, setToastMessage] = useState('');
+  useEffect(() => {
+    fetchProfileData();
+  }, [fetchProfileData]);
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3500);
-  };
-
-  const handleSaveSchoolProfile = (updatedSchool) => {
-    setSchoolData(updatedSchool);
-    localStorage.setItem('schoolProfile', JSON.stringify(updatedSchool));
-    showToast('School profile updated and saved successfully!');
-  };
-
-  const handleSaveAdminProfile = (updatedAdmin) => {
-    setAdminData(updatedAdmin);
-    // Persist in localStorage so Header and rest of app update reactively
-    localStorage.setItem('user', JSON.stringify(updatedAdmin));
-    showToast('Administrator details saved successfully!');
-  };
-
-  const handleUpdatePassword = () => {
+  // Handle saving school institutional profile
+  const handleSaveSchoolProfile = async (updatedSchool) => {
     try {
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      currentUser.passwordLastChanged = new Date().toISOString();
-      localStorage.setItem('user', JSON.stringify(currentUser));
-    } catch {}
-    showToast('Password changed successfully! Keep your credentials safe.');
+      const merged = { ...schoolData, ...updatedSchool };
+      await updateSchoolProfile(merged);
+      setSchoolData(merged);
+      showToast('School profile updated and saved to database successfully!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to save school profile to database.', 'error');
+      throw err;
+    }
   };
 
-  const handleSavePreferences = (updatedPrefs) => {
-    setPreferences(updatedPrefs);
-    localStorage.setItem('fleetPreferences', JSON.stringify(updatedPrefs));
-    showToast('Fleet preferences updated successfully!');
+  // Handle updating admin password
+  const handleUpdatePassword = async ({ currentPassword, newPassword }) => {
+    try {
+      const result = await updateAdminPassword({ currentPassword, newPassword });
+      if (result && !result.success) {
+        return result;
+      }
+      showToast('Password updated successfully in the database!', 'success');
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message || 'Could not update password.' };
+    }
+  };
+
+  // Handle uploading school logo
+  const handleUploadLogo = async (file) => {
+    try {
+      setIsUploadingLogo(true);
+      const res = await uploadSchoolLogo(file);
+      if (res?.logoUrl) {
+        setSchoolData((prev) => ({ ...prev, logoUrl: res.logoUrl }));
+        showToast('School logo uploaded to Supabase Storage and saved successfully!', 'success');
+      }
+    } catch (err) {
+      console.error('Logo upload error:', err);
+      showToast(err.message || 'Failed to upload school logo.', 'error');
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
+  // Handle removing school logo
+  const handleRemoveLogo = async () => {
+    try {
+      setIsUploadingLogo(true);
+      await removeSchoolLogo();
+      setSchoolData((prev) => ({ ...prev, logoUrl: null }));
+      showToast('School logo removed.', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to remove school logo.', 'error');
+    } finally {
+      setIsUploadingLogo(false);
+    }
   };
 
   return (
@@ -128,10 +126,20 @@ const Profile = ({
         <Header onNavigate={onNavigate} />
 
         {/* Floating Toast Notification */}
-        {toastMessage && (
-          <div className="fixed top-20 right-8 z-50 bg-slate-900/95 text-white px-4 py-2.5 rounded-xl shadow-xl border border-slate-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>{toastMessage}</span>
+        {toast.message && (
+          <div
+            className={`fixed top-20 right-8 z-50 px-4 py-2.5 rounded-xl shadow-xl border text-xs font-semibold flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-200 ${
+              toast.type === 'error'
+                ? 'bg-rose-950/95 text-white border-rose-800'
+                : 'bg-slate-900/95 text-white border-slate-700'
+            }`}
+          >
+            {toast.type === 'error' ? (
+              <MdErrorOutline className="w-4 h-4 text-rose-400 shrink-0" />
+            ) : (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            )}
+            <span>{toast.message}</span>
           </div>
         )}
 
@@ -144,36 +152,27 @@ const Profile = ({
           <ProfileHeaderBanner
             schoolName={schoolData.schoolName}
             campusName={schoolData.campusName}
-            adminName={adminData.name}
-            totalBuses={25}
-            totalStudents={340}
-            activeDrivers={18}
+            logoUrl={schoolData.logoUrl}
+            onUploadLogo={handleUploadLogo}
+            onRemoveLogo={handleRemoveLogo}
+            isUploadingLogo={isUploadingLogo}
           />
 
-          {/* Cards Layout Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column: School Profile & Preferences (7 cols) */}
+          {/* Cards Layout Grid: School Profile & Password Security */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column: School Profile (7 cols) */}
             <div className="lg:col-span-7 space-y-6">
               <SchoolProfileCard
                 schoolData={schoolData}
                 onSaveSchoolProfile={handleSaveSchoolProfile}
-              />
-
-              <FleetPreferencesCard
-                preferences={preferences}
-                onSavePreferences={handleSavePreferences}
+                isLoading={isLoading}
               />
             </div>
 
-            {/* Right Column: Admin Details & Password Change (5 cols) */}
+            {/* Right Column: Password Change (5 cols) */}
             <div className="lg:col-span-5 space-y-6">
               <ChangePasswordCard
                 onUpdatePassword={handleUpdatePassword}
-              />
-
-              <AdminDetailsCard
-                adminData={adminData}
-                onSaveAdminProfile={handleSaveAdminProfile}
               />
             </div>
           </div>
