@@ -10,8 +10,8 @@ interface ParentProfileHeaderProps {
 }
 
 export const ParentProfileHeader: React.FC<ParentProfileHeaderProps> = ({
-  name = 'Zeeshan Malik',
-  phone = '+92 312 412412',
+  name = '',
+  phone = 'N/A',
   onEdit,
 }) => {
   return (

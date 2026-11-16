@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -18,6 +18,7 @@ import { DriverCallParentScreen } from '../screens/driver/DriverCallParentScreen
 import { DriverNotificationsScreen } from '../screens/driver/DriverNotificationsScreen';
 import { DriverSOSScreen } from '../screens/driver/DriverSOSScreen';
 import { DriverProfileScreen } from '../screens/driver/DriverProfileScreen';
+import { DriverAllStudentsScreen } from '../screens/driver/DriverAllStudentsScreen';
 
 // Parent Screens
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
@@ -49,6 +50,13 @@ export const RootNavigator: React.FC = () => {
     return (
       <View style={styles.loadingContainer}>
         <StatusBar style="dark" />
+        <View style={styles.loadingLogoWrapper}>
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={styles.loadingLogo}
+            resizeMode="contain"
+          />
+        </View>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Connecting to SafeRoute...</Text>
       </View>
@@ -94,6 +102,13 @@ export const RootNavigator: React.FC = () => {
         case 'roster':
           return (
             <DriverTripScreen
+              onBack={() => setDriverTab('dashboard')}
+              onOpenNotifications={() => setDriverTab('notifications')}
+            />
+          );
+        case 'students':
+          return (
+            <DriverAllStudentsScreen
               onBack={() => setDriverTab('dashboard')}
               onOpenNotifications={() => setDriverTab('notifications')}
             />
@@ -252,6 +267,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
+  },
+  loadingLogoWrapper: {
+    width: 76,
+    height: 76,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 8,
+  },
+  loadingLogo: {
+    width: '100%',
+    height: '100%',
   },
   loadingText: {
     fontSize: 14,

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { MdDirectionsBus } from 'react-icons/md';
+import safeRouteLogo from '../../../assets/logo.png';
 
 const LandingFooter = () => {
   return (
@@ -9,8 +9,8 @@ const LandingFooter = () => {
           {/* Brand info (Col-2) */}
           <div className="md:col-span-2 space-y-4">
             <Link to="/" className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20">
-                <MdDirectionsBus size={20} />
+              <div className="w-10 h-10 bg-white border border-slate-200/80 rounded-xl flex items-center justify-center shadow-xs shrink-0 p-1 overflow-hidden">
+                <img src={safeRouteLogo} alt="SafeRoute Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-base font-bold text-slate-900 tracking-tight">

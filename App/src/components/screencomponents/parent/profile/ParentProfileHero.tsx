@@ -10,11 +10,11 @@ interface ParentProfileHeroProps {
 }
 
 export const ParentProfileHero: React.FC<ParentProfileHeroProps> = ({
-  name = 'Zeeshan Malik',
-  phone = '+92 312 412412',
+  name = '',
+  phone = 'N/A',
   onEdit,
 }) => {
-  const usernameHandle = `@${name.toLowerCase().replace(/\s+/g, '.')}`;
+  const usernameHandle = name ? `@${name.toLowerCase().replace(/\s+/g, '.')}` : '@guardian';
 
   return (
     <View style={styles.container}>

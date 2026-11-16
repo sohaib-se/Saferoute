@@ -15,6 +15,7 @@ import {
 } from 'react-icons/md';
 import { supabase } from '../../lib/supabaseClient';
 import { getCurrentSchoolId } from '../../lib/session';
+import safeRouteLogo from '../../assets/logo.png';
 
 const isValidUUID = (val) =>
   Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));

@@ -11,9 +11,9 @@ interface ParentResidenceCardProps {
 }
 
 export const ParentResidenceCard: React.FC<ParentResidenceCardProps> = ({
-  address = 'Khatme Nabuwat Chowk, Ghari Rashida',
-  email = 'zeeshan@gmail.com',
-  alternateContact = '+92 300 1234567',
+  address = 'N/A',
+  email = '',
+  alternateContact = 'N/A',
   onEdit,
 }) => {
   return (

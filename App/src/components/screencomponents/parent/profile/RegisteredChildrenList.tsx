@@ -17,35 +17,6 @@ interface ChildData {
   driverName: string;
 }
 
-const childrenList: ChildData[] = [
-  {
-    id: '1',
-    name: 'Ayesha Malik',
-    initials: 'AM',
-    initialsBg: '#E0F2FE',
-    initialsColor: '#0284C7',
-    grade: 'Grade 4',
-    section: 'Section C',
-    rollNumber: '1482',
-    busNumber: 'Bus 1',
-    busPlate: 'ICT-4921',
-    driverName: 'Hilal',
-  },
-  {
-    id: '2',
-    name: 'Zain Malik',
-    initials: 'ZM',
-    initialsBg: '#F3E8FF',
-    initialsColor: '#8B5CF6',
-    grade: 'Grade 2',
-    section: 'Section A',
-    rollNumber: '1483',
-    busNumber: 'Bus 1',
-    busPlate: 'ICT-4921',
-    driverName: 'Hilal',
-  },
-];
-
 interface RegisteredChildrenListProps {
   children?: any[];
   onChildPress?: (childName: string) => void;
@@ -55,15 +26,20 @@ export const RegisteredChildrenList: React.FC<RegisteredChildrenListProps> = ({
   children,
   onChildPress,
 }) => {
-  const displayList = children && children.length > 0 ? children : childrenList;
+  const displayList = children || [];
 
   return (
     <View style={styles.container}>
       {/* Section Title */}
       <Text style={styles.sectionTitle}>Registered Children ({displayList.length})</Text>
 
-      {/* Children Cards */}
-      {displayList.map((child) => (
+      {displayList.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Ionicons name="school-outline" size={28} color="#94A3B8" />
+          <Text style={styles.emptyText}>No registered children found.</Text>
+        </View>
+      ) : (
+        displayList.map((child) => (
         <TouchableOpacity
           key={child.id}
           style={styles.childCard}
@@ -131,7 +107,7 @@ export const RegisteredChildrenList: React.FC<RegisteredChildrenListProps> = ({
             </View>
           </View>
         </TouchableOpacity>
-      ))}
+      )))}
     </View>
   );
 };
@@ -276,6 +252,22 @@ const styles = StyleSheet.create({
     color: '#B45309',
     fontWeight: '700',
     fontSize: 11.5,
+  },
+  emptyCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#E6EFF7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    ...shadows.card,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '600',
   },
 });
 

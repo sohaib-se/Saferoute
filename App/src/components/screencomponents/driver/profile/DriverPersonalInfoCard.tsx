@@ -13,12 +13,12 @@ interface DriverPersonalInfoCardProps {
 }
 
 export const DriverPersonalInfoCard: React.FC<DriverPersonalInfoCardProps> = ({
-  vehicle = 'Bus 1 (ICT-4921)',
-  route = 'Sector G-10',
-  license = 'DL-32412',
+  vehicle = 'N/A',
+  route = 'N/A',
+  license = 'N/A',
   licenseType = 'Heavy Transport',
-  loginId = '9584',
-  phone = '03124124',
+  loginId = '',
+  phone = 'N/A',
 }) => {
   return (
     <View style={styles.container}>

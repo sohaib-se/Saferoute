@@ -66,9 +66,9 @@ export const ParentSOSScreen: React.FC<ParentSOSScreenProps> = ({
             const result = await dispatchSOSAlert({
               schoolId: user?.schoolId,
               senderType: 'parent',
-              senderId: user?.userId || '87ac2bf4-700b-4fec-9ec0-1fd83f3bb448',
-              senderName: user?.name || 'Zeeshan Malik',
-              vehicleName: user?.profile?.bus || 'Bus 1',
+              senderId: user?.userId || '',
+              senderName: user?.name || '',
+              vehicleName: user?.profile?.bus || '',
               latitude: 33.6844,
               longitude: 73.0479,
             });

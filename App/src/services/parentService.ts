@@ -80,10 +80,10 @@ export const getParentChildren = async (
       const matchedDriver = driversMap[dKey];
       const matchedVehicle = vehiclesMap[vKey];
 
-      const driverPhone = matchedDriver?.phone || '03124124';
-      const driverName = matchedDriver?.name || s.driver || 'Hilal';
-      const vehiclePlate = matchedVehicle?.reg_no || 'ICT-4921';
-      const vehicleDisplay = `${s.vehicle || 'Bus 1'} (${vehiclePlate})`;
+      const driverPhone = matchedDriver?.phone || s.driver_phone || 'N/A';
+      const driverName = matchedDriver?.name || s.driver || 'N/A';
+      const vehiclePlate = matchedVehicle?.reg_no || 'N/A';
+      const vehicleDisplay = s.vehicle ? `${s.vehicle} (${vehiclePlate})` : `Assigned Van (${vehiclePlate})`;
 
       let status = (s.status as any) || 'Waiting';
       if (status === 'Picked up') status = 'En route';
@@ -91,7 +91,7 @@ export const getParentChildren = async (
       return {
         id: s.id,
         name: s.name,
-        grade: `${s.class_grade || 'Grade 5'}${s.section ? ' - Section ' + s.section : ''}`,
+        grade: `${s.class_grade || 'Grade'}${s.section ? ' - Section ' + s.section : ''}`,
         studentCode: s.student_code ? s.student_code.replace('#', '') : `${1480 + index}`,
         vehicle: vehicleDisplay,
         driverName,
@@ -99,7 +99,7 @@ export const getParentChildren = async (
         status,
         etaMinutes: status === 'En route' ? 7 : status === 'Waiting' ? 15 : 0,
         pickupTime: `07:${25 + index * 10} AM`,
-        stopAddress: s.stop || s.address || 'Khatme Nabuwat Chowk',
+        stopAddress: s.stop || s.address || 'N/A',
       };
     });
   } catch (err) {
@@ -134,26 +134,26 @@ export const getParentProfileData = async (
       : '15 Sep 2024';
 
     return {
-      id: data?.id || parentId || 'parent-1',
-      name: data?.name || 'Zeeshan Malik',
-      email: data?.email || 'zeeshan@gmail.com',
-      phone: data?.phone || '+92 312 412412',
-      address: data?.address || 'Khatme Nabuwat Chowk, Ghari Rashida',
+      id: data?.id || parentId || '',
+      name: data?.name || '',
+      email: data?.email || '',
+      phone: data?.phone || '',
+      address: data?.address || '',
       joinedDate: formattedDate,
       role: 'Primary Guardian',
-      bus: data?.bus || 'Bus 1',
+      bus: data?.bus || '',
     };
   } catch (err) {
     console.error('Error fetching parent profile:', err);
     return {
-      id: parentId || 'parent-1',
-      name: 'Zeeshan Malik',
-      email: 'zeeshan@gmail.com',
-      phone: '+92 312 412412',
-      address: 'Khatme Nabuwat Chowk, Ghari Rashida',
-      joinedDate: '15 Sep 2024',
+      id: parentId || '',
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      joinedDate: '',
       role: 'Primary Guardian',
-      bus: 'Bus 1',
+      bus: '',
     };
   }
 };
@@ -379,17 +379,37 @@ export const getLiveVehicleLocation = async (vehicleName: string) => {
  */
 export const isVehicleTripRunning = async (vehicleName: string): Promise<boolean> => {
   try {
-    const today = new Date().toISOString().split('T')[0];
-    const { data } = await supabase
-      .from('trips')
-      .select('overall_status')
-      .eq('vehicle_name', vehicleName)
-      .eq('trip_date', today)
-      .in('overall_status', ['pickup_active', 'dropoff_active'])
-      .maybeSingle();
+    if (!vehicleName) return false;
+    const cleanName = vehicleName.split(' (')[0].trim();
 
-    return Boolean(data);
-  } catch {
+    // 1. Check trips table for active running trip
+    const { data: tripData, error: tripErr } = await supabase
+      .from('trips')
+      .select('id, overall_status, vehicle_name')
+      .ilike('vehicle_name', cleanName)
+      .in('overall_status', ['pickup_active', 'dropoff_active'])
+      .limit(1);
+
+    if (!tripErr && tripData && tripData.length > 0) {
+      return true;
+    }
+
+    // 2. Also check vehicle_locations table (where active drivers broadcast live GPS)
+    const { data: locData, error: locErr } = await supabase
+      .from('vehicle_locations')
+      .select('id, is_active, updated_at')
+      .ilike('vehicle_name', cleanName)
+      .limit(1);
+
+    if (!locErr && locData && locData.length > 0) {
+      if (locData[0].is_active !== false) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (err) {
+    console.warn('isVehicleTripRunning error:', err);
     return false;
   }
 };

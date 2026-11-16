@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../../components/common/Header';
-import { JourneyNoticeCard } from '../../components/screencomponents/parent/dashboard/JourneyNoticeCard';
 import {
   ChildStatusCard,
   ChildData,
 } from '../../components/screencomponents/parent/dashboard/ChildStatusCard';
-import { RadarMapCard } from '../../components/screencomponents/parent/dashboard/RadarMapCard';
+import { BusLiveStatusCard } from '../../components/screencomponents/parent/dashboard/BusLiveStatusCard';
 import { useAuth } from '../../context/AuthContext';
 import {
   getParentChildren,
@@ -87,10 +86,20 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
   }, [user]);
 
   const primaryChild = children[0];
-  const vehicleDisplayName = primaryChild?.vehicle
-    ? primaryChild.vehicle.split(' ')[0]
-    : assignedDriverInfo?.vehicleName || user?.profile?.bus || 'Assigned Van';
-  const driverDisplayName = primaryChild?.driverName || assignedDriverInfo?.driverName || 'Driver';
+  const cleanVehicleFromChild = primaryChild?.vehicle
+    ? primaryChild.vehicle.split(' (')[0].trim()
+    : '';
+  const vehicleDisplayName =
+    cleanVehicleFromChild ||
+    (assignedDriverInfo?.vehicleName ? assignedDriverInfo.vehicleName.split(' (')[0].trim() : '') ||
+    (user?.profile?.bus ? user.profile.bus.split(' (')[0].trim() : '') ||
+    'Assigned Van';
+  const driverDisplayName =
+    primaryChild?.driverName && primaryChild.driverName !== 'N/A'
+      ? primaryChild.driverName
+      : assignedDriverInfo?.driverName && assignedDriverInfo.driverName !== 'N/A'
+      ? assignedDriverInfo.driverName
+      : 'Driver';
 
   const handleTrackChild = (child: ChildData) => {
     onNavigateTab('tracking');
@@ -110,8 +119,8 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Live Journey Active Transit Card */}
-        <JourneyNoticeCard vehicleName={vehicleDisplayName} sectorName="Sector G-10" driverName={driverDisplayName} />
+        {/* Bus Live Status Card */}
+        <BusLiveStatusCard vehicleName={vehicleDisplayName} driverName={driverDisplayName} onTrackPress={() => onNavigateTab('tracking')} />
 
         {/* Children Status Cards Section */}
         <View style={styles.sectionHeaderRow}>
@@ -136,24 +145,6 @@ export const ParentDashboardScreen: React.FC<ParentDashboardScreenProps> = ({
           />
         ))}
 
-        {/* Live Map Preview Snapshot */}
-        <View style={styles.mapSectionHeader}>
-          <View style={styles.sectionTitleCol}>
-            <Text style={styles.sectionTitle}>Live Transit Radar</Text>
-            <Text style={styles.sectionSubTitle}>Realtime WebSocket GPS channel</Text>
-          </View>
-          <TouchableOpacity onPress={() => onNavigateTab('tracking')} activeOpacity={0.75}>
-            <Text style={styles.fullScreenText}>Full Map View →</Text>
-          </TouchableOpacity>
-        </View>
-
-        <RadarMapCard
-          vehicleName={vehicleDisplayName}
-          driverName={driverDisplayName}
-          speedKmh={36}
-          distanceKm={2.1}
-          onPressFullMap={() => onNavigateTab('tracking')}
-        />
       </ScrollView>
     </View>
   );
@@ -203,18 +194,6 @@ const styles = StyleSheet.create({
   },
   alertsBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  mapSectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 12,
-  },
-  fullScreenText: {
-    fontSize: 12,
     fontWeight: '800',
     color: colors.primary,
   },

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { MdDirectionsBus, MdArrowForward } from 'react-icons/md';
+import { MdArrowForward } from 'react-icons/md';
+import safeRouteLogo from '../../../assets/logo.png';
 
 const LandingHeader = () => {
   return (
@@ -7,8 +8,8 @@ const LandingHeader = () => {
       <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 h-16 flex items-center justify-between">
         {/* SafeRoute Brand Logo */}
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform shrink-0">
-            <MdDirectionsBus size={20} />
+          <div className="w-9 h-9 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0 p-1 overflow-hidden">
+            <img src={safeRouteLogo} alt="SafeRoute Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-2">

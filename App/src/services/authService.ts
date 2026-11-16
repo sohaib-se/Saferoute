@@ -81,8 +81,8 @@ export const authenticateUser = async ({
 
         if (profileData) {
           profileData.assignedVan = vehicleName;
-          profileData.plateNumber = vh?.reg_no || 'ICT-4921';
-          profileData.licenseNumber = dr?.license ? `DL-${dr.license}` : 'DL-32412';
+          profileData.plateNumber = vh?.reg_no || 'N/A';
+          profileData.licenseNumber = dr?.license ? `DL-${dr.license}` : 'N/A';
         }
       } else {
         const { data: pr } = await supabase
@@ -96,123 +96,19 @@ export const authenticateUser = async ({
       const session: UserSession = {
         id: cred.id,
         userId: cred.user_id,
-        name: cred.name || profileData?.name || (userType === 'driver' ? 'Hilal' : 'Zeeshan Malik'),
+        name: cred.name || profileData?.name || '',
         phone: cred.phone || profileData?.phone,
         role: userType,
         schoolId: cred.school_id,
         loginId: cred.login_id,
         profile: {
           ...profileData,
-          schoolName: schoolData?.name || 'Allied School',
-          schoolPhone: schoolData?.phone || '03001234567',
+          schoolName: schoolData?.name || '',
+          schoolPhone: schoolData?.phone || '',
         },
       };
 
       return { success: true, user: session };
-    }
-
-    // 2. Direct check in drivers table as fallback
-    if (!role || role === 'driver') {
-      const { data: driverMatch } = await supabase
-        .from('drivers')
-        .select('*')
-        .or(`phone.eq.${cleanId},license.eq.${cleanId}`)
-        .maybeSingle();
-
-      if (driverMatch && (cleanPass === driverMatch.phone || cleanPass === driverMatch.license || cleanPass === '1234' || cleanPass === '9584')) {
-        return {
-          success: true,
-          user: {
-            id: driverMatch.id,
-            userId: driverMatch.id,
-            name: driverMatch.name,
-            phone: driverMatch.phone,
-            role: 'driver',
-            schoolId: driverMatch.school_id,
-            loginId: cleanId,
-            profile: {
-              ...driverMatch,
-              assignedVan: driverMatch.vehicle || 'Bus 1',
-              plateNumber: 'ICT-4921',
-              licenseNumber: `DL-${driverMatch.license || '32412'}`,
-            },
-          },
-        };
-      }
-    }
-
-    // 3. Direct check in parents table as fallback
-    if (!role || role === 'parent') {
-      const { data: parentMatch } = await supabase
-        .from('parents')
-        .select('*')
-        .or(`phone.eq.${cleanId},email.eq.${cleanId}`)
-        .maybeSingle();
-
-      if (parentMatch && (cleanPass === parentMatch.phone || cleanPass === '1234' || cleanPass === '1201')) {
-        return {
-          success: true,
-          user: {
-            id: parentMatch.id,
-            userId: parentMatch.id,
-            name: parentMatch.name,
-            phone: parentMatch.phone,
-            role: 'parent',
-            schoolId: parentMatch.school_id,
-            loginId: cleanId,
-            profile: parentMatch,
-          },
-        };
-      }
-    }
-
-    // 4. Demo fallback if offline
-    if (
-      (cleanId === '1201' || cleanId.toLowerCase() === 'zeeshan@gmail.com') &&
-      (cleanPass === '1201' || cleanPass === '1234') &&
-      (!role || role === 'parent')
-    ) {
-      return {
-        success: true,
-        user: {
-          id: '5dc43c0c-819d-413a-b4e4-3f58d4debfdd',
-          userId: '87ac2bf4-700b-4fec-9ec0-1fd83f3bb448',
-          name: 'Zeeshan Malik',
-          phone: '+92 312 412412',
-          role: 'parent',
-          schoolId: '29b8aa56-5568-47e4-9072-b463b2e821ae',
-          loginId: '1201',
-          profile: {
-            address: 'Khatme Nabuwat Chowk, Ghari Rashida',
-            email: 'zeeshan@gmail.com',
-            phone: '+92 312 412412',
-          },
-        },
-      };
-    }
-
-    if (
-      (cleanId === '9584' || cleanId.toLowerCase() === 'hilal@gmail.com') &&
-      (cleanPass === '9584' || cleanPass === '1234') &&
-      (!role || role === 'driver')
-    ) {
-      return {
-        success: true,
-        user: {
-          id: '649e28af-5642-4c93-8dfc-79a463f874bb',
-          userId: '07322545-3dfa-48d6-a4db-70c28158e431',
-          name: 'Hilal',
-          phone: '03124124',
-          role: 'driver',
-          schoolId: '29b8aa56-5568-47e4-9072-b463b2e821ae',
-          loginId: '9584',
-          profile: {
-            assignedVan: 'Bus 1',
-            plateNumber: 'ICT-4921',
-            licenseNumber: 'DL-32412',
-          },
-        },
-      };
     }
 
     return {

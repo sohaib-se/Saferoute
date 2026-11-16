@@ -28,7 +28,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ selectedRole }) => {
   const handleSubmit = async () => {
     setErrorMessage('');
     if (!identifier.trim() || !password.trim()) {
-      setErrorMessage('Please enter both your email/ID and password.');
+      setErrorMessage('Please enter your Login ID and password.');
       return;
     }
 
@@ -59,7 +59,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ selectedRole }) => {
         </View>
       ) : null}
 
-      {/* Email Address Input */}
+      {/* Login ID Input */}
       <View
         style={[
           styles.inputContainer,
@@ -67,21 +67,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ selectedRole }) => {
         ]}
       >
         <Ionicons
-          name="mail-outline"
+          name="person-outline"
           size={20}
           color={focusedField === 'identifier' ? '#007AFF' : '#94A3B8'}
           style={styles.inputIcon}
         />
         <TextInput
           style={styles.textInput}
-          placeholder={selectedRole === 'parent' ? 'Email Address or Login ID (e.g. 1201)' : 'Email Address or Driver ID (e.g. 9584)'}
+          placeholder="Login ID"
           placeholderTextColor="#94A3B8"
           value={identifier}
           onChangeText={setIdentifier}
           onFocus={() => setFocusedField('identifier')}
           onBlur={() => setFocusedField(null)}
           autoCapitalize="none"
-          keyboardType="email-address"
+          keyboardType="default"
         />
       </View>
 

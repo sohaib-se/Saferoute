@@ -22,14 +22,14 @@ export const ParentProfileScreen: React.FC<ParentProfileScreenProps> = ({
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const [profile, setProfile] = useState<ParentProfileData>({
-    id: user?.userId || 'parent-1',
-    name: user?.name || 'Zeeshan Malik',
-    email: 'zeeshan@gmail.com',
-    phone: user?.phone || '+92 312 412412',
-    address: 'Khatme Nabuwat Chowk, Ghari Rashida',
-    joinedDate: '15 Sep 2024',
+    id: user?.userId || '',
+    name: user?.name || '',
+    email: '',
+    phone: user?.phone || '',
+    address: '',
+    joinedDate: '',
     role: 'Primary Guardian',
-    bus: 'Bus 1',
+    bus: '',
   });
 
   const [childrenData, setChildrenData] = useState<any[]>([]);
@@ -61,8 +61,8 @@ export const ParentProfileScreen: React.FC<ParentProfileScreenProps> = ({
               grade: k.grade.split(' - ')[0] || 'Grade 5',
               section: k.grade.split(' - ')[1] || 'Section A',
               rollNumber: k.studentCode,
-              busNumber: k.vehicle.split(' ')[0] || 'Bus 1',
-              busPlate: k.vehicle.includes('(') ? k.vehicle.split('(')[1].replace(')', '') : 'ICT-4921',
+              busNumber: k.vehicle.split(' (')[0].trim() || '',
+              busPlate: k.vehicle.includes('(') ? k.vehicle.split('(')[1].replace(')', '') : 'N/A',
               driverName: k.driverName,
             };
           });
@@ -131,9 +131,9 @@ export const ParentProfileScreen: React.FC<ParentProfileScreenProps> = ({
           </View>
           <Text style={styles.userNameText}>{profile.name}</Text>
           <Text style={styles.userSubText}>
-            Enrolled Child Bus: <Text style={styles.boldSubText}>{profile.bus || 'Bus 1'}</Text>
+            Enrolled Child Bus: <Text style={styles.boldSubText}>{profile.bus || 'N/A'}</Text>
           </Text>
-          <Text style={styles.userPhoneText}>Phone: {profile.phone}</Text>
+          <Text style={styles.userPhoneText}>Phone: {profile.phone || 'N/A'}</Text>
         </View>
 
         {/* 2. Personal Info Grid Card */}
