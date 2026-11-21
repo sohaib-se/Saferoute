@@ -13,13 +13,29 @@ import {
 } from '../services/callService';
 import { soundManager } from '../services/soundService';
 
-// Safely require react-native-webrtc so app won't crash if native module isn't linked
-let webrtcModule: any = null;
-try {
-  webrtcModule = require('react-native-webrtc');
-} catch (e) {
-  console.warn('react-native-webrtc module could not be loaded:', e);
+// Lazily and safely require react-native-webrtc so app won't crash on launch
+let _actualWebrtcModule: any = undefined;
+function getWebRTCModule(): any {
+  if (_actualWebrtcModule === undefined) {
+    try {
+      _actualWebrtcModule = require('react-native-webrtc');
+    } catch (e) {
+      console.warn('react-native-webrtc module could not be loaded:', e);
+      _actualWebrtcModule = null;
+    }
+  }
+  return _actualWebrtcModule;
 }
+
+const webrtcModule: any = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      const mod = getWebRTCModule();
+      return mod ? mod[prop] : undefined;
+    },
+  }
+);
 
 const ICE_SERVERS = [
   // STUN — direct route for WiFi

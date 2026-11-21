@@ -1,14 +1,30 @@
 import { Vibration } from 'react-native';
 
-// Safely require expo-av so app won't crash in Expo Go where ExponentAV native module may not be present
-let AudioModule: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const expoAv = require('expo-av');
-  AudioModule = expoAv.Audio || null;
-} catch (e) {
-  console.warn('expo-av native module (ExponentAV) not available in this environment:', e);
+// Lazily and safely require expo-av so app won't crash on launch
+let _actualAudioModule: any = undefined;
+function getAudioModule(): any {
+  if (_actualAudioModule === undefined) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const expoAv = require('expo-av');
+      _actualAudioModule = expoAv.Audio || null;
+    } catch (e) {
+      console.warn('expo-av native module (ExponentAV) not available in this environment:', e);
+      _actualAudioModule = null;
+    }
+  }
+  return _actualAudioModule;
 }
+
+const AudioModule: any = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      const mod = getAudioModule();
+      return mod ? mod[prop] : undefined;
+    },
+  }
+);
 
 class SoundManager {
   private currentSound: any = null;
