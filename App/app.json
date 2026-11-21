@@ -56,6 +56,15 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": false,
+            "extraProguardRules": "-dontwarn org.webrtc.**\n-dontwarn expo.modules.**"
+          }
+        }
       ]
     ],
     "experiments": {
