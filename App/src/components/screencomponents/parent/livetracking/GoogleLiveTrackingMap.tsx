@@ -36,14 +36,11 @@ export const GoogleLiveTrackingMap: React.FC<GoogleLiveTrackingMapProps> = ({
 
   useEffect(() => {
     if (mapMode === 'google' && mapRef.current) {
-      mapRef.current.animateToRegion(
-        {
-          latitude,
-          longitude,
-          latitudeDelta: 0.025,
-          longitudeDelta: 0.025,
-        },
-        800
+      // animateCamera with only `center` preserves the user's current zoom level.
+      // animateToRegion was reset zoom to latitudeDelta 0.025 on every update.
+      mapRef.current.animateCamera(
+        { center: { latitude, longitude } },
+        { duration: 800 }
       );
     }
   }, [latitude, longitude, mapMode]);

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,20 +23,32 @@ export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
 }) => {
   const webViewRef = useRef<any>(null);
 
-  // Send real-time updates to Leaflet without reloading the WebView
-  useEffect(() => {
-    if (webViewRef.current) {
-      const script = `
-        if (window.setTripActiveStatus) {
-          window.setTripActiveStatus(${isTripActive}, ${latitude}, ${longitude}, '${vehicleName}');
-        } else if (window.updateBusPosition) {
-          window.updateBusPosition(${latitude}, ${longitude}, '${vehicleName}');
-        }
-        true;
-      `;
-      webViewRef.current.injectJavaScript(script);
-    }
+  // Push current state into the already-loaded Leaflet map via JS bridge.
+  // This runs on every prop change WITHOUT reloading the WebView.
+  const pushCurrentState = useCallback(() => {
+    if (!webViewRef.current) return;
+    const script = `
+      if (window.setTripActiveStatus) {
+        window.setTripActiveStatus(${isTripActive}, ${latitude}, ${longitude}, '${vehicleName}');
+      } else if (window.updateBusPosition) {
+        window.updateBusPosition(${latitude}, ${longitude}, '${vehicleName}');
+      }
+      true;
+    `;
+    webViewRef.current.injectJavaScript(script);
   }, [isTripActive, latitude, longitude, vehicleName]);
+
+  // On every prop update, push new data into the living Leaflet instance.
+  // The WebView itself is NOT reloaded — only the marker is repositioned.
+  useEffect(() => {
+    pushCurrentState();
+  }, [pushCurrentState]);
+
+  // Once the WebView finishes its one-time load, inject the current real data.
+  const handleWebViewLoad = useCallback(() => {
+    // Small delay to ensure Leaflet's JS is fully initialized before injecting.
+    setTimeout(() => pushCurrentState(), 150);
+  }, [pushCurrentState]);
 
   const recenterMap = () => {
     if (webViewRef.current) {
@@ -49,7 +61,18 @@ export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
     }
   };
 
-  const htmlContent = `
+  // ─── KEY FIX ─────────────────────────────────────────────────────────────
+  // useMemo with EMPTY deps [] means htmlContent is computed exactly ONCE at
+  // mount and never changes again.  Because the WebView `source` prop is now
+  // a stable object, React never triggers a WebView reload — the map keeps
+  // its tile cache, zoom level, and pan position across every bus update.
+  //
+  // All live data (lat/lng, isTripActive, vehicleName) is delivered through
+  // injectJavaScript → window.setTripActiveStatus / window.updateBusPosition,
+  // which are already defined inside the HTML. The initial JS vars below are
+  // safe neutral defaults that get overwritten immediately via onLoad.
+  // ─────────────────────────────────────────────────────────────────────────
+  const htmlContent = useMemo(() => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -165,14 +188,18 @@ export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
   <div id="map"></div>
 
   <script>
-    var isTripActive = ${isTripActive ? 'true' : 'false'};
-    var currentLat = ${latitude};
-    var currentLng = ${longitude};
-    var vanName = '${vehicleName}';
-    var driverName = '${driverName}';
+    // ── Neutral initial values ────────────────────────────────────────────────
+    // These are NOT interpolated from React props.  Real data is delivered via
+    // injectJavaScript → window.setTripActiveStatus once the WebView is loaded.
+    // This keeps the HTML string constant so the WebView never reloads.
+    var isTripActive = false;
+    var currentLat = 33.6938;
+    var currentLng = 73.0479;
+    var vanName = 'Bus';
+    var driverName = 'Driver';
     var currentBusCoord = [currentLat, currentLng];
 
-    // Initialize Map centered on the Driver's coordinates
+    // Initialize Map — centered on a default area; real position injected via onLoad
     var map = L.map('map', {
       zoomControl: true,
       attributionControl: false
@@ -278,13 +305,14 @@ export const OpenStreetMapLiveView: React.FC<OpenStreetMapLiveViewProps> = ({
   </script>
 </body>
 </html>
-  `;
+  `, []); // ← empty deps: this string is built ONCE at mount and never changes
 
   return (
     <View style={styles.container}>
       <MapWebView
         ref={webViewRef}
         source={{ html: htmlContent }}
+        onLoad={handleWebViewLoad}
         style={styles.webView}
         originWhitelist={['*']}
         javaScriptEnabled={true}
