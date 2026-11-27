@@ -21,6 +21,7 @@ export interface AssignedDriverDetails {
   plateNumber: string;
   licenseNumber: string;
   route: string;
+  photoUrl?: string;
 }
 
 /**
@@ -261,6 +262,7 @@ export const getAssignedDriverDetailsForParent = async (
       plateNumber: vehicleData?.reg_no || 'N/A',
       licenseNumber: driverData?.license ? `DL-${driverData.license}` : 'N/A',
       route: route || driverData?.route || vehicleData?.route || 'Assigned Route',
+      photoUrl: driverData?.photo_url || driverData?.profile_image || undefined,
     };
   } catch (err) {
     console.error('Error fetching assigned driver details for parent:', err);

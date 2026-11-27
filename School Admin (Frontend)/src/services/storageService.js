@@ -149,3 +149,116 @@ export const uploadStudentPhoto = async (file, studentCodeOrId = 'student') => {
 
   return publicUrlData.publicUrl;
 };
+
+/**
+ * Uploads a driver photo to the 'student-photos' bucket under 'driver-photos/' directory in Supabase Storage.
+ * @param {File|Blob} file - The image file to upload.
+ * @param {string} driverIdOrName - Unique identifier or name of driver to include in filename.
+ * @returns {Promise<string>} - Resolves with the public URL of the uploaded image.
+ */
+export const uploadDriverPhoto = async (file, driverIdOrName = 'driver') => {
+  if (!file) return null;
+
+  const schoolId = getCurrentSchoolId() || 'default-school';
+  const cleanId = String(driverIdOrName).replace(/[^a-zA-Z0-9_-]/g, '') || 'driver';
+  const fileExt = file.name ? file.name.split('.').pop().toLowerCase() : 'jpg';
+  const uniqueTimestamp = Date.now();
+  const filePath = `driver-photos/${schoolId}/${cleanId}_${uniqueTimestamp}.${fileExt}`;
+
+  const { error } = await supabase.storage
+    .from('student-photos')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true,
+      contentType: file.type || 'image/jpeg',
+    });
+
+  if (error) {
+    console.error('Failed to upload driver photo to Supabase storage:', error);
+    throw new Error(`Failed to upload driver photo: ${error.message}`);
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from('student-photos')
+    .getPublicUrl(filePath);
+
+  return publicUrlData.publicUrl;
+};
+
+/**
+ * Deletes a driver photo (or array of photos) from the Supabase Storage bucket.
+ * @param {string|string[]} photoUrlOrPath - Public URL, relative path, or array of URLs/paths.
+ * @returns {Promise<boolean>} - True if deleted successfully, false otherwise.
+ */
+export const deleteDriverPhoto = async (photoUrlOrPath) => {
+  if (!photoUrlOrPath) return false;
+
+  const items = Array.isArray(photoUrlOrPath) ? photoUrlOrPath : [photoUrlOrPath];
+  const filePaths = items
+    .map((item) => extractStoragePathFromUrl(item, 'student-photos'))
+    .filter(Boolean);
+
+  if (filePaths.length === 0) {
+    return false;
+  }
+
+  try {
+    const { data, error } = await supabase.storage
+      .from('student-photos')
+      .remove(filePaths);
+
+    if (error) {
+      console.warn('Failed to delete driver photo from Supabase storage:', error.message);
+      return false;
+    }
+
+    console.log('Successfully removed old driver photo(s) from storage:', filePaths, data);
+    return true;
+  } catch (err) {
+    console.warn('Error deleting driver photo from storage:', err);
+    return false;
+  }
+};
+
+/**
+ * Scans the driver's storage directory and cleans up any old/orphaned photos for this driver.
+ * @param {string} driverIdOrName - Unique identifier or name of driver.
+ * @param {string|null} keepUrlOrPath - Optional photo URL or path to keep (won't be deleted).
+ * @returns {Promise<number>} - Count of orphaned photos removed.
+ */
+export const cleanupDriverPhotos = async (driverIdOrName, keepUrlOrPath = null) => {
+  if (!driverIdOrName) return 0;
+
+  const schoolId = getCurrentSchoolId() || 'default-school';
+  const cleanId = String(driverIdOrName).replace(/[^a-zA-Z0-9_-]/g, '');
+  if (!cleanId) return 0;
+
+  const folderPath = `driver-photos/${schoolId}`;
+  const keepPath = keepUrlOrPath ? extractStoragePathFromUrl(keepUrlOrPath, 'student-photos') : null;
+
+  try {
+    const { data: files, error } = await supabase.storage
+      .from('student-photos')
+      .list(folderPath, { limit: 100 });
+
+    if (error || !Array.isArray(files)) {
+      return 0;
+    }
+
+    const toDelete = files
+      .filter((file) => file.name && (file.name.startsWith(`${cleanId}_`) || file.name.startsWith(`${cleanId}.`)))
+      .map((file) => `${folderPath}/${file.name}`)
+      .filter((filePath) => !keepPath || filePath !== keepPath);
+
+    if (toDelete.length > 0) {
+      console.log(`Cleaning up ${toDelete.length} legacy photo(s) for driver ${cleanId}:`, toDelete);
+      await supabase.storage.from('student-photos').remove(toDelete);
+      return toDelete.length;
+    }
+
+    return 0;
+  } catch (err) {
+    console.warn('Error cleaning up legacy driver photos:', err);
+    return 0;
+  }
+};

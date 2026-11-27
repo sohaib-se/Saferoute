@@ -9,6 +9,7 @@ interface DriverDetailsCardProps {
   vehicleName?: string;
   plateNumber?: string;
   licenseNumber?: string;
+  photoUrl?: string;
   onCallDriver?: () => void;
 }
 
@@ -18,6 +19,7 @@ export const DriverDetailsCard: React.FC<DriverDetailsCardProps> = ({
   vehicleName = 'Assigned Van',
   plateNumber = 'N/A',
   licenseNumber = 'N/A',
+  photoUrl,
   onCallDriver,
 }) => {
   const handleCall = () => {
@@ -34,9 +36,13 @@ export const DriverDetailsCard: React.FC<DriverDetailsCardProps> = ({
       <View style={styles.headerRow}>
         <View style={styles.avatarWrapper}>
           {/* Driver Portrait Avatar */}
-          <View style={styles.avatarCircle}>
-            <Ionicons name="person" size={38} color="#94A3B8" />
-          </View>
+          {photoUrl ? (
+            <Image source={{ uri: photoUrl }} style={styles.avatarCircle} resizeMode="cover" />
+          ) : (
+            <View style={styles.avatarCircle}>
+              <Ionicons name="person" size={38} color="#94A3B8" />
+            </View>
+          )}
           {/* Green Online Dot */}
           <View style={styles.onlineStatusBadge} />
         </View>

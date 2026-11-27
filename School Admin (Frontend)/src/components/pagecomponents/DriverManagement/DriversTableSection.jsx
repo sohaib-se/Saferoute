@@ -262,8 +262,22 @@ const DriversTableSection = ({
                   </td>
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-2.5">
+                      {driver.photoUrl ? (
+                        <img
+                          src={driver.photoUrl}
+                          alt={driver.name}
+                          className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-200 shadow-2xs"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const sibling = e.currentTarget.parentElement?.querySelector('.fallback-initials');
+                            if (sibling) sibling.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
                       <div
-                        className={`w-8 h-8 rounded-full ${driver.initialsStyle} font-bold text-xs flex items-center justify-center shrink-0`}
+                        className={`fallback-initials w-8 h-8 rounded-full ${driver.initialsStyle} font-bold text-xs flex items-center justify-center shrink-0 ${
+                          driver.photoUrl ? 'hidden' : ''
+                        }`}
                       >
                         {driver.initials}
                       </div>

@@ -5,12 +5,14 @@ import { shadows } from '../../../../lib/theme';
 
 interface ParentSOSBeaconProps {
   isTriggered: boolean;
+  isTripActive?: boolean;
   onTrigger: () => void;
   onCancel?: () => void;
 }
 
 export const ParentSOSBeacon: React.FC<ParentSOSBeaconProps> = ({
   isTriggered,
+  isTripActive = true,
   onTrigger,
 }) => {
   if (isTriggered) {
@@ -21,10 +23,10 @@ export const ParentSOSBeacon: React.FC<ParentSOSBeaconProps> = ({
         </View>
         <Text style={styles.activeTitle}>EMERGENCY ALERT TRANSMITTING</Text>
         <Text style={styles.activeSub}>
-          Live GPS Beacon Active with School Admin Control Desk
+          Emergency Distress Beacon Active with School Admin Control Desk
         </Text>
         <Text style={styles.activeDescription}>
-          School administration, transport desk, and campus safety have received your distress alert with live device telemetry. Stay on this screen until school authorities respond.
+          School administration, transport desk, and campus safety have received your distress alert. Stay on this screen until school authorities respond.
         </Text>
 
         {/* SOS Sent Confirmation Card - Admin Only Resolution */}
@@ -48,31 +50,46 @@ export const ParentSOSBeacon: React.FC<ParentSOSBeaconProps> = ({
   return (
     <View style={styles.container}>
       {/* Concentric Soft Aura Rings */}
-      <View style={styles.ringOuter}>
-        <View style={styles.ringMiddle}>
-          <View style={styles.ringInner}>
+      <View style={[styles.ringOuter, !isTripActive && styles.ringOuterDisabled]}>
+        <View style={[styles.ringMiddle, !isTripActive && styles.ringMiddleDisabled]}>
+          <View style={[styles.ringInner, !isTripActive && styles.ringInnerDisabled]}>
             <TouchableOpacity
-              style={styles.sosMainBtn}
-              onPress={onTrigger}
-              activeOpacity={0.85}
+              style={[styles.sosMainBtn, !isTripActive && styles.sosDisabledBtn]}
+              onPress={isTripActive ? onTrigger : undefined}
+              activeOpacity={isTripActive ? 0.85 : 1}
+              disabled={!isTripActive}
             >
-              <Ionicons name="notifications" size={34} color="#FFFFFF" />
+              <Ionicons
+                name={isTripActive ? 'notifications' : 'lock-closed'}
+                size={34}
+                color="#FFFFFF"
+              />
               <Text style={styles.sosText}>SOS</Text>
-              <Text style={styles.sosSub}>TAP FOR EMERGENCY</Text>
+              <Text style={styles.sosSub}>
+                {isTripActive ? 'TAP FOR EMERGENCY' : 'TRIP NOT ACTIVE'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
       {/* Instant Safety Escalation Notice Card */}
-      <View style={styles.escalationCard}>
-        <View style={styles.shieldBadge}>
-          <Ionicons name="shield-checkmark" size={20} color="#FFFFFF" />
+      <View style={[styles.escalationCard, !isTripActive && styles.escalationCardDisabled]}>
+        <View style={[styles.shieldBadge, !isTripActive && styles.shieldBadgeDisabled]}>
+          <Ionicons
+            name={isTripActive ? 'shield-checkmark' : 'information-circle'}
+            size={20}
+            color="#FFFFFF"
+          />
         </View>
         <View style={styles.escalationTextCol}>
-          <Text style={styles.escalationTitle}>Instant Safety Escalation</Text>
+          <Text style={[styles.escalationTitle, !isTripActive && styles.escalationTitleDisabled]}>
+            {isTripActive ? 'Instant Safety Escalation' : 'SOS Disabled • Trip Closed'}
+          </Text>
           <Text style={styles.escalationDescription}>
-            One-tap emergency trigger captures your GPS coordinates and dispatches an instant high-priority escalation beacon to School Admin & Security desk within seconds.
+            {isTripActive
+              ? 'One-tap emergency trigger dispatches an instant high-priority distress alert to School Admin & Security desk within seconds.'
+              : 'Parent Emergency SOS is only active while your child’s school bus trip is in progress. Once the driver starts the route trip, the SOS beacon will activate automatically.'}
           </Text>
         </View>
       </View>
@@ -124,6 +141,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 4,
     borderColor: '#FFFFFF',
+  },
+  ringOuterDisabled: {
+    backgroundColor: '#F1F5F9',
+  },
+  ringMiddleDisabled: {
+    backgroundColor: '#E2E8F0',
+  },
+  ringInnerDisabled: {
+    shadowColor: '#94A3B8',
+    shadowOpacity: 0.1,
+  },
+  sosDisabledBtn: {
+    backgroundColor: '#94A3B8',
+  },
+  escalationCardDisabled: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+  },
+  shieldBadgeDisabled: {
+    backgroundColor: '#64748B',
+  },
+  escalationTitleDisabled: {
+    color: '#475569',
   },
   sosText: {
     color: '#FFFFFF',

@@ -6,12 +6,14 @@ import { useDriverTrip } from '../../../../context/DriverTripContext';
 
 interface DriverSOSBeaconProps {
   isTriggered: boolean;
+  isTripActive?: boolean;
   onTrigger: () => void;
   onClear?: () => void;
 }
 
 export const DriverSOSBeacon: React.FC<DriverSOSBeaconProps> = ({
   isTriggered,
+  isTripActive = true,
   onTrigger,
 }) => {
   const { gpsState, vehicleName, vehiclePlate, routeTitle, students } = useDriverTrip();
@@ -73,31 +75,46 @@ export const DriverSOSBeacon: React.FC<DriverSOSBeaconProps> = ({
   return (
     <View style={styles.container}>
       {/* Concentric Soft Aura Rings matching Parent Portal */}
-      <View style={styles.ringOuter}>
-        <View style={styles.ringMiddle}>
-          <View style={styles.ringInner}>
+      <View style={[styles.ringOuter, !isTripActive && styles.ringOuterDisabled]}>
+        <View style={[styles.ringMiddle, !isTripActive && styles.ringMiddleDisabled]}>
+          <View style={[styles.ringInner, !isTripActive && styles.ringInnerDisabled]}>
             <TouchableOpacity
-              style={styles.sosMainBtn}
-              onPress={onTrigger}
-              activeOpacity={0.85}
+              style={[styles.sosMainBtn, !isTripActive && styles.sosDisabledBtn]}
+              onPress={isTripActive ? onTrigger : undefined}
+              activeOpacity={isTripActive ? 0.85 : 1}
+              disabled={!isTripActive}
             >
-              <Ionicons name="alert-circle" size={36} color="#FFFFFF" />
+              <Ionicons
+                name={isTripActive ? 'alert-circle' : 'lock-closed'}
+                size={36}
+                color="#FFFFFF"
+              />
               <Text style={styles.sosText}>SOS</Text>
-              <Text style={styles.sosSub}>EMERGENCY DISPATCH</Text>
+              <Text style={styles.sosSub}>
+                {isTripActive ? 'EMERGENCY DISPATCH' : 'TRIP NOT ACTIVE'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
       {/* REQ-D7.1 Notice Card */}
-      <View style={styles.escalationCard}>
-        <View style={styles.shieldBadge}>
-          <Ionicons name="shield-checkmark" size={20} color="#FFFFFF" />
+      <View style={[styles.escalationCard, !isTripActive && styles.escalationCardDisabled]}>
+        <View style={[styles.shieldBadge, !isTripActive && styles.shieldBadgeDisabled]}>
+          <Ionicons
+            name={isTripActive ? 'shield-checkmark' : 'information-circle'}
+            size={20}
+            color="#FFFFFF"
+          />
         </View>
         <View style={styles.escalationTextCol}>
-          <Text style={styles.escalationTitle}>Driver Emergency Escalation</Text>
+          <Text style={[styles.escalationTitle, !isTripActive && styles.escalationTitleDisabled]}>
+            {isTripActive ? 'Driver Emergency Escalation' : 'SOS Disabled • Trip Closed'}
+          </Text>
           <Text style={styles.escalationDescription}>
-            Triggering SOS captures your current live GPS coordinates ({gpsState.latitude.toFixed(4)}°N, {gpsState.longitude.toFixed(4)}°E) and immediately notifies the School Administration desk AND all parents on this route.
+            {isTripActive
+              ? `Triggering SOS captures your current live GPS coordinates (${gpsState.latitude.toFixed(4)}°N, ${gpsState.longitude.toFixed(4)}°E) and immediately notifies the School Administration desk AND all parents on this route.`
+              : 'Emergency SOS is disabled because your route trip is not active. Start your trip from the Dashboard or Trip tab to enable emergency SOS dispatch and live GPS broadcasting.'}
           </Text>
         </View>
       </View>
@@ -149,6 +166,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 4,
     borderColor: '#FFFFFF',
+  },
+  ringOuterDisabled: {
+    backgroundColor: '#F1F5F9',
+  },
+  ringMiddleDisabled: {
+    backgroundColor: '#E2E8F0',
+  },
+  ringInnerDisabled: {
+    shadowColor: '#94A3B8',
+    shadowOpacity: 0.1,
+  },
+  sosDisabledBtn: {
+    backgroundColor: '#94A3B8',
+  },
+  escalationCardDisabled: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+  },
+  shieldBadgeDisabled: {
+    backgroundColor: '#64748B',
+  },
+  escalationTitleDisabled: {
+    color: '#475569',
   },
   sosText: {
     color: '#FFFFFF',
