@@ -6,8 +6,8 @@ export interface SOSDispatchParams {
   senderId: string;
   senderName: string;
   vehicleName?: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number | null;
+  longitude?: number | null;
   parentUserIds?: string[];
 }
 
@@ -38,6 +38,16 @@ export const dispatchSOSAlert = async (params: SOSDispatchParams): Promise<SOSDi
 
     const validSchoolId = isValidUUID(params.schoolId) ? params.schoolId : null;
 
+    // Driver SOS includes exact GPS coordinates; Parent SOS has NO coordinates (null)
+    const lat =
+      params.senderType === 'driver' && params.latitude != null && !isNaN(Number(params.latitude))
+        ? Number(params.latitude)
+        : null;
+    const lng =
+      params.senderType === 'driver' && params.longitude != null && !isNaN(Number(params.longitude))
+        ? Number(params.longitude)
+        : null;
+
     // 1. Insert into sos_alerts table
     const { data: insertedRows, error: alertError } = await supabase
       .from('sos_alerts')
@@ -48,8 +58,8 @@ export const dispatchSOSAlert = async (params: SOSDispatchParams): Promise<SOSDi
           sender_id: validSenderId,
           sender_name: params.senderName,
           vehicle_name: params.vehicleName || null,
-          latitude: params.latitude,
-          longitude: params.longitude,
+          latitude: lat,
+          longitude: lng,
           status: 'active',
         },
       ])
@@ -69,8 +79,10 @@ export const dispatchSOSAlert = async (params: SOSDispatchParams): Promise<SOSDi
 
     const adminBody =
       params.senderType === 'driver'
-        ? `HIGH ALERT: Driver ${params.senderName} (${params.vehicleName || 'Vehicle'}) has triggered an emergency distress beacon near coordinates (${params.latitude.toFixed(4)}, ${params.longitude.toFixed(4)}). Immediate response required!`
-        : `HIGH ALERT: Parent ${params.senderName} has triggered an emergency SOS distress signal near coordinates (${params.latitude.toFixed(4)}, ${params.longitude.toFixed(4)}). Immediate safety response required!`;
+        ? `HIGH ALERT: Driver ${params.senderName} (${params.vehicleName || 'Vehicle'}) has triggered an emergency distress beacon${
+            lat != null && lng != null ? ` near coordinates (${lat.toFixed(4)}, ${lng.toFixed(4)})` : ''
+          }. Immediate response required!`
+        : `HIGH ALERT: Parent ${params.senderName} has triggered an emergency SOS distress signal. Immediate safety response required!`;
 
     try {
       await supabase.from('notifications').insert([
@@ -126,12 +138,14 @@ export const dispatchSOSAlert = async (params: SOSDispatchParams): Promise<SOSDi
       try {
         if (validParentIds.length > 0) {
           // Targeted notifications to each respective parent
+          const coordsText =
+            lat != null && lng != null ? ` near (${lat.toFixed(4)}, ${lng.toFixed(4)})` : '';
           const parentRows = validParentIds.map((pId) => ({
             school_id: validSchoolId,
             recipient_type: 'parent',
             recipient_id: pId,
             title: `🚨 EMERGENCY ALERT: ${params.vehicleName || 'School Bus'}`,
-            body: `HIGH PRIORITY DISTRESS ALERT: Driver ${params.senderName} on ${params.vehicleName || "your child's bus"} has triggered an Emergency SOS Beacon near (${params.latitude.toFixed(4)}, ${params.longitude.toFixed(4)}). School authorities have been alerted.`,
+            body: `HIGH PRIORITY DISTRESS ALERT: Driver ${params.senderName} on ${params.vehicleName || "your child's bus"} has triggered an Emergency SOS Beacon${coordsText}. School authorities have been alerted.`,
             type: 'sos',
             is_read: false,
           }));

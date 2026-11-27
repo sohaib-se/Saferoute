@@ -1,17 +1,22 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface DriverProfileHeaderProps {
   name: string;
   phone?: string;
+  photoUrl?: string;
 }
 
-export const DriverProfileHeader: React.FC<DriverProfileHeaderProps> = ({ name, phone }) => {
+export const DriverProfileHeader: React.FC<DriverProfileHeaderProps> = ({ name, phone, photoUrl }) => {
   return (
     <View style={styles.profileCard}>
       <View style={styles.avatarCircle}>
-        <Ionicons name="person" size={36} color="#2563EB" />
+        {photoUrl ? (
+          <Image source={{ uri: photoUrl }} style={styles.avatarImage} resizeMode="cover" />
+        ) : (
+          <Ionicons name="person" size={36} color="#2563EB" />
+        )}
       </View>
       <Text style={styles.userName}>{name}</Text>
       <View style={styles.roleBadge}>
@@ -42,6 +47,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 2,
     borderColor: '#DBEAFE',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   userName: {
     fontSize: 18,

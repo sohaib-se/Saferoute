@@ -475,7 +475,7 @@ export const DriverTripProvider: React.FC<{ children: ReactNode }> = ({ children
               timeInterval: 3000,
               distanceInterval: 2,
             },
-            (location) => {
+            (location: Location.LocationObject) => {
               if (isCancelled) return;
               const { latitude, longitude, speed } = location.coords;
               const speedVal = speed != null && speed > 0 ? Math.round(speed * 3.6) : 0;

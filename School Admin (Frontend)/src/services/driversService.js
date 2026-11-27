@@ -6,6 +6,7 @@ import {
   getDeterministicFallbackCode,
 } from './appCredentialsService';
 import { clearVehiclesCache } from './vehiclesService';
+import { deleteDriverPhoto } from './storageService';
 
 let driversCache = {
   data: null,
@@ -18,6 +19,31 @@ const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
 export const clearDriversCache = () => {
   driversCache = { data: null, timestamp: 0, schoolId: null };
   driversInFlight = null;
+};
+
+let cachedPhotoColumn = undefined;
+
+export const resetDriverPhotoColumnCache = () => {
+  cachedPhotoColumn = undefined;
+};
+
+/**
+ * Checks whether the 'drivers' table has 'photo_url' or 'profile_image' columns.
+ * Returns an object { photoUrl: boolean, profileImage: boolean }
+ */
+export const getDriverPhotoColumn = async () => {
+  if (cachedPhotoColumn !== undefined) return cachedPhotoColumn;
+  try {
+    const { error: err1 } = await supabase.from('drivers').select('photo_url').limit(1);
+    const hasPhotoUrl = !err1;
+    const { error: err2 } = await supabase.from('drivers').select('profile_image').limit(1);
+    const hasProfileImage = !err2;
+    cachedPhotoColumn = { photoUrl: hasPhotoUrl, profileImage: hasProfileImage };
+  } catch (err) {
+    console.warn('Could not probe drivers photo column in schema:', err);
+    cachedPhotoColumn = { photoUrl: false, profileImage: false };
+  }
+  return cachedPhotoColumn;
 };
 
 export const getDrivers = async (forceRefresh = false) => {
@@ -73,6 +99,8 @@ export const getDrivers = async (forceRefresh = false) => {
           password: getDeterministicFallbackCode(d),
         };
 
+        const photoUrl = d.photo_url || d.profile_image || null;
+
         return {
           id: d.id,
           num: index + 1,
@@ -83,6 +111,9 @@ export const getDrivers = async (forceRefresh = false) => {
           vehicle: d.vehicle || 'Unassigned',
           route: d.route || 'Unassigned',
           status: d.status || 'Online',
+          photoUrl,
+          photo_url: photoUrl,
+          profile_image: photoUrl,
           initials,
           initialsStyle: 'bg-blue-100 text-blue-700',
           credentials: cred,
@@ -122,23 +153,49 @@ export const addDriver = async (driverData) => {
     throw new Error('No active school session found. Please sign in again.');
   }
 
-  const { data, error } = await supabase
+  const photoCols = await getDriverPhotoColumn();
+  const insertPayload = {
+    school_id: schoolId,
+    name: driverData.name,
+    license: driverData.license,
+    license_type: driverData.licenseType || 'Heavy Transport',
+    phone: driverData.phone,
+    vehicle: driverData.vehicle || 'Unassigned',
+    route: driverData.route || 'Unassigned',
+    status: driverData.status || 'Online',
+  };
+
+  const photoUrl = driverData.photoUrl || driverData.photo_url || null;
+  if (photoUrl) {
+    if (photoCols.photoUrl) {
+      insertPayload.photo_url = photoUrl;
+    }
+    if (photoCols.profileImage) {
+      insertPayload.profile_image = photoUrl;
+    }
+  }
+
+  let insertResult = await supabase
     .from('drivers')
-    .insert([
-      {
-        school_id: schoolId,
-        name: driverData.name,
-        license: driverData.license,
-        license_type: driverData.licenseType || 'Heavy Transport',
-        phone: driverData.phone,
-        vehicle: driverData.vehicle || 'Unassigned',
-        route: driverData.route || 'Unassigned',
-        status: driverData.status || 'Online',
-      },
-    ])
+    .insert([insertPayload])
     .select()
     .single();
 
+  // If insert failed due to column missing (e.g. 42703), retry without photo columns
+  if (insertResult.error && insertResult.error.code === '42703') {
+    console.warn('Driver photo column does not exist in Supabase drivers table. Storing without photo column until migration is run.');
+    cachedPhotoColumn = { photoUrl: false, profileImage: false };
+    const fallbackPayload = { ...insertPayload };
+    delete fallbackPayload.photo_url;
+    delete fallbackPayload.profile_image;
+    insertResult = await supabase
+      .from('drivers')
+      .insert([fallbackPayload])
+      .select()
+      .single();
+  }
+
+  const { data, error } = insertResult;
   if (error) {
     console.error('Error adding driver:', error);
     throw error;
@@ -158,7 +215,12 @@ export const addDriver = async (driverData) => {
     });
   }
 
-  return { ...data, credentials };
+  return {
+    ...data,
+    photoUrl: data.photo_url || data.profile_image || photoUrl || null,
+    photo_url: data.photo_url || data.profile_image || photoUrl || null,
+    credentials,
+  };
 };
 
 export const updateDriver = async (driverId, driverData) => {
@@ -170,27 +232,59 @@ export const updateDriver = async (driverId, driverData) => {
   // Fetch current driver before updating to track changes
   const { data: oldDriver } = await supabase
     .from('drivers')
-    .select('name, vehicle, route')
+    .select('*')
     .eq('id', driverId)
     .eq('school_id', schoolId)
     .maybeSingle();
 
-  const { data, error } = await supabase
+  const photoCols = await getDriverPhotoColumn();
+  const updatePayload = {
+    name: driverData.name,
+    license: driverData.license,
+    license_type: driverData.licenseType || 'Heavy Transport',
+    phone: driverData.phone,
+    vehicle: driverData.vehicle || 'Unassigned',
+    route: driverData.route || 'Unassigned',
+    status: driverData.status,
+  };
+
+  const photoUrl = driverData.photoUrl !== undefined 
+    ? driverData.photoUrl 
+    : driverData.photo_url;
+
+  if (photoUrl !== undefined) {
+    if (photoCols.photoUrl) {
+      updatePayload.photo_url = photoUrl;
+    }
+    if (photoCols.profileImage) {
+      updatePayload.profile_image = photoUrl;
+    }
+  }
+
+  let updateResult = await supabase
     .from('drivers')
-    .update({
-      name: driverData.name,
-      license: driverData.license,
-      license_type: driverData.licenseType || 'Heavy Transport',
-      phone: driverData.phone,
-      vehicle: driverData.vehicle || 'Unassigned',
-      route: driverData.route || 'Unassigned',
-      status: driverData.status,
-    })
+    .update(updatePayload)
     .eq('id', driverId)
     .eq('school_id', schoolId)
     .select()
     .single();
 
+  if (updateResult.error && updateResult.error.code === '42703') {
+    console.warn('Driver photo column does not exist in Supabase drivers table. Storing without photo column until migration is run.');
+    cachedPhotoColumn = { photoUrl: false, profileImage: false };
+    const fallbackPayload = { ...updatePayload };
+    delete fallbackPayload.photo_url;
+    delete fallbackPayload.profile_image;
+    updateResult = await supabase
+      .from('drivers')
+      .update(fallbackPayload)
+      .eq('id', driverId)
+      .eq('school_id', schoolId)
+      .select()
+      .single();
+  }
+
+  const { data, error } = updateResult;
   if (error) {
     console.error('Error updating driver:', error);
     throw error;
@@ -229,7 +323,11 @@ export const updateDriver = async (driverId, driverData) => {
 
   clearDriversCache();
 
-  return data;
+  return {
+    ...data,
+    photoUrl: data.photo_url || data.profile_image || photoUrl || null,
+    photo_url: data.photo_url || data.profile_image || photoUrl || null,
+  };
 };
 
 export const deleteDriver = async (driverId) => {
@@ -240,7 +338,7 @@ export const deleteDriver = async (driverId) => {
 
   const { data: driverToDelete } = await supabase
     .from('drivers')
-    .select('name')
+    .select('*')
     .eq('id', driverId)
     .eq('school_id', schoolId)
     .maybeSingle();
@@ -254,6 +352,14 @@ export const deleteDriver = async (driverId) => {
   if (error) {
     console.error('Error deleting driver:', error);
     throw error;
+  }
+
+  // Delete driver's photo from storage if existed
+  const existingPhoto = driverToDelete?.photo_url || driverToDelete?.profile_image;
+  if (existingPhoto) {
+    deleteDriverPhoto(existingPhoto).catch((err) => {
+      console.warn('Could not remove driver photo from storage:', err);
+    });
   }
 
   if (driverToDelete?.name) {

@@ -6,9 +6,15 @@ import {
   MdLocationOn,
   MdCheckCircle,
   MdFileDownload,
+  MdDeleteOutline,
 } from 'react-icons/md';
 
-const EmergencyResponseLedger = ({ alerts = [], onResolveAlert }) => {
+const EmergencyResponseLedger = ({
+  alerts = [],
+  onResolveAlert,
+  onCheckLocation,
+  onDeleteAlert,
+}) => {
   const [activeTab, setActiveTab] = useState('All Alerts');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -29,12 +35,15 @@ const EmergencyResponseLedger = ({ alerts = [], onResolveAlert }) => {
     const created = row.created_at ? new Date(row.created_at) : new Date();
     const timeStr = created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const lat = Number(row.latitude);
-    const lng = Number(row.longitude);
-    const coordsStr =
-      !isNaN(lat) && !isNaN(lng) && lat !== 0
-        ? `${lat.toFixed(4)}, ${lng.toFixed(4)}`
-        : null;
+    const lat = row.latitude != null ? Number(row.latitude) : null;
+    const lng = row.longitude != null ? Number(row.longitude) : null;
+    const hasDriverCoords =
+      isDriver &&
+      lat != null &&
+      lng != null &&
+      !isNaN(lat) &&
+      !isNaN(lng) &&
+      lat !== 0;
 
     return {
       num: index + 1,
@@ -42,13 +51,14 @@ const EmergencyResponseLedger = ({ alerts = [], onResolveAlert }) => {
       id: `SOS-${row.id.slice(0, 4).toUpperCase()}`,
       type: senderType,
       typeCategory: senderType,
+      isDriver,
+      hasDriverCoords,
+      rawRow: row,
       initiatorInitials: initials || 'SR',
       initiatorName: row.sender_name || (isDriver ? 'Staff Driver' : 'Registered Parent'),
       initiatorRole: isDriver ? 'Staff Driver' : 'Registered Parent',
       bus: row.vehicle_name || (isDriver ? 'Assigned Bus' : 'Parent Stop'),
       route: isDriver ? 'Active Fleet Route' : 'Assigned Stop',
-      location: coordsStr ? `GPS (${coordsStr})` : 'Telemetry Distress Point',
-      coords: coordsStr,
       time: timeStr,
       status: isCritical ? 'Active Beacon' : 'Resolved',
       statusType: isCritical ? 'critical' : 'resolved',
@@ -74,7 +84,6 @@ const EmergencyResponseLedger = ({ alerts = [], onResolveAlert }) => {
         item.id.toLowerCase().includes(q) ||
         item.initiatorName.toLowerCase().includes(q) ||
         item.bus.toLowerCase().includes(q) ||
-        item.location.toLowerCase().includes(q) ||
         item.type.toLowerCase().includes(q)
       );
     }
@@ -254,20 +263,20 @@ const EmergencyResponseLedger = ({ alerts = [], onResolveAlert }) => {
                   </td>
 
                   <td className="py-3.5 px-5">
-                    <span
-                      className={`block ${
-                        row.isCriticalRow
-                          ? 'font-medium text-slate-800'
-                          : 'font-medium text-slate-700'
-                      }`}
-                    >
-                      {row.location}
-                    </span>
-                    {row.coords && (
-                      <span className="text-[10px] text-blue-600 font-mono flex items-center gap-1">
-                        <MdLocationOn className="w-3 h-3 text-red-500" />
-                        {row.coords}
-                      </span>
+                    {row.hasDriverCoords ? (
+                      <button
+                        type="button"
+                        onClick={() => onCheckLocation && onCheckLocation(row.rawRow)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold rounded-lg shadow-2xs transition-colors cursor-pointer"
+                        title="View driver live location on map"
+                      >
+                        <MdLocationOn className="w-4 h-4 text-blue-600" />
+                        <span>Check Location</span>
+                      </button>
+                    ) : row.isDriver ? (
+                      <span className="text-slate-400 font-medium">No Coordinates Reported</span>
+                    ) : (
+                      <span className="text-slate-400 font-medium text-xs">—</span>
                     )}
                   </td>
 
@@ -288,15 +297,33 @@ const EmergencyResponseLedger = ({ alerts = [], onResolveAlert }) => {
                         </span>
                       </div>
 
-                      {row.isCriticalRow && onResolveAlert && (
-                        <button
-                          onClick={() => onResolveAlert(row.realId)}
-                          className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg transition-colors cursor-pointer shadow-2xs"
-                        >
-                          <MdCheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                          Resolve
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        {row.isCriticalRow && onResolveAlert && (
+                          <button
+                            type="button"
+                            onClick={() => onResolveAlert(row.realId)}
+                            className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg transition-colors cursor-pointer shadow-2xs"
+                          >
+                            <MdCheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            Resolve
+                          </button>
+                        )}
+                        {onDeleteAlert && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm(`Delete SOS alert #${row.id}?`)) {
+                                onDeleteAlert(row.realId);
+                              }
+                            }}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                            title="Delete SOS Alert"
+                          >
+                            <MdDeleteOutline className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </td>
                 </tr>

@@ -5,6 +5,7 @@ import SOSPageHeader from '../components/pagecomponents/SOS/SOSPageHeader';
 import SOSStatCards from '../components/pagecomponents/SOS/SOSStatCards';
 import CriticalAlertBanner from '../components/pagecomponents/SOS/CriticalAlertBanner';
 import EmergencyResponseLedger from '../components/pagecomponents/SOS/EmergencyResponseLedger';
+import DriverSOSLocationModal from '../components/pagecomponents/SOS/DriverSOSLocationModal';
 import SOSFooter from '../components/pagecomponents/SOS/SOSFooter';
 import { supabase } from '../lib/supabaseClient';
 import { getCurrentSchoolId } from '../lib/session';
@@ -15,12 +16,21 @@ const isValidUUID = (val) =>
 const SOS = ({ onLogout, onNavigate, currentPage = 'SOS Alerts' }) => {
   const [alerts, setAlerts] = useState([]);
   const [toastMessage, setToastMessage] = useState(null);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [selectedAlertForLocation, setSelectedAlertForLocation] = useState(null);
 
   const showNotification = (msg) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
     }, 4000);
+  };
+
+  const handleOpenLocationModal = (alertItem) => {
+    if (alertItem) {
+      setSelectedAlertForLocation(alertItem);
+      setIsLocationModalOpen(true);
+    }
   };
 
   const fetchAlerts = useCallback(async () => {
@@ -85,6 +95,30 @@ const SOS = ({ onLogout, onNavigate, currentPage = 'SOS Alerts' }) => {
     }
   };
 
+  const handleDeleteAlert = async (alertId) => {
+    try {
+      setAlerts((prev) => prev.filter((a) => a.id !== alertId));
+
+      if (selectedAlertForLocation?.id === alertId) {
+        setIsLocationModalOpen(false);
+        setSelectedAlertForLocation(null);
+      }
+
+      const { error } = await supabase
+        .from('sos_alerts')
+        .delete()
+        .eq('id', alertId);
+
+      if (error) throw error;
+      showNotification(`Incident #${alertId.slice(0, 4).toUpperCase()} deleted.`);
+      await fetchAlerts();
+    } catch (err) {
+      console.error('Failed to delete SOS alert:', err);
+      showNotification('Could not delete SOS alert. Please try again.');
+      await fetchAlerts();
+    }
+  };
+
   const activeAlerts = alerts.filter((a) => a.status === 'active');
   const activeAlert = activeAlerts[0] || null;
 
@@ -114,18 +148,34 @@ const SOS = ({ onLogout, onNavigate, currentPage = 'SOS Alerts' }) => {
           <CriticalAlertBanner
             activeAlert={activeAlert}
             onResolveAlert={handleResolveAlert}
+            onCheckLocation={handleOpenLocationModal}
+            onDeleteAlert={handleDeleteAlert}
           />
 
           {/* Full-Width Emergency Response Ledger (matches Parents screen layout) */}
           <EmergencyResponseLedger
             alerts={alerts}
             onResolveAlert={handleResolveAlert}
+            onCheckLocation={handleOpenLocationModal}
+            onDeleteAlert={handleDeleteAlert}
           />
 
           <div className="h-4"></div>
         </main>
 
         <SOSFooter />
+
+        {/* Driver SOS Exact Location Map Popup */}
+        <DriverSOSLocationModal
+          isOpen={isLocationModalOpen}
+          onClose={() => {
+            setIsLocationModalOpen(false);
+            setSelectedAlertForLocation(null);
+          }}
+          alert={selectedAlertForLocation}
+          onResolveAlert={handleResolveAlert}
+          onDeleteAlert={handleDeleteAlert}
+        />
       </div>
     </div>
   );

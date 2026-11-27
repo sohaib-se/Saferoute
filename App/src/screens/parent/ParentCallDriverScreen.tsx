@@ -97,6 +97,7 @@ export const ParentCallDriverScreen: React.FC<ParentCallDriverScreenProps> = ({
             vehicleName={driverInfo.vehicleName}
             plateNumber={driverInfo.plateNumber}
             licenseNumber={driverInfo.licenseNumber}
+            photoUrl={driverInfo.photoUrl}
             onCallDriver={handleCallDriver}
           />
         )}

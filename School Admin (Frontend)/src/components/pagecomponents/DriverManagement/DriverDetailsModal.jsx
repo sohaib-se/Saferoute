@@ -16,6 +16,49 @@ const DriverDetailsModal = ({ driver, isOpen, onClose, onEdit }) => {
     >
       <div>
         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          {/* Driver Avatar & Identity */}
+          <div className="flex items-center gap-3.5 p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80">
+            {driver.photoUrl ? (
+              <img
+                src={driver.photoUrl}
+                alt={driver.name}
+                className="w-13 h-13 rounded-full object-cover shrink-0 border-2 border-white shadow-xs"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const sib = e.currentTarget.parentElement?.querySelector('.details-fallback-initials');
+                  if (sib) sib.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div
+              className={`details-fallback-initials w-13 h-13 rounded-full ${
+                driver.initialsStyle || 'bg-blue-100 text-blue-700'
+              } font-bold text-base flex items-center justify-center shrink-0 border-2 border-white shadow-xs ${
+                driver.photoUrl ? 'hidden' : ''
+              }`}
+            >
+              {driver.initials || 'DR'}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-bold text-slate-900 truncate">{driver.name}</h3>
+              <p className="text-xs text-slate-500 font-mono mt-0.5">
+                {driver.license} • {driver.licenseType || 'Heavy Transport'}
+              </p>
+              <span
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${
+                  driver.statusBadgeStyle || 'bg-emerald-50 text-emerald-700'
+                } text-[10px] font-bold mt-1.5`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    driver.statusDotStyle || 'bg-emerald-500'
+                  }`}
+                ></span>
+                {driver.status}
+              </span>
+            </div>
+          </div>
+
           {/* Summary Card */}
           <div className="bg-slate-50/70 rounded-xl border border-slate-200/80 p-4 grid grid-cols-2 gap-4">
             <div>

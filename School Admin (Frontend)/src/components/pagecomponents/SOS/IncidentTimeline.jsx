@@ -5,8 +5,9 @@ const IncidentTimeline = ({ activeAlert, onViewArchive }) => {
   const isDriver = activeAlert?.sender_type === 'driver';
   const initiator = activeAlert?.sender_name || (isDriver ? 'Staff Driver' : 'Parent');
   const vehicle = activeAlert?.vehicle_name || 'Vehicle';
-  const lat = Number(activeAlert?.latitude || 33.6844);
-  const lng = Number(activeAlert?.longitude || 73.0479);
+  const lat = activeAlert?.latitude != null ? Number(activeAlert.latitude) : null;
+  const lng = activeAlert?.longitude != null ? Number(activeAlert.longitude) : null;
+  const hasCoords = lat != null && lng != null && !isNaN(lat) && !isNaN(lng) && lat !== 0;
   const timeStr = activeAlert?.created_at
     ? new Date(activeAlert.created_at).toLocaleTimeString([], {
         hour: '2-digit',
@@ -49,10 +50,12 @@ const IncidentTimeline = ({ activeAlert, onViewArchive }) => {
             <span className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-blue-600 ring-4 ring-white"></span>
             <div className="text-[11px]">
               <div className="flex items-center justify-between font-bold text-slate-800">
-                <span>Coordinates Registered</span>
+                <span>{hasCoords ? 'Coordinates Registered' : 'Alert Origin'}</span>
               </div>
               <p className="text-slate-500 mt-0.5 leading-snug">
-                GPS telemetry pinned at {lat.toFixed(4)}° N, {lng.toFixed(4)}° E. High-alert notification sent to admin desk.
+                {hasCoords
+                  ? `GPS telemetry pinned at ${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E. High-alert notification sent to admin desk.`
+                  : 'Distress alert transmitted directly from parent app (Parent SOS). High-alert notification sent to admin desk.'}
               </p>
             </div>
           </div>

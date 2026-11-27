@@ -3,8 +3,9 @@ import { MdDirectionsBus } from 'react-icons/md';
 const EmergencyRadarMap = ({ activeAlert }) => {
   const isDriver = activeAlert?.sender_type === 'driver';
   const vehicle = activeAlert?.vehicle_name || (isDriver ? 'Bus Unit' : 'Parent Beacon');
-  const lat = Number(activeAlert?.latitude || 33.6844);
-  const lng = Number(activeAlert?.longitude || 73.0479);
+  const lat = activeAlert?.latitude != null ? Number(activeAlert.latitude) : null;
+  const lng = activeAlert?.longitude != null ? Number(activeAlert.longitude) : null;
+  const hasCoords = isDriver && lat != null && lng != null && !isNaN(lat) && !isNaN(lng) && lat !== 0;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden">
@@ -48,19 +49,25 @@ const EmergencyRadarMap = ({ activeAlert }) => {
               <div className="mt-1 bg-slate-900 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded shadow">
                 {vehicle} • Distress Active
               </div>
-              <div className="text-[9px] font-mono text-red-700 font-bold bg-white/90 px-1.5 py-0.5 rounded mt-0.5 shadow-xs">
-                {lat.toFixed(4)}, {lng.toFixed(4)}
-              </div>
+              {hasCoords && (
+                <div className="text-[9px] font-mono text-red-700 font-bold bg-white/90 px-1.5 py-0.5 rounded mt-0.5 shadow-xs">
+                  {lat.toFixed(4)}, {lng.toFixed(4)}
+                </div>
+              )}
             </div>
 
             {/* Bottom Status */}
             <div className="relative flex items-center justify-between w-full z-10 pt-36">
               <div className="bg-white/95 backdrop-blur-xs border border-slate-300 rounded-lg px-2 py-1 shadow-sm text-[10px]">
-                <span className="font-bold text-slate-800 block">Distress Coordinates</span>
-                <span className="text-red-600 font-bold">{lat.toFixed(4)}° N, {lng.toFixed(4)}° E</span>
+                <span className="font-bold text-slate-800 block">
+                  {hasCoords ? 'Distress Coordinates' : 'Distress Location'}
+                </span>
+                <span className="text-red-600 font-bold">
+                  {hasCoords ? `${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E` : 'Direct Parent Distress Alert'}
+                </span>
               </div>
               <div className="bg-red-600 text-white rounded-lg px-2 py-1 shadow-sm text-[10px] font-bold">
-                Active Telemetry
+                {hasCoords ? 'Active Telemetry' : 'Direct Distress Call'}
               </div>
             </div>
           </>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { MdBadge } from 'react-icons/md';
+import { MdBadge, MdCameraAlt, MdEdit } from 'react-icons/md';
 import Modal from '../../common/Modal';
+import { uploadDriverPhoto, deleteDriverPhoto, cleanupDriverPhotos } from '../../../services/storageService';
 
 const AddDriverModal = ({
   isOpen,
@@ -10,6 +11,8 @@ const AddDriverModal = ({
   driver = null,
 }) => {
   const isEditMode = Boolean(driver);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -17,9 +20,11 @@ const AddDriverModal = ({
     licenseType: 'Heavy Transport',
     phone: '',
     status: 'Online',
+    photoUrl: null,
   });
 
   useEffect(() => {
+    setPhotoFile(null);
     if (driver) {
       setFormData({
         name: driver.name || '',
@@ -27,6 +32,7 @@ const AddDriverModal = ({
         licenseType: driver.licenseType || 'Heavy Transport',
         phone: driver.phone || '',
         status: driver.status || 'Online',
+        photoUrl: driver.photo_url || driver.photoUrl || driver.profile_image || null,
       });
     } else {
       setFormData({
@@ -35,11 +41,30 @@ const AddDriverModal = ({
         licenseType: 'Heavy Transport',
         phone: '',
         status: 'Online',
+        photoUrl: null,
       });
     }
   }, [driver, isOpen]);
 
   if (!isOpen) return null;
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Please choose an image file smaller than 5MB.');
+        return;
+      }
+      setPhotoFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setFormData((prev) => ({ ...prev, photoUrl: previewUrl }));
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setFormData((prev) => ({ ...prev, photoUrl: null }));
+  };
 
   const getInitials = (name) => {
     if (!name) return 'DR';
@@ -75,57 +100,139 @@ const AddDriverModal = ({
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || !formData.license) return;
 
-    const styles = getStatusStyles(formData.status);
-    const driverPayload = {
-      ...(driver || {}),
-      ...formData,
-      vehicle: driver?.vehicle || 'Unassigned',
-      route: driver?.route || 'Unassigned',
-      initials: getInitials(formData.name),
-      initialsStyle: styles.initials,
-      statusBadgeStyle: styles.badge,
-      statusDotStyle: styles.dot,
-    };
+    setIsSubmitting(true);
+    try {
+      const previousPhotoUrl = driver?.photo_url || driver?.photoUrl || driver?.profile_image;
+      let finalPhotoUrl = formData.photoUrl;
 
-    if (isEditMode) {
-      if (onUpdateDriver) {
-        onUpdateDriver(driverPayload);
+      if (photoFile) {
+        try {
+          const uploadedUrl = await uploadDriverPhoto(photoFile, formData.license || formData.name);
+          if (uploadedUrl) {
+            finalPhotoUrl = uploadedUrl;
+            if (previousPhotoUrl && previousPhotoUrl !== uploadedUrl) {
+              await deleteDriverPhoto(previousPhotoUrl);
+            }
+            await cleanupDriverPhotos(formData.license || formData.name, uploadedUrl);
+          }
+        } catch (err) {
+          console.error('Failed to upload driver photo to storage:', err);
+        }
+      } else if (!formData.photoUrl && previousPhotoUrl) {
+        await deleteDriverPhoto(previousPhotoUrl);
+        await cleanupDriverPhotos(formData.license || formData.name);
+        finalPhotoUrl = null;
       }
-    } else {
-      if (onAddDriver) {
-        onAddDriver(driverPayload);
+
+      const styles = getStatusStyles(formData.status);
+      const driverPayload = {
+        ...(driver || {}),
+        ...formData,
+        photoUrl: finalPhotoUrl,
+        photo_url: finalPhotoUrl,
+        profile_image: finalPhotoUrl,
+        vehicle: driver?.vehicle || 'Unassigned',
+        route: driver?.route || 'Unassigned',
+        initials: getInitials(formData.name),
+        initialsStyle: styles.initials,
+        statusBadgeStyle: styles.badge,
+        statusDotStyle: styles.dot,
+      };
+
+      if (isEditMode) {
+        if (onUpdateDriver) {
+          await onUpdateDriver(driverPayload);
+        }
+      } else {
+        if (onAddDriver) {
+          await onAddDriver(driverPayload);
+        }
       }
+
+      setFormData({
+        name: '',
+        license: '',
+        licenseType: 'Heavy Transport',
+        phone: '',
+        status: 'Online',
+        photoUrl: null,
+      });
+      setPhotoFile(null);
+      onClose();
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setFormData({
-      name: '',
-      license: '',
-      licenseType: 'Heavy Transport',
-      phone: '',
-      status: 'Online',
-    });
-    onClose();
   };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      icon={<MdBadge size={20} />}
+      icon={isEditMode ? <MdEdit size={20} /> : <MdBadge size={20} />}
       title={isEditMode ? 'Edit Driver Information' : 'Add New Driver'}
       subtitle={
         isEditMode
-          ? 'Update driver license, contact, or duty status'
+          ? 'Update driver license, contact, photo, or duty status'
           : 'Enroll transport personnel into the active driver roster'
       }
       maxWidth="max-w-lg"
     >
       <form onSubmit={handleSubmit}>
         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          {/* Profile Photo Upload */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80">
+            <label className="w-16 h-16 rounded-full bg-blue-100/70 border-2 border-dashed border-blue-300 flex flex-col items-center justify-center text-blue-600 shrink-0 cursor-pointer hover:bg-blue-100 transition-colors overflow-hidden relative group">
+              {formData.photoUrl ? (
+                <img
+                  src={formData.photoUrl}
+                  alt="Driver"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <>
+                  <MdCameraAlt size={22} />
+                  <span className="text-[10px] font-semibold mt-0.5">Photo</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoUpload}
+              />
+            </label>
+            <div className="flex-1 text-center sm:text-left">
+              <h4 className="text-xs font-bold text-slate-800">Driver Profile Image</h4>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Upload clear portrait for fleet verification and digital badge identification.
+              </p>
+              <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
+                <label className="text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer">
+                  Choose Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePhotoUpload}
+                  />
+                </label>
+                {formData.photoUrl && (
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="text-xs font-semibold text-rose-500 hover:text-rose-600 cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Driver Full Name <span className="text-rose-500">*</span>
@@ -191,15 +298,20 @@ const AddDriverModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+            disabled={isSubmitting}
+            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition cursor-pointer"
+            disabled={isSubmitting}
+            className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isEditMode ? 'Save Changes' : 'Save Driver'}
+            {isSubmitting && (
+              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            )}
+            <span>{isSubmitting ? 'Saving...' : isEditMode ? 'Save Changes' : 'Save Driver'}</span>
           </button>
         </div>
       </form>
